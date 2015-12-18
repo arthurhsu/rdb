@@ -1,0 +1,181 @@
+typedef (ArrayBuffer or Boolean or Date or Number or String or Object) ValueType;
+typedef (Boolean or Date or Number or String) IndexableType;
+
+enum ColumnType {
+  'ArrayBuffer',
+  'Boolean',
+  'Date',
+  'Number',
+  'String',
+  'Object'
+};
+
+interface IExecutionContext {
+  Promise<(void or Object[])> commit();
+  Promise<void> rollback();
+};
+
+interface ITransaction : IExecutionContext {
+  void append((IQuery... or IQuery[]) queries);
+};
+
+interface IQuery : IExecutionContext {
+  ITransaction attachTo(ITransaction tx);
+};
+
+
+/**
+ * Section 1: database
+ *
+ * var db;
+ * navigator.db.open('foo').then(function(instance) {
+ *   db = instance;
+ * }, function(e) {
+ *   // type of e is DOMException
+ * });
+ */
+enum RelationalDatabaseStorageType {
+  "persistent",
+  "volatile"
+};
+
+dictionary OpenDatabaseOptions {
+  storageType: RelationalDatabaseStorageType
+};
+ 
+interface IRelationalDatabase {
+  Promise<IDBInstance> open(string name, optional OpenDatabaseOptions opt);
+  Promise<void> delete(string name);
+};
+
+partial interface Navigator {
+  IRelationalDatabase db;
+};
+
+interface IDBInstance : ISchemaQueryProvider, IDataQueryProvider {
+  readonly string name;
+};
+
+
+/**
+ * Section 2: Data Schema Definition
+ * db.create(jsonSchema).exec().then(function() { ... });
+ * // add new tables
+ * var tx = db.createTransaction('readwrite');
+ * var q1 = db.createTable('emp')
+ *              .column('id', 'Number', true)
+ *              .column('name', 'String', true)
+ *              .column('deptId', 'String', true)
+ *              .column('title', 'String')
+ *              .primaryKey([{name: 'id', order: 'asc'}])
+ *              .unique(['name'])
+ *              .index('idx_Desc', [{name: 'desc', order: 'asc'}])
+ *              .foreignKey({
+ *                name: 'fk_DeptId',
+ *                local: 'deptId',
+ *                remote: 'Dept.id',
+ *                action: 'restrict',
+ *                timing: 'immediate'
+ *              });
+ * q1.attachTo(tx);
+ * var q2 = db.alterTable('dept')
+ *              .addColumn('desc', 'String');
+ * tx.append(q2);
+ * tx.commit().then(resolver, rejecter);
+ */
+dictionary ColumnSchema {
+  string name;
+  string type;
+  boolean notNull;
+};
+
+enum Order {
+  'ASC',
+  'asc',
+  'ascending',
+  'DESC',
+  'desc',
+  'descending'
+};
+
+dictionary IndexedColumn {
+  string name;
+  Order order = 'asc';
+};
+
+dictionary IndexSpec {
+  string name;
+  (string or string[] or IndexedColumn[]) column;
+};
+
+enum ForeignKeyAction {
+  'CASCADE',
+  'cascade',
+  'RESTRICT',
+  'restrict'
+};
+
+enum ForeignKeyTiming {
+  'DEFERRED',
+  'deferred',
+  'IMMEDIATE',
+  'immediate'
+};
+
+dictionary ForeignKeySpec {
+  string name;
+  string local;
+  string remote;
+  ForeignKeyAction action;
+  ForeignKeyTiming timing;
+};
+
+dictionary Constraint {
+  primaryKey: (string or string[] or IndexedColumn),
+  unique: string[],
+  foreignKey: ForeignKeySpec[]
+};
+
+dictionary TableSchema {
+  string name;
+  ColumnSchema[] column;
+  Constraint constraint;
+  IndexSpec[] index;
+};
+
+dictionary Schema {
+  string name;
+  TableSchema[] table;
+};
+
+interface ISchemaQueryProvider {
+  Promise<Schema> exportSchema();
+  IQuery create(Schema schema);
+  ITableBuilder createTable();
+  ITableChanger alterTable();
+};
+
+interface ITableBuilder : IQuery {
+  ITableBuilder column(string name, ColumnType type, optional boolean notNull = true);
+  ITableBuilder primaryKey((string or string[] or IndexedColumn[]) keySpec);
+  ITableBuilder index(string name, (string or string[] or IndexedColumn[]) indexSpec);
+  ITableBuilder unique((string or string[]) uniqueSpec);
+  ITableBuilder foreignKey(ForeignKeySpec spec);
+};
+
+interface ITableChanger : IQuery {
+  ITableChanger rename(string newTableName);
+  ITableChanger addColumn(string name, ColumnType type, optional boolean notNull = true);
+  ITableChanger dropColumn(string name);
+  IColumnChanger setColumn(string name);
+};
+
+interface IColumnChanger {
+  ITableChanger set(string newName, ColumnType newType, optional boolean notNull = true);
+};
+
+
+/**
+ * Section 3: Data Manipulation
+ */
+
