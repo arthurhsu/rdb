@@ -21,6 +21,9 @@ interface ITransaction : IExecutionContext {
 
 interface IQuery : IExecutionContext {
   ITransaction attachTo(ITransaction tx);
+  Promise<string> explain();
+  IQuery bind(ValueType[] values);
+  string toSql();
 };
 
 
@@ -52,8 +55,19 @@ partial interface Navigator {
   IRelationalDatabase db;
 };
 
+enum TransactionType {
+  "readonly",
+  "readwrite"
+};
+
 interface IDBInstance : ISchemaQueryProvider, IDataQueryProvider {
   readonly string name;
+  string observe(ISelectQuery query, function(Object[]) callbackFn);
+  void unobserve(string observeKey);
+  ITransaction createTransaction(TransactionType type);
+  void close();
+  Promise<Object> export();
+  Promise<void> import(Object data);
 };
 
 
@@ -83,7 +97,7 @@ interface IDBInstance : ISchemaQueryProvider, IDataQueryProvider {
  * tx.append(q2);
  * tx.commit().then(resolver, rejecter);
  */
-dictionary ColumnSchema {
+dictionary ColumnSpec {
   string name;
   string type;
   boolean notNull;
@@ -136,21 +150,39 @@ dictionary Constraint {
   foreignKey: ForeignKeySpec[]
 };
 
-dictionary TableSchema {
+dictionary TableSpec {
   string name;
-  ColumnSchema[] column;
+  ColumnSpec[] column;
   Constraint constraint;
   IndexSpec[] index;
 };
 
 dictionary Schema {
   string name;
-  TableSchema[] table;
+  TableSpec[] table;
+};
+
+interface IDatabaseSchema {
+  readonly string name;
+  Object table(string tableName);
+};
+
+interface ITable {
+  readonly string name;
+  ITable as(string alias);
+};
+
+interface IColumn : IPredicate {
+  readonly string name;
+  readonly ColumnType type;
+  readonly boolean nullable;
+  IColumn as(string alias);
 };
 
 interface ISchemaQueryProvider {
   Promise<Schema> exportSchema();
   IQuery create(Schema schema);
+  IDatabaseSchema schema();
   ITableBuilder createTable();
   ITableChanger alterTable();
 };
@@ -178,4 +210,55 @@ interface IColumnChanger {
 /**
  * Section 3: Data Manipulation
  */
+interface IDataQueryProvider {
+  ISelectQuery select(IColumn...);
+  IInsertQuery insert();
+  IInsertQuery insertOrReplace();
+  IUpdateQuery update();
+  IDeleteQuery delete(); 
+};
 
+interface ISelectQuery : IQuery {
+  ISelectQuery from(ITable... tables);
+  ISelectQuery where(IPredicate searchCondition);
+  ISelectQuery innerJoin(ITable table, IPredicate onCondition);
+  ISelectQuery leftOuterJoin(ITable table, IPredicate onCondition);
+  ISelectQuery limit((number or IBindableValue) numberOfRows);
+  ISelectQuery skip((number or IBindableValue) numberOfRows);
+  ISelectQuery orderBy(IColumn column, Order order);
+  ISelectQuery groupBy(IColumn... column);
+};
+
+interface IInsertQuery : IQuery {
+  IInsertQuery into(ITable table);
+  IInsertQuery values((Object[] or IBindableValue[]) rows);
+};
+
+interface IUpdateQuery : IQuery {
+  IUpdateQuery set(IColumn column, ValueType value);
+  IUpdateQuery where(IPredicate searchCondition);
+};
+
+interface IDeleteQuery : IQuery {
+  IDeleteQuery from(ITable table);
+  IDeleteQuery where(IPredicate searchCondition);
+};
+
+typedef (IndexableValueType or IBindableValue) ComparableValueType
+
+interface IPredicate {
+  IPredicate eq(ComparableValueType value);
+  IPredicate neq(ComparableValueType value);
+  IPredicate lt(ComparableValueType value);
+  IPredicate lte(ComparableValueType value);
+  IPredicate gt(ComparableValueType value);
+  IPredicate gte(ComparableValueType value);
+  IPredicate match((IBindableValue or RegExp) value);
+  IPredicate between(ComparableValueType value, ComparableValueType value);
+  IPredicate in((IndexableValueType[] or IBindableArray) values);
+  IPredicate isNull();
+  IPredicate isNotNull();
+  IPredicate complement();
+  IPredicate and(IPredicate... childPredicate);
+  IPredicate or(IPredicate... childPredicate);
+};
