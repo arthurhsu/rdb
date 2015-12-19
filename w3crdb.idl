@@ -22,13 +22,18 @@ interface IJournaledExecutionContext : IExecutionContext {
 
 interface ITransaction : IJournaledExecutionContext {
   Promise<TransactionResults> begin();
-  Promise<TransactionResults> attach(IQuery queries);
+  Promise<TransactionResults> attach((IQuery or IProcedure) query);
 };
 
 interface IQuery : IExecutionContext {
   Promise<string> explain();
   IQuery bind((ValueType... or ValueType[]) values);
   string toSql();
+};
+
+interface IProcedure : IExecutionContext {
+  readonly string name;
+  void add((IQuery... or IQuery[]) queries);
 };
 
 
@@ -44,7 +49,7 @@ interface IQuery : IExecutionContext {
  */
 enum RelationalDatabaseStorageType {
   "persistent",
-  "volatile"
+  "temporary"
 };
 
 dictionary OpenDatabaseOptions {
@@ -52,7 +57,7 @@ dictionary OpenDatabaseOptions {
 };
  
 interface IRelationalDatabase {
-  Promise<IDBInstance> open(string name, optional OpenDatabaseOptions opt);
+  Promise<IDatabaseInstance> open(string name, optional OpenDatabaseOptions opt);
   Promise<void> delete(string name);
   IDatabaseFunctionProvider fn;
 };
@@ -66,11 +71,12 @@ enum TransactionType {
   "readwrite"
 };
 
-interface IDBInstance : ISchemaQueryProvider, IDataQueryProvider {
+interface IDatabaseInstance : ISchemaQueryProvider, IDataQueryProvider {
   readonly string name;
   string observe(ISelectQuery query, function(Object[]) callbackFn);
   void unobserve(string observeKey);
   ITransaction createTransaction(TransactionType type);
+  IProcedure createProcedure(string name, optional (IQuery... or IQuery[]) queries); 
   void close();
   Promise<Object> export();
   Promise<void> import(Object data);
