@@ -60,10 +60,15 @@ interface IRelationalDatabase {
   Promise<IDatabaseInstance> open(string name, optional OpenDatabaseOptions opt);
   Promise<void> delete(string name);
   IDatabaseFunctionProvider fn;
+  IBindableValue bind(number index);
 };
 
 partial interface Navigator {
   IRelationalDatabase db;
+};
+
+interface IBindableValue {
+  readonly ValueType value;
 };
 
 enum TransactionType {
@@ -226,7 +231,7 @@ interface IDataQueryProvider {
 
 interface ISelectQuery : IQuery {
   ISelectQuery from(ITable... tables);
-  ISelectQuery where(Predicate searchCondition);
+  ISelectQuery where(IPredicate searchCondition);
   ISelectQuery innerJoin(ITable table, Predicate onCondition);
   ISelectQuery leftOuterJoin(ITable table, Predicate onCondition);
   ISelectQuery limit((number or IBindableValue) numberOfRows);
@@ -242,35 +247,34 @@ interface IInsertQuery : IQuery {
 
 interface IUpdateQuery : IQuery {
   IUpdateQuery set(IColumn column, ValueType value);
-  IUpdateQuery where(Predicate searchCondition);
+  IUpdateQuery where(IPredicate searchCondition);
 };
 
 interface IDeleteQuery : IQuery {
   IDeleteQuery from(ITable table);
-  IDeleteQuery where(Predicate searchCondition);
+  IDeleteQuery where(IPredicate searchCondition);
 };
 
 typedef (IndexableValueType or IBindableValue) ComparableValueType
 
 interface IValuePredicate {
-  IValuePredicate eq(ComparableValueType value);
-  IValuePredicate neq(ComparableValueType value);
-  IValuePredicate lt(ComparableValueType value);
-  IValuePredicate lte(ComparableValueType value);
-  IValuePredicate gt(ComparableValueType value);
-  IValuePredicate gte(ComparableValueType value);
-  IValuePredicate match((IBindableValue or RegExp) value);
-  IValuePredicate between(ComparableValueType value, ComparableValueType value);
-  IValuePredicate in((IndexableValueType[] or IBindableArray) values);
-  IValuePredicate isNull();
-  IValuePredicate isNotNull();
+  IPredicate eq(ComparableValueType value);
+  IPredicate neq(ComparableValueType value);
+  IPredicate lt(ComparableValueType value);
+  IPredicate lte(ComparableValueType value);
+  IPredicate gt(ComparableValueType value);
+  IPredicate gte(ComparableValueType value);
+  IPredicate match((IBindableValue or RegExp) value);
+  IPredicate between(ComparableValueType value, ComparableValueType value);
+  IPredicate in((IndexableValueType[] or IBindableArray) values);
+  IPredicate isNull();
+  IPredicate isNotNull();
 };
 
-typedef (IValuePredicate or ICombinedPredicate) Predicate
-interface ICombinedPredicate {
-  ICombinedPredicate complement();
-  ICombinedPredicate and(Predicate... childPredicate);
-  Predicate or(Predicate... childPredicate);
+interface IPredicate : IValuePredicate{
+  IPredicate complement();
+  IPredicate and(Predicate childPredicate);
+  IPredicate or(Predicate childPredicate);
 };
 
 interface IDatabaseFunctionProvider : IAggregateFunction {
