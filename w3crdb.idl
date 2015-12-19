@@ -10,19 +10,24 @@ enum ColumnType {
   'Object'
 };
 
+typedef (void or Object[]) TransactionResults
+
 interface IExecutionContext {
-  Promise<(void or Object[])> commit();
+  Promise<TransactionResults> commit();
+};
+
+interface IJournaledExecutionContext : IExecutionContext {
   Promise<void> rollback();
 };
 
-interface ITransaction : IExecutionContext {
-  void append((IQuery... or IQuery[]) queries);
+interface ITransaction : IJournaledExecutionContext {
+  Promise<TransactionResults> begin();
+  Promise<TransactionResults> attach(IQuery queries);
 };
 
 interface IQuery : IExecutionContext {
-  ITransaction attachTo(ITransaction tx);
   Promise<string> explain();
-  IQuery bind(ValueType[] values);
+  IQuery bind((ValueType... or ValueType[]) values);
   string toSql();
 };
 
@@ -49,6 +54,7 @@ dictionary OpenDatabaseOptions {
 interface IRelationalDatabase {
   Promise<IDBInstance> open(string name, optional OpenDatabaseOptions opt);
   Promise<void> delete(string name);
+  IDatabaseFunctionProvider fn;
 };
 
 partial interface Navigator {
@@ -104,10 +110,8 @@ dictionary ColumnSpec {
 };
 
 enum Order {
-  'ASC',
   'asc',
   'ascending',
-  'DESC',
   'desc',
   'descending'
 };
@@ -123,16 +127,12 @@ dictionary IndexSpec {
 };
 
 enum ForeignKeyAction {
-  'CASCADE',
   'cascade',
-  'RESTRICT',
   'restrict'
 };
 
 enum ForeignKeyTiming {
-  'DEFERRED',
   'deferred',
-  'IMMEDIATE',
   'immediate'
 };
 
@@ -172,7 +172,7 @@ interface ITable {
   ITable as(string alias);
 };
 
-interface IColumn : IPredicate {
+interface IColumn : IPredicate, IAggregator {
   readonly string name;
   readonly ColumnType type;
   readonly boolean nullable;
@@ -261,4 +261,19 @@ interface IPredicate {
   IPredicate complement();
   IPredicate and(IPredicate... childPredicate);
   IPredicate or(IPredicate... childPredicate);
+};
+
+interface IDatabaseFunctionProvider : IAggregateFunction {
+  IColumn distinct(IColumn... col);
+};
+
+interface IAggregateFunction {
+  IColumn avg(IColumn col);
+  IColumn count(optional IColumn col = null);
+  IColumn geomean(IColumn col);
+  IColumn max(IColumn col);
+  IColumn min(IColumn col);
+  IColumn stddev(IColumn col);
+  IColumn sum(IColumn col);
+  IColumn var(IColumn col);
 };
