@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8"/>
+    <title>Web Relational Database Spec Draft</title>
+    <script src="node_modules/respec/js/require.js" data-main="node_modules/respec/js/profile-w3c-common.js" async class="remove"></script>
+    <script class="remove">
+      var respecConfig = {
+        specStatus: 'ED',
+        shortName: 'rdb',
+        editors: [
+          {
+            name: 'Arthur Hsu',
+            company: 'Google, Inc.',
+            url: 'https://www.google.com'
+          },
+          {
+            name: 'Demetrios Papadopoulos',
+            company: 'Google, Inc.',
+            url: 'https://www.google.com'
+          }
+        ],
+        wg: 'Relational Database Interest Group',
+        wgURI: 'https://www.github.com/arthurhsu/rdb',
+        edDraftURI: 'https://www.github.com/arthurhsu/rdb'
+      };
+    </script>
+    <link id="introLink" rel="import" href="intro.html" />
+  </head>
+  <body>
+    <section id="intro"></section>
+    <script>
+      var introLink = document.getElementById('introLink');
+      var introContents = introLink.import;
+      var el = introContents.getElementById('contents');
+      var section = document.getElementById('intro');
+      section.appendChild(el.cloneNode(true));
+    </script>
+  </body>
+</html>
