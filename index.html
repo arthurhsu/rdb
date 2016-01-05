@@ -3,38 +3,6 @@
   <head>
     <meta charset="utf-8"/>
     <title>Relational Database API</title>
-    <link id="introLink" rel="import" href="intro.html" />
-  </head>
-  <body>
-    <section id="abstract">
-      <p>
-      This document defines APIs for a database of tables holding rows, each row
-      represents a tuple of data fields. The type of data fields must be
-      predefined. These APIs provide query capabilities that are comparable to a
-      subset of SQL-03 standard.
-      </p>
-    </section>
-
-    <section id="sotd">
-      <p>This document has not been submitted to anywhere yet.</p>
-    </section>
-
-    <section id="toc"></section>
-
-    <section id="intro" class="informative"></section>
-    <script>
-      var sections = [
-        'intro',
-        'status'
-      ];
-      sections.forEach(function(section) {
-        var link = document.getElementById(section + 'Link');
-        var contents = link.import;
-        var el = contents.getElementById('contents');
-        var dom = document.getElementById(section);
-        dom.appendChild(el.cloneNode(true));
-      });
-    </script>
     <script src="node_modules/respec/js/require.js" data-main="node_modules/respec/js/profile-w3c-common.js" async class="remove"></script>
     <script class="remove">
       var respecConfig = {
@@ -57,5 +25,23 @@
         edDraftURI: 'https://www.github.com/arthurhsu/rdb'
       };
     </script>
+  </head>
+  <body>
+    <section id="abstract">
+      <p>
+      This document defines APIs for a database of tables holding rows, each row
+      represents a tuple of data fields. The type of data fields must be
+      predefined. These APIs provide query capabilities that are comparable to a
+      subset of SQL-03 standard.
+      </p>
+    </section>
+
+    <section id="sotd">
+      <p>This document has not been submitted to anywhere yet.</p>
+    </section>
+
+    <section id="toc"></section>
+
+    <section id="intro" class="informative" data-include="intro.html"></section>
   </body>
 </html>
