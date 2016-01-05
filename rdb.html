@@ -2,7 +2,39 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8"/>
-    <title>Web Relational Database Spec Draft</title>
+    <title>Relational Database API</title>
+    <link id="introLink" rel="import" href="intro.html" />
+  </head>
+  <body>
+    <section id="abstract">
+      <p>
+      This document defines APIs for a database of tables holding rows, each row
+      represents a tuple of data fields. The type of data fields must be
+      predefined. These APIs provide query capabilities that are comparable to a
+      subset of SQL-03 standard.
+      </p>
+    </section>
+
+    <section id="sotd">
+      <p>This document has not been submitted to anywhere yet.</p>
+    </section>
+
+    <section id="toc"></section>
+
+    <section id="intro" class="informative"></section>
+    <script>
+      var sections = [
+        'intro',
+        'status'
+      ];
+      sections.forEach(function(section) {
+        var link = document.getElementById(section + 'Link');
+        var contents = link.import;
+        var el = contents.getElementById('contents');
+        var dom = document.getElementById(section);
+        dom.appendChild(el.cloneNode(true));
+      });
+    </script>
     <script src="node_modules/respec/js/require.js" data-main="node_modules/respec/js/profile-w3c-common.js" async class="remove"></script>
     <script class="remove">
       var respecConfig = {
@@ -20,21 +52,10 @@
             url: 'https://www.google.com'
           }
         ],
-        wg: 'Relational Database Interest Group',
+        wg: 'Relational Database API Interest Group',
         wgURI: 'https://www.github.com/arthurhsu/rdb',
         edDraftURI: 'https://www.github.com/arthurhsu/rdb'
       };
-    </script>
-    <link id="introLink" rel="import" href="intro.html" />
-  </head>
-  <body>
-    <section id="intro"></section>
-    <script>
-      var introLink = document.getElementById('introLink');
-      var introContents = introLink.import;
-      var el = introContents.getElementById('contents');
-      var section = document.getElementById('intro');
-      section.appendChild(el.cloneNode(true));
     </script>
   </body>
 </html>
