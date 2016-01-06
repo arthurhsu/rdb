@@ -40,8 +40,21 @@
       <p>This document has not been submitted to anywhere yet.</p>
     </section>
 
-    <section id="toc"></section>
+    <section>
+      <h2>Introduction</h2>
+      <div data-include="intro.html"></div>
+    </section>
 
-    <section id="intro" class="informative" data-include="intro.html"></section>
+    <section>
+      <h2>Schema</h2>
+      <div data-include="schema.html"></div>
+      <section>
+        <h2>Types</h2>
+        <div data-include="schema-types.html"></div>
+      </section>
+      <p>The following example demonstrates how to create a database schema.</p>
+      <pre class="example highlight" data-include="examples/schema/create-by-json.js" data-include-format="text"></pre>
+      <pre class="example highlight" data-include="examples/schema/create-by-api.js" data-include-format="text"></pre>
+    </section>
   </body>
 </html>

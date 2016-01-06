@@ -1,0 +1,30 @@
+<html>
+  <head>
+    <meta charset="utf-8"/>
+  </head>
+  <body>
+    <p>
+    All columns must be associated with a given type. Valid types of a column
+    are defined in the following enum:
+    </p>
+    <dl title='enum ColumnType' class='idl'>
+      <dt>ArrayBuffer</dt>
+      <dd>Represents the <code>ArrayBuffer</code> type in JavaScript</dd>
+      <dt>Boolean</dt>
+      <dd>Represents the <code>boolean</code> type in JavaScript</dd>
+      <dt>Date</dt>
+      <dd>Represents the <code>Date</code> type in JavaScript</dd>
+      <dt>Number</dt>
+      <dd>Represents the <code>Number</code> type in JavaScript</dd>
+      <dt>String</dt>
+      <dd>Represents the <code>string</code> type in JavaScript</dd>
+      <dt>Object</dt>
+      <dd>Represents the <code>Object</code> type in JavaScript</dd>
+    </dl>
+    <p>
+    <code>ArrayBuffer</code> and <code>Object</code> type are not
+    <em>indexable</em>, which means columns of these types could not be used to
+    create indices and predicates.
+    </p>
+  </body>
+</html>

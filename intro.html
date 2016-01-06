@@ -3,32 +3,30 @@
     <meta charset="utf-8"/>
   </head>
   <body>
-    <div id="contents">
-      <h2>Introduction</h2>
-      <p>
-      The IndexedDB API lacks query capabilities and requires the users to
-      write their own query layer. Several attempts of generic relational query
-      layer has been attempted, however, the following areas are really hard
-      or impossible to be efficiently done in JavaScript:
-      </p>
-      <ul>
-        <li>Memory management: query engine cannot efficiently cache/release a
-          loaded object.</li>
-        <li>Schema update: IndexedDB allows altering database structure only
-          during connection, which is far more restrictive than necessary.</li>
-        <li>Storage management: there is not a way to identify or limit the size
-          occupied by data on storage.</li>
-        <li>Cross process: there is not a way to receive notification when
-          database is changed by other connection. Furthermore, users only care
-          about the data they care, where a change notification on the database
-          scope will not help.</li>
-        <li>Indexing bottleneck: implementing complex index data structures
-          suffers from boxing/unboxing/garbage collection in JavaScript. Also,
-          B-Tree is not necessary a proper solution for all usages.</li>
-      </ul>
-      <p>As a result, this document defines APIs for a database of tables
-      holding rows, each row represents a tuple of data. These APIs provide
-      query capabilities that are comparable to a subset of SQL-03 standard.</p>
-    </div>
+    <p>
+    The IndexedDB API lacks query capabilities and requires the users to
+    write their own query layer. Several attempts of generic relational query
+    layer has been made, however, the following areas are really hard or
+    impossible to be efficiently done in JavaScript:
+    </p>
+    <ul>
+      <li>Memory management: query engine cannot efficiently cache/release a
+        loaded object.</li>
+      <li>Schema update: IndexedDB allows altering database structure only
+        during connection, which is far more restrictive than necessary.</li>
+      <li>Storage management: there is not a way to identify or limit the size
+        occupied by data on storage.</li>
+      <li>Cross process: there is not a way to receive notification when
+        database is changed by other connection. Furthermore, users only care
+        about the data matters to them, which is not equivalent to change
+        notification on the database scope.</li>
+      <li>Indexing bottleneck: implementing complex index data structures
+        suffers from boxing/unboxing/garbage collection in JavaScript. Also,
+        B-Tree is not necessary a proper solution for all usages.</li>
+    </ul>
+    <p>
+    As a result, this document proposes a small-scale relational database
+    that can be used by web applications.
+    </p>
   </body>
 </html>
