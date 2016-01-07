@@ -1,6 +1,7 @@
 // Create a database using predefined JSON schema.
 var hrSchema = {
   'name': 'hr',
+  'version': 2,
   'table': [
     {
       'name': 'Dept',
@@ -37,7 +38,7 @@ var hrSchema = {
   ]
 };
 
-db.create(hrSchema).exec().then(function(instance) {
+db.create(hrSchema).commit().then(function(instance) {
   // Instance is the connected instance.
 }, function(e) {
   // e is the DOMError if any, e.g. AlreadyExists.
