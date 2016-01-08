@@ -1,0 +1,56 @@
+<html>
+  <head>
+    <meta charset="utf-8"/>
+  </head>
+  <body>
+    <p>A database's origin is the same as the origin of the document or worker.
+    Each origin has an associated set of database.</p>
+
+    <p class="note">The database origin is not affected by changes to
+    <code>document.domain</code>.</p>
+
+    <p>Each origin has an associated set of databases. A database comprises one
+    or more tables which hold the data stored in the database.</p>
+
+    <p>Every database has a <em>name</em> which identifies it within a specific
+    origin. The name can be any string value, except empty string, and stays
+    constant for the lifetime of the database.</p>
+
+    <p>Each database also has a version number for reference only. When a
+    database is first created, its version is 0.</p>
+
+    <p class="note">Implementations must support all names. If an implementation
+    uses a storage mechanism which can't handle arbitrary database names, the
+    implementation must use an escaping mechanism or something similar to map
+    the provided name to a name that it can handle.</p>
+
+    <p>Databases has a <em>delete pending</em> flag which is used during
+    deletion. When a database is requested to be deleted the flag is set to true
+    and all attempts at opening the database are stalled until database is
+    deleted.</p>
+
+    <p>The act of opening a database creates a <em>connection</em>. There may be
+    multiple connections to a given database at any given time. Each connection
+    has a <em>closePending</em> flag which initially is set to false.</p>
+
+    <p>When a connection is initially created it is in opened state. The
+    connection can be closed through several means. If the connection is garbage
+    collected or execution context where the connection is created is destroyed
+    (for example due to the user navigating away from that page), the connection
+    is closed. The connection can also be closed explicitly using the steps for
+    closing a database connection. When the connection is closed the
+    closePending flag is always set to true if it hasn't already been. All
+    uncommitted transactions will be cancelled if their associated connections
+    are marked close pending.</p>
+
+    <p>Every database contains a <em>schema</em> that defines data types,
+    referential integrity enforcement, and indices for the stored data.</p>
+
+    <p>Users can create observers associated with a given database. Each
+    observer consists a select query. When the results of that select query
+    change, the observer will be triggered.</p>
+
+    <p>The <code>IDatabaseConnection</code> interface represents a connection to
+    a database.</p>
+  </body>
+</html>
