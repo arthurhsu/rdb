@@ -53,6 +53,6 @@ function upgradeDb() {
   return db.alterTable('Dept').addColumn('desc', 'String').commit();
 }
 
-openDatabase.then(function() {
+openDatabase().then(function() {
   // Real work starts here.
 });

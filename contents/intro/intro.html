@@ -1,31 +1,35 @@
 <section class="informative">
   <h2>Introduction</h2>
-  <p>
-  The IndexedDB API lacks query capabilities and requires the users to
-  write their own query layer. Several attempts of generic relational query
-  layer has been made, however, the following areas are really hard or
-  impossible to be efficiently done in JavaScript:
-  </p>
+  <p>Relational data manipulation for the web apps has been in a difficult
+  state for years. WebSQL has quite a few problems with itself and hence
+  deprecated. The poised substitute, IndexedDB, is actually an object database.
+  In this document, an easy-to-use APIs are defined to promote readable,
+  maintainable, and performance code for apps needing relational data.</p>
+  
+  <p>Why a new standard is proposed instead of modifying existing IndexedDB?
+  There are some very good reasons of doing so.</p>
   <ul>
-    <li>Memory management: query engine cannot efficiently cache/release a
-      loaded object.</li>
-    <li>Schema update: IndexedDB allows altering database structure only
-      during connection, which is far more restrictive than necessary.</li>
-    <li>Storage management: there is not a way to identify or limit the size
-      occupied by data on storage.</li>
-    <li>Cross process: there is not a way to receive notification when
-      database is changed by other connection. Furthermore, users only care
-      about the data matters to them, which is not equivalent to change
-      notification on the database scope.</li>
-    <li>Indexing bottleneck: implementing complex index data structures
-      suffers from boxing/unboxing/garbage collection in JavaScript. Also,
-      B-Tree is not necessary a proper solution for all usages.</li>
+    <li>Making IndexedDB more bloated with the features that object databases
+    don't need simply makes no sense.</li>
+
+    <li>At the time of drafting this spec, most browsers carry a C++ relational
+    database implementation without exposing it.</li>
+
+    <li>Fundamentally the algorithms behind an object database and a relational
+    database are different. Shoehorning a relational query layer on top of
+    IndexedDB creates unnecessary complexity. Users are either forced to write
+    their own domain-specific query engine, or to include a large JS library
+    (e.g. Lovefield).</li>
+
+    <li>IndexedDB assumes single-level B-Tree index and object store structure
+    are good enough, which is not true for relational data manipulation.</li>
+
+    <li>JavaScript lacks many fundamental support needed by relational query
+    engine, especially for memory management and storage management.</li>
   </ul>
-  <p>
-  As a result, this document proposes a small-scale relational database
-  that can be used by web applications.
-  </p>
-  <p>The following example shows how to open a database.</p>
+
+  <p>The APIs proposed in this document are designed for small-scale relational
+  data manipulation. The following example shows how to open a database.</p>
   <pre class="example highlight">
     {{include: open.js}}
   </pre>
