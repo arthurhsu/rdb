@@ -40,35 +40,10 @@
       <p>This document has not been submitted to anywhere yet.</p>
     </section>
 
-    <section class="informative">
-      <h2>Introduction</h2>
-      <div data-include="contents/intro.html"></div>
-      <p>The following example shows how to open a database.</p>
-      <pre class="example highlight" data-include="examples/intro/open.js" data-include-format="text"></pre>
-      <p>Once the database is opened, queries can be performed.</p>
-      <pre class="example highlight" data-include="examples/intro/scud.js" data-include-format="text"></pre>
-    </section>
-
+    {{include: intro/intro.html}}
     <section id="conformance"></section>
 
-    <section>
-      <h2>Constructs</h2>
-      <section>
-        <h2>Database</h2>
-        <div data-include="contents/constructs/database.html"></div>
-      </section>
-    </section>
+    {{include: constructs/constructs.html}}
 
-    <section>
-      <h2>Schema</h2>
-      <div data-include="contents/schema.html"></div>
-      <section>
-        <h2>Types</h2>
-        <div data-include="contents/schema/types.html"></div>
-      </section>
-      <p>The following example demonstrates how to create a database schema.</p>
-      <pre class="example highlight" data-include="examples/schema/create-by-json.js" data-include-format="text"></pre>
-      <pre class="example highlight" data-include="examples/schema/create-by-api.js" data-include-format="text"></pre>
-    </section>
-  </body>
+ </body>
 </html>

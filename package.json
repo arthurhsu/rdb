@@ -15,6 +15,7 @@
     "url": "https://github.com/arthurhsu/rdb.git"
   },
   "devDependencies": {
+    "fs-extra": "*",
     "gulp": "^3.9.0",
     "gulp-connect": "^2.3.1",
     "nopt": "~2.2.1"

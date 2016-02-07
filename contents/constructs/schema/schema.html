@@ -1,0 +1,18 @@
+<section>
+  <h2>Schema</h2>
+  <p>The concept of relational database is to have a predefined layout of the
+  data structures persisted, which is referred as schema throughout this
+  document. A database schema consists of a list of table schemas. Each table
+  schema has a list of column definitions, constraints, and index
+  specifications for that table.</p>
+
+  {{include: types.html}}
+
+  <p>The following example demonstrates how to create a database schema.</p>
+  <pre class="example highlight">
+    {{include: create-by-json.js}}
+  </pre>
+  <pre class="example highlight">
+    {{include: create-by-api.js}}
+  </pre>
+</section>
