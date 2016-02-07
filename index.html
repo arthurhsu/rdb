@@ -40,35 +40,310 @@
       <p>This document has not been submitted to anywhere yet.</p>
     </section>
 
-    <section class="informative">
-      <h2>Introduction</h2>
-      <div data-include="contents/intro.html"></div>
-      <p>The following example shows how to open a database.</p>
-      <pre class="example highlight" data-include="examples/intro/open.js" data-include-format="text"></pre>
-      <p>Once the database is opened, queries can be performed.</p>
-      <pre class="example highlight" data-include="examples/intro/scud.js" data-include-format="text"></pre>
-    </section>
+<section class="informative">
+  <h2>Introduction</h2>
+  <p>
+  The IndexedDB API lacks query capabilities and requires the users to
+  write their own query layer. Several attempts of generic relational query
+  layer has been made, however, the following areas are really hard or
+  impossible to be efficiently done in JavaScript:
+  </p>
+  <ul>
+    <li>Memory management: query engine cannot efficiently cache/release a
+      loaded object.</li>
+    <li>Schema update: IndexedDB allows altering database structure only
+      during connection, which is far more restrictive than necessary.</li>
+    <li>Storage management: there is not a way to identify or limit the size
+      occupied by data on storage.</li>
+    <li>Cross process: there is not a way to receive notification when
+      database is changed by other connection. Furthermore, users only care
+      about the data matters to them, which is not equivalent to change
+      notification on the database scope.</li>
+    <li>Indexing bottleneck: implementing complex index data structures
+      suffers from boxing/unboxing/garbage collection in JavaScript. Also,
+      B-Tree is not necessary a proper solution for all usages.</li>
+  </ul>
+  <p>
+  As a result, this document proposes a small-scale relational database
+  that can be used by web applications.
+  </p>
+  <p>The following example shows how to open a database.</p>
+  <pre class="example highlight">
+// Open database named 'hr'.
+// If the named instance does not exist, create an empty database instance.
+// Otherwise, open the existing database named 'hr'.
+var db;
+
+function openDatabase() {
+  return navigator.db.open('hr').then(function(instance) {
+    db = instance;
+
+    // version is a read-only number that is for reference only.
+    if (db.version == 0) {
+      // This is an empty database.
+      return setUpNewDb();
+    } else if (db.version < 2) {
+      // Version is smaller than expected, perform upgrades.
+      return upgradeDb();
+    }
+  });
+}
+
+function setUpNewDb() {
+  var tx = db.createTransaction('readwrite');
+  var q1 = db.createTable('Dept')
+             .column(/* column_name */ 'id',
+                     /* column_type */ 'String',
+                     /* not_null */ true)
+             .column('name', 'String', true)
+             .column('desc', 'String')
+             .primaryKey([{'name': 'id'}]);
+
+  var q2 = db.createTable('Emp')
+             .column('id', 'Number', true)
+             .column('name', 'String', true)
+             .column('deptId', 'String', true)
+             .column('title', 'String')
+             .primaryKey([{name: 'id', order: 'asc'}])
+             .unique(['name'])
+             .index('idx_Desc', [{name: 'desc', order: 'asc'}])
+             .foreignKey({
+               'name': 'fk_DeptId',
+               'local': 'deptId',
+               'remote': 'Dept.id',
+               'action': 'restrict',
+               'timing': 'immediate'
+             });
+  var q3 = db.setVersion(2);
+
+  tx.append([q1, q2, q3]);
+  return tx.commit();
+}
+
+function upgradeDb() {
+  return db.alterTable('Dept').addColumn('desc', 'String').commit();
+}
+
+openDatabase.then(function() {
+  // Real work starts here.
+});
+
+  </pre>
+  <p>Once the database is opened, queries can be performed.</p>
+  <pre class="example highlight">
+var d = db.table('Dept');
+
+function insertData() {
+  var deptData = [
+    {'id': 'HR', 'name': 'Human Resources', 'desc': 'Rock stars'},
+    {'id': 'ENG', 'name': 'Engineering', 'desc': 'Hard workers'},
+    {'id': 'NADA', 'name': 'Non existing'},
+    {'id': 'L', 'name': 'Leadership'}
+  ];
+  return db.insert().into(d).values(deptData).commit();
+}
+
+function updateData() {
+  return db.update(d).set(d.desc, 'Master minds').where(d.id.eq('L')).commit();
+}
+
+function deleteData() {
+  return db.delete().from(d).where(d.id.eq('NADA')).commit();
+}
+
+function selectData() {
+  return db.select().from(d).commit();
+}
+
+insertData().then(function() {
+  return updateData();
+}).then(function() {
+  return deleteData() {
+}).then(function() {
+  return selectData() {
+}).then(function(rows) {
+  // Expected returns:
+  // [{'id': 'HR', 'name': 'Human Resources', 'desc': 'Rock stars'},
+  //  {'id': 'ENG', 'name': 'Engineering', 'desc': 'Hard workers'},
+  //  {'id': 'L', 'name': 'Leadership', 'desc': 'Master minds'}]
+  console.log(rows);
+});
+
+  </pre>
+</section>
 
     <section id="conformance"></section>
 
-    <section>
-      <h2>Constructs</h2>
-      <section>
-        <h2>Database</h2>
-        <div data-include="contents/constructs/database.html"></div>
-      </section>
-    </section>
+<section>
+  <h2>Constructs</h2>
+<section>
+  <h2>Database</h2>
+  <p>A database's origin is the same as the origin of the document or worker.
+  Each origin has an associated set of database.</p>
 
-    <section>
-      <h2>Schema</h2>
-      <div data-include="contents/schema.html"></div>
-      <section>
-        <h2>Types</h2>
-        <div data-include="contents/schema/types.html"></div>
-      </section>
-      <p>The following example demonstrates how to create a database schema.</p>
-      <pre class="example highlight" data-include="examples/schema/create-by-json.js" data-include-format="text"></pre>
-      <pre class="example highlight" data-include="examples/schema/create-by-api.js" data-include-format="text"></pre>
-    </section>
-  </body>
+  <p class="note">The database origin is not affected by changes to
+  <code>document.domain</code>.</p>
+
+  <p>Each origin has an associated set of databases. A database comprises one
+  or more tables which hold the data stored in the database.</p>
+
+  <p>Every database has a <em>name</em> which identifies it within a specific
+  origin. The name can be any string value, except empty string, and stays
+  constant for the lifetime of the database.</p>
+
+  <p>Each database also has a version number for reference only. When a
+  database is first created, its version is 0.</p>
+
+  <p class="note">Implementations must support all names. If an implementation
+  uses a storage mechanism which can't handle arbitrary database names, the
+  implementation must use an escaping mechanism or something similar to map
+  the provided name to a name that it can handle.</p>
+
+  <p>Databases has a <em>delete pending</em> flag which is used during
+  deletion. When a database is requested to be deleted the flag is set to true
+  and all attempts at opening the database are stalled until database is
+  deleted.</p>
+
+  <p>The act of opening a database creates a <em>connection</em>. There may be
+  multiple connections to a given database at any given time. Each connection
+  has a <em>closePending</em> flag which initially is set to false.</p>
+
+  <p>When a connection is initially created it is in opened state. The
+  connection can be closed through several means. If the connection is garbage
+  collected or execution context where the connection is created is destroyed
+  (for example due to the user navigating away from that page), the connection
+  is closed. The connection can also be closed explicitly using the steps for
+  closing a database connection. When the connection is closed the
+  closePending flag is always set to true if it hasn't already been. All
+  uncommitted transactions will be cancelled if their associated connections
+  are marked close pending.</p>
+
+  <p>Every database contains a <em>schema</em> that defines data types,
+  referential integrity enforcement, and indices for the stored data.</p>
+
+  <p>Users can create observers associated with a given database. Each
+  observer consists a select query. When the results of that select query
+  change, the observer will be triggered.</p>
+
+  <p>The <code>IDatabaseConnection</code> interface represents a connection to
+  a database.</p>
+</section>
+
+<section>
+  <h2>Schema</h2>
+  <p>The concept of relational database is to have a predefined layout of the
+  data structures persisted, which is referred as schema throughout this
+  document. A database schema consists of a list of table schemas. Each table
+  schema has a list of column definitions, constraints, and index
+  specifications for that table.</p>
+
+<section>
+  <h2>Types</h2>
+  <p>All columns must be associated with a given type. Valid types of a column
+  are defined in the following enum:</p>
+  <dl title='enum ColumnType' class='idl'>
+    <dt>ArrayBuffer</dt>
+    <dd>Represents the <code>ArrayBuffer</code> type in JavaScript</dd>
+    <dt>Boolean</dt>
+    <dd>Represents the <code>boolean</code> type in JavaScript</dd>
+    <dt>Date</dt>
+    <dd>Represents the <code>Date</code> type in JavaScript</dd>
+    <dt>Number</dt>
+    <dd>Represents the <code>Number</code> type in JavaScript</dd>
+    <dt>String</dt>
+    <dd>Represents the <code>string</code> type in JavaScript</dd>
+    <dt>Object</dt>
+    <dd>Represents the <code>Object</code> type in JavaScript</dd>
+  </dl>
+  <p><code>ArrayBuffer</code> and <code>Object</code> type are not
+  <em>indexable</em>, which means columns of these types could not be used to
+  create indices and predicates.</p>
+</section>
+
+
+  <p>The following example demonstrates how to create a database schema.</p>
+  <pre class="example highlight">
+// Create a database using predefined JSON schema.
+var hrSchema = {
+  'name': 'hr',
+  'version': 2,
+  'table': [
+    {
+      'name': 'Dept',
+      'column': [
+        {'name': 'id', 'type': 'String'},
+        {'name': 'name', 'type': 'String'}
+      ],
+      'constraint': {
+        'primaryKey': [{'name': 'id'}],
+        'notNull': ['name']
+      }
+    },
+    {
+      'name': 'Emp',
+      'column': [
+        {'name': 'id', 'type': 'Number'},
+        {'name': 'name', 'type': 'String'},
+        {'name': 'deptId', 'type': 'String'},
+        {'name': 'title', 'type': 'String'}
+      ],
+      'constraint': {
+        'primaryKey': [{'name': 'id', 'order': 'desc'}],
+        'foreignKey': [{
+          'name': 'fk_DeptId',
+          'local': 'deptId',
+          'remote': 'Dept.id',
+          'action': 'restrict',
+          'timing': 'immediate'
+        }],
+        'unique': ['name'],
+        'notNull': ['id', 'name', 'deptId']
+      }
+    }
+  ]
+};
+
+db.create(hrSchema).commit().then(function(instance) {
+  // Instance is the connected instance.
+}, function(e) {
+  // e is the DOMError if any, e.g. AlreadyExists.
+});
+
+  </pre>
+  <pre class="example highlight">
+var tx = db.createTransaction('readwrite');
+var q1 = db.createTable('Dept')
+           .column(/* column_name */ 'id',
+                   /* column_type */ 'String',
+                   /* not_null */ true)
+           .column('name', 'String', true)
+           .primaryKey([{'name': 'id'}]);
+tx.append(q1);
+
+var q2 = db.createTable('Emp')
+           .column('id', 'Number', true)
+           .column('name', 'String', true)
+           .column('deptId', 'String', true)
+           .column('title', 'String')
+           .primaryKey([{'name': 'id', 'order': 'asc'}])
+           .unique(['name'])
+           .index('idx_Desc', [{'name': 'desc', 'order': 'asc'}])
+           .foreignKey({
+             'name': 'fk_DeptId',
+             'local': 'deptId',
+             'remote': 'Dept.id',
+             'action': 'restrict',
+             'timing': 'immediate'
+           });
+q2.attachTo(tx);
+
+tx.commit().then(...);
+
+  </pre>
+</section>
+
+</section>
+
+
+ </body>
 </html>
