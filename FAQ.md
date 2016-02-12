@@ -13,8 +13,8 @@ The goal is to provide a relational DB for web apps, which
   code for apps needing relational data
 * Removes the need to shoehorn relational data model on top of object data model
   (i.e. IndexedDB)
-* Removes the need to implement domain-specific query layer or to use big
-  libraries (e.g. Lovefield)
+* Removes the need to implement domain-specific query layer or to use third-party
+  libraries (e.g. [Lovefield](https://github.com/google/lovefield))
 
 
 ## Q: Why not just use existing IndexedDB? You can ...
