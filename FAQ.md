@@ -24,6 +24,9 @@ TL;DR:
 * IndexedDB does not have a relational query engine.
 * IndexedDB is the only viable persistent storage on web platform, but it's not
   suitable for relational data manipulation.
+* A relational query/manipulation API can be useful even when persistence is not a
+  desired (and therefore IndexedDB can't help). Surprisingly this use case has shown
+  to be fairly popular.
 
 ### Relational Query Engine
 
@@ -41,7 +44,8 @@ example:
 
 Readability, ease of change, ease of maintenance, these are all valuable to
 developers. Writing such a simple app using so many lines with IndexedDB is
-simply wrong.
+simply wrong. A generic purpose relational data query/manipulation API would
+relieve developers from re-inventing the wheel, over and over again.
 
 #### Problems for Implementing a Generic Relational Query Engine
 
@@ -69,9 +73,9 @@ object store that is best working with NoSQL technology, not relational DB.
 I believe so (see what Lovefield can do), though I don't really care.
 [Performance benchmark demo](http://arthurhsu.github.io/rdb/demo/demo.html)
 implements a simple but super common usage of relational database:
-a master-slave view. What it does is to join three tables and show the details
-result. The key number here is when we click a grid row, how long it takes to
-generate the details data.
+a master-slave view. It joins three tables and shows the details result.
+The key number here is the time it takes to generate the details data,
+when the user clicks on a grid row. 
 
 On my Macbook Pro, IndexedDB is about 70~200ms, WebSQL is 5ms~9ms, and
 Lovefield is 5ms~15ms. Remember this is just for a single row and it's order of
@@ -85,7 +89,7 @@ that in JS.
 
 Because it's simply non-sense.
 
-Many browsers (Chrome, Safari, Firefox for sure) already carry relational
+Many browsers (Chrome, Safari, Firefox for sure) already carry a relational
 database implementation in C++ without exposing it. Building/fixing more
 low-level blocks to improve IndexedDB so that relational usage can be
 shoehorned on top of it, when there's already something in the C++ layer,
@@ -97,7 +101,7 @@ does not need also makes no sense.
 IndexedDB and relational DB are different from algorithms. Relational DB is also
 very self-contained and well defined. It should be viewed as a separate
 component. Many other platforms (noteably iOS and Android) already take this
-approach and provide dedicate APIs for developers to do so.
+approach and provide dedicated APIs for developers.
 
 
 ## Q: RDB can be vulnerable for cross-browser bugs, just like the dead WebSQL.
@@ -156,7 +160,7 @@ expect most of the efforts will be quite boiler-plate.
 If any vendor want to go full-fledge (i.e. create a real database from scratch),
 then yes that would be a significant investment decision to make. Even so there
 are quite a few existing C++ class libraries to start with, so it's not from
-zero. At least one don't really need to write B-Tree from scratch as I did for
+zero. At least one doesn't really need to write B+-Tree from scratch as I did for
 Lovefield.
 
 
