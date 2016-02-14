@@ -1,0 +1,15 @@
+<section>
+  <h2>Orders</h2>
+  <p>There are two sorting orders defined in the following enum:</p>
+  <dl title="enum Order" class="idl">
+    <dt>asc</dt>
+    <dd>Represents ascending sort order (Default)</dd>
+    <dt>desc</dt>
+    <dd>Represents descending sort order</dd>
+  </dl>
+  <p>Ascending sort order is the natural sort order, which means that if two
+  fields are ordered as <code>a, b</code>, then <code>(a <= b) === true</code>.
+  <code>ArrayBuffer</code> and <code>Object</code> types are not
+  <em>indexable</em>, which implied they were not <em>comparable</em> and thus
+  the orders have no effect for these two types.</p>
+</section>

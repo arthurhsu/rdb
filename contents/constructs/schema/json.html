@@ -1,0 +1,69 @@
+<section>
+  <h2>Schema Definition JSON Format</h2>
+  <p>Database schema can be defined using a single JSON object. The following
+  example demonstrates how to create a database using such JSON object.</p>
+  <pre class="example highlight">
+    {{include: create-by-json.js}}
+  </pre>
+  <p>The schema JSON object has three fields:</p>
+  <table class="parameters">
+    <tr><th>Field</th><th>Description</th></tr>
+    <tr><td>name</td><td>Name of the database</td></tr>
+    <tr><td>version</td>
+      <td>(Optional) Version of the database, for reference only</td>
+    </tr>
+    <tr><td>table</td><td>Array of table schemas</td></tr>
+  </table>
+
+  <p>The table schema is also a JSON object with the following fields:</p>
+  <table class="parameters">
+    <tr><th>Field</th><th>Description</th></tr>
+    <tr><td>name</td><td>Name of the table</td></tr>
+    <tr><td>column</td><td>Array of column definitions</td></tr>
+    <tr><td>constraint</td><td>(Optional) Constraint definitions</td></tr>
+    <tr><td>index</td><td>(Optional) Array of index definitions</td></tr>
+  </table>
+
+  <p>A column definition is a JSON object with two fields:</p>
+  <table class="parameters">
+    <tr><th>Field</th><th>Description</th></tr>
+    <tr><td>name</td><td>Name of the column</td></tr>
+    <tr><td>type</td><td>Type of the column</td></tr>
+  </table>
+
+  <p>An index definition is a JSON object with the following fields:</p>
+  <table class="parameters">
+    <tr><th>Field</th><th>Description</th></tr>
+    <tr><td>name</td><td>Name of the index</td></tr>
+    <tr><td>column</td><td>Array of indexed column definitions</td></tr>
+  </table>
+
+  <p>An indexed column definition is a JSON object with two fields:</p>
+  <table class="parameters">
+    <tr><th>Field</th><th>Description</th></tr>
+    <tr><td>name</td><td>Name of the indexed column</td></tr>
+    <tr><td>order</td><td>Sorting order of the column</td></tr>
+  </table>
+  <p>The name specified in the indexed column must exist in the same table
+  defining this index, otherwise an <code>NotFoundException</code> will be
+  thrown. If the specified column is not indexable, an
+  <code>NotSupportedException</code> will be thrown.</p>
+
+  <p>A constraint JSON object contains following fields, and all fields are
+  optional:</p>
+  <table class="parameters">
+    <tr><th>Field</th><th>Description</th></tr>
+    <tr><td>primaryKey</td><td>(Optional) Primary key definition</td></tr>
+    <tr><td>foreignKey</td><td>(Optional) Foreign key definition</td></tr>
+    <tr><td>unique</td>
+        <td>(Optional) Array of unique constraint definitions</td>
+    </tr>
+    <tr><td>notNull</td>
+        <td>(Optional) Array of column names that are not null</td>
+    </tr>
+  </table>
+  <p>The name specified in the notNull array must exist in the same table
+  defining this constraint, otherwise an <code>NotFoundException</code> will
+  be thrown. By default all columns accept null as valid value, unless the
+  column is constrainted with notNull.</p>
+</section>

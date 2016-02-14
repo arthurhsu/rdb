@@ -10,8 +10,8 @@
   or more tables which hold the data stored in the database.</p>
 
   <p>Every database has a <em>name</em> which identifies it within a specific
-  origin. The name can be any string value, except empty string, and stays
-  constant for the lifetime of the database.</p>
+  origin. The name must satisfy the Naming Rules, and stay constant for the
+  lifetime of the database.</p>
 
   <p>Each database also has a version number for reference only. When a
   database is first created, its version is 0.</p>
@@ -39,6 +39,13 @@
   closePending flag is always set to true if it hasn't already been. All
   uncommitted transactions will be cancelled if their associated connections
   are marked close pending.</p>
+
+  <p>Every database contains zero or more <em>tables</em> to store data. A
+  table contains zero or more <em>rows</em>. A row is also known as a record or
+  a tuple, which represents a single structured data item in a table. A row
+  consists zero or more <em>columns</em>, each with predefined data types.
+  A database can also contain <em>indices</em>. An index is a data structure
+  that enables fast lookup and/or enforces data integrity.</p>
 
   <p>Every database contains a <em>schema</em> that defines data types,
   referential integrity enforcement, and indices for the stored data.</p>

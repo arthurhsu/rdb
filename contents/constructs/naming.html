@@ -1,0 +1,13 @@
+<section>
+  <h2>Naming Rules</h2>
+  <p>All names used in the relational database are case sensitive, and they
+  must satisfy following rules:</p>
+  <ul>
+    <li>A name must pass the following check:
+        <code>/^[A-Za-z_][A-Za-z0-9_]*$/.test(name)</code>
+    </li>
+    <li>A name must not conflict with fields defined in
+        <code>Object.prototype</code>
+    </li>
+  </ul>
+</section>

@@ -1,8 +1,8 @@
 <section>
   <h2>Types</h2>
-  <p>All columns must be associated with a given type. Valid types of a column
-  are defined in the following enum:</p>
-  <dl title='enum ColumnType' class='idl'>
+  <p>All columns in a table schema must be associated with a given type. Valid
+  types of a column are defined in the following enum:</p>
+  <dl title="enum ColumnType" class="idl">
     <dt>ArrayBuffer</dt>
     <dd>Represents the <code>ArrayBuffer</code> type in JavaScript</dd>
     <dt>Boolean</dt>
@@ -16,7 +16,7 @@
     <dt>Object</dt>
     <dd>Represents the <code>Object</code> type in JavaScript</dd>
   </dl>
-  <p><code>ArrayBuffer</code> and <code>Object</code> type are not
+  <p><code>ArrayBuffer</code> and <code>Object</code> types are not
   <em>indexable</em>, which means columns of these types could not be used to
   create indices and predicates (except the <code>isNull()</code> and
   <code>isNotNull()</code> predicates).</p>

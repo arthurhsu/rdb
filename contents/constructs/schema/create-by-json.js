@@ -31,9 +31,18 @@ var hrSchema = {
           'action': 'restrict',
           'timing': 'immediate'
         }],
-        'unique': ['name'],
+        'unique': [{
+          'name': 'uq_Name',
+          'column': ['name']
+        }],
         'notNull': ['id', 'name', 'deptId']
-      }
+      },
+      'index': [
+        {
+          'name': 'idx_Title',
+          'column': [{'name': 'title', 'order': 'asc'}]
+        }
+      ]
     }
   ]
 };
