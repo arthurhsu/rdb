@@ -33,7 +33,7 @@ var hrSchema = {
         }],
         'unique': [{
           'name': 'uq_Name',
-          'column': ['name']
+          'column': [{'name': 'name', 'order': 'desc'}]
         }],
         'notNull': ['id', 'name', 'deptId']
       },

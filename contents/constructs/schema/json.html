@@ -15,55 +15,147 @@
     <tr><td>table</td><td>Array of table schemas</td></tr>
   </table>
 
-  <p>The table schema is also a JSON object with the following fields:</p>
-  <table class="parameters">
-    <tr><th>Field</th><th>Description</th></tr>
-    <tr><td>name</td><td>Name of the table</td></tr>
-    <tr><td>column</td><td>Array of column definitions</td></tr>
-    <tr><td>constraint</td><td>(Optional) Constraint definitions</td></tr>
-    <tr><td>index</td><td>(Optional) Array of index definitions</td></tr>
-  </table>
+  <section>
+    <h2>Table Schema</h2>
+    <p>The table schema is also a JSON object with the following fields:</p>
+    <table class="parameters">
+      <tr><th>Field</th><th>Description</th></tr>
+      <tr><td>name</td><td>Name of the table</td></tr>
+      <tr><td>column</td><td>Array of column definitions</td></tr>
+      <tr><td>constraint</td><td>(Optional) Constraint definitions</td></tr>
+      <tr><td>index</td><td>(Optional) Array of index definitions</td></tr>
+    </table>
 
-  <p>A column definition is a JSON object with two fields:</p>
-  <table class="parameters">
-    <tr><th>Field</th><th>Description</th></tr>
-    <tr><td>name</td><td>Name of the column</td></tr>
-    <tr><td>type</td><td>Type of the column</td></tr>
-  </table>
+    <p>A column definition is a JSON object with two fields:</p>
+    <table class="parameters">
+      <tr><th>Field</th><th>Description</th></tr>
+      <tr><td>name</td><td>Name of the column</td></tr>
+      <tr><td>type</td><td>Type of the column</td></tr>
+    </table>
+  </section>
 
-  <p>An index definition is a JSON object with the following fields:</p>
-  <table class="parameters">
-    <tr><th>Field</th><th>Description</th></tr>
-    <tr><td>name</td><td>Name of the index</td></tr>
-    <tr><td>column</td><td>Array of indexed column definitions</td></tr>
-  </table>
+  <section>
+    <h2>Index Definition</h2>
+    <p>An index definition is a JSON object with the following fields:</p>
+    <table class="parameters">
+      <tr><th>Field</th><th>Description</th></tr>
+      <tr><td>name</td><td>Name of the index</td></tr>
+      <tr><td>column</td><td>Array of indexed column definitions</td></tr>
+      <tr><td>type</td><td>Type of index</td></tr>
+    </table>
+    <p>Index type allows user to hint the implementation what this index is
+    best to be used for. The implementation may or may not construct the index
+    using corresponding algorithm. The index type is an enum:</p>
+    <dl title="enum IndexType" class="idl">
+      <dt>btree</dt><dd>B+ Tree index</dd>
+      <dt>hash</dt><dd>Hash index</dd>
+    </dl>
 
-  <p>An indexed column definition is a JSON object with two fields:</p>
-  <table class="parameters">
-    <tr><th>Field</th><th>Description</th></tr>
-    <tr><td>name</td><td>Name of the indexed column</td></tr>
-    <tr><td>order</td><td>Sorting order of the column</td></tr>
-  </table>
-  <p>The name specified in the indexed column must exist in the same table
-  defining this index, otherwise an <code>NotFoundException</code> will be
-  thrown. If the specified column is not indexable, an
-  <code>NotSupportedException</code> will be thrown.</p>
+    <p>An indexed column definition is a JSON object with two fields:</p>
+    <table class="parameters">
+      <tr><th>Field</th><th>Description</th></tr>
+      <tr><td>name</td><td>Name of the indexed column</td></tr>
+      <tr><td>order</td><td>Sorting order of the column</td></tr>
+    </table>
+    <p>The name specified in the indexed column must exist in the same table
+    defining this index, otherwise an <code>InvalidSchemaError</code> will be
+    thrown. If the specified column is not indexable, an
+    <code>InvalidSchemaError</code> will be thrown.</p>
+    <p>If an index definition overlapped with implicit indices created by
+    constraints (for example, create an index on the same column of the primary
+    key), it will be up to the implementation to determine whether or not to
+    create this index.</p>
 
-  <p>A constraint JSON object contains following fields, and all fields are
-  optional:</p>
-  <table class="parameters">
-    <tr><th>Field</th><th>Description</th></tr>
-    <tr><td>primaryKey</td><td>(Optional) Primary key definition</td></tr>
-    <tr><td>foreignKey</td><td>(Optional) Foreign key definition</td></tr>
-    <tr><td>unique</td>
-        <td>(Optional) Array of unique constraint definitions</td>
-    </tr>
-    <tr><td>notNull</td>
-        <td>(Optional) Array of column names that are not null</td>
-    </tr>
-  </table>
-  <p>The name specified in the notNull array must exist in the same table
-  defining this constraint, otherwise an <code>NotFoundException</code> will
-  be thrown. By default all columns accept null as valid value, unless the
-  column is constrainted with notNull.</p>
+    <p>An index can be keyed by one or more columns. All indices allow
+    duplicate key values to exist. If unique indices are needed, please use
+    the unique constraint to define them.</p>
+  </section>
+
+  <section>
+    <h2>Constraint Definition</h2>
+    <p>A constraint JSON object contains following fields, and all fields are
+    optional:</p>
+    <table class="parameters">
+      <tr><th>Field</th><th>Description</th></tr>
+      <tr><td>primaryKey</td><td>(Optional) Primary key definition</td></tr>
+      <tr><td>foreignKey</td><td>(Optional) Foreign key definition</td></tr>
+      <tr><td>unique</td>
+          <td>(Optional) Array of unique constraint definitions</td>
+      </tr>
+      <tr><td>notNull</td>
+          <td>(Optional) Array of column names that are not null</td>
+      </tr>
+    </table>
+    <p>The name specified in the notNull array must exist in the same table
+    defining this constraint, otherwise an <code>InvalidSchemaError</code>
+    will be thrown. By default all columns accept null as valid value, unless
+    the column is constrainted with notNull.</p>
+  </section>
+
+  <section>
+    <h2>Unique Constraint Definition</h2>
+    <p>Unique constraint is a specialized index that disallows duplicated keys.
+    Its definition format is the same as index definition. If two or more
+    columns are defined as keys, the combination of the columns forms the
+    uniqueness.</p>
+  </section>
+
+  <section>
+    <h2>Primary Key Definition</h2>
+    <p>Each table can only have one primary key definition. The primary key
+    will implicitly create an unique constraint and enforce it. A primary key
+    definition can be an object or an array of indexed column definitions. When
+    it is an object, it can have following fields:</p>
+    <table class="parameters">
+      <tr><th>Field</th><th>Description</th></tr>
+      <tr><td>name</td><td>Column name of the primary key</td></tr>
+      <tr><td>order</td><td>(Optional) Sorting order, default to asc</td></tr>
+      <tr><td>autoIncrement</td>
+          <td>(Optional) <code>true</code> if this is auto-increment</td>
+      </tr>
+    </table>
+    <p>When the autoIncrement field is specified, the specified column must be
+    of type <code>Number</code>, and the order field must not be
+    <code>desc</code>, otherwise an <code>InvalidSchemaError</code> will be
+    thrown.</p>
+  </section>
+
+  <section>
+    <h2>Foreign Key Definition</h2>
+    <p>The foreign key definition is a JSON object with following fields:</p>
+    <table class="parameters">
+      <tr><th>Field</th><th>Description</th></tr>
+      <tr><td>name</td><td>Name of the foreign key</td></tr>
+      <tr><td>local</td><td>Referring column name</td></tr>
+      <tr><td>remote</td><td>Referred column canonical name</td></tr>
+      <tr>
+        <td>action</td>
+        <td>(Optional) Foreign key action, default: <code>restrict</code></td>
+      </tr>
+      <tr>
+        <td>timing</td>
+        <td>(Optional) Foreign key timing, default: <code>immediate</code></td>
+      </tr>
+    </table>
+    <p>Foreign key actions are enum values as defined in the following:</p>
+    <dl title="enum ForeignKeyAction" class="idl">
+      <dt>restrict</dt>
+      <dd>Any constraint violation results in cancelling the operation that
+      violated the constraint.</dd>
+      <dt>cascade</dt>
+      <dd>Constraint violation results in modifying related tables as necessary
+      to maintain data integrity.</dd>
+    </dl>
+    <p>Foreign key timings are enum values as defined below:</p>
+    <dl title="enum ForeignKeyTiming" class="idl">
+      <dt>deferrable</dt>
+      <dd>The constraint is enforced right before a transaction is committed.
+      The constraint can be violated by individual queries during the lifetime
+      of the enclosing transaction, without any error being thrown.</dd>
+      <dt>immediate</dt>
+      <dd>The constraint is enforced during execution of each individual query.
+      </dd>
+    </dl>
+  </section>
+
 </section>
