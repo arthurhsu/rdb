@@ -47,8 +47,12 @@
   A database can also contain <em>indices</em>. An index is a data structure
   that enables fast lookup and/or enforces data integrity.</p>
 
-  <p>Every database contains a <em>schema</em> that defines data types,
-  referential integrity enforcement, and indices for the stored data.</p>
+  <p>Every database has a predefined layout of the data structures persisted,
+  which is referred as <em>schema</em> throughout this document. A database
+  schema consists of a list of table schemas. Each table schema describes the
+  structures of the rows stored within it, which is also referred as 
+  <em>column definitions</em>. A table schema also describes
+  <em>constraints</em> and <em>index</em> structures for that table.</p>
 
   <p>Users can create observers associated with a given database. Each
   observer consists a select query. When the results of that select query
