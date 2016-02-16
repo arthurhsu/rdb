@@ -1,0 +1,38 @@
+<section>
+  <h2>Schema Query</h2>
+  <p>Schema is created using schema queries. Schema queries can be used to
+  create or modify database schema. Schema queries are run in the context of
+  <em>transaction</em> and can be executed any time during the life time of the
+  database. The schema query starts with the <code>ISchemaQueryProvider</code>:
+  </p>
+  <pre class="idl">
+    interface ISchemaQueryProvider {
+      IExecutionContext exportSchema();
+      IExecutionContext create(Object schema);
+      IDatabaseSchema schema();
+      ITableBuilder createTable();
+      ITableChanger alterTable();
+    };
+  </pre>
+  <dl class="idl">
+    <dt><code>IExecutionContext exportSchema();</code></dt>
+    <dd>Export schema object. This is run in the context of transaction.</dd>
+    <dt><code>IExecutionContext create(Object schema);</code></dt>
+    <dd>Create database schema from provided schema object. The schema object
+    must conform to the format defined in Schema Definition JSON Format.
+    Any error in the schema will result in transaction failure with
+    <code>InvalidSchemaError</code>.</dd>
+    <dt><code>IDatabaseSchema schema();</code></dt>
+    <dd>Returns an <code>IDatabaseSchema</code> object for crafting data
+    manipulation queries.</dd>
+    <dt><code>ITableBuilder createTable();</code></dt>
+    <dd>Returns a table builder for creating a new table.</dd>
+    <dt><code>ITableChanger alterTable(string tableName);</code></dt>
+    <dd>Returns a table builder for altering an existing table.</dd>
+  </dl>
+
+  <p>The following example demonstrates how to create a database schema.</p>
+    <pre class="example highlight">
+    {{include: create-by-api.js}}
+  </pre>
+</section>
