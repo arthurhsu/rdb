@@ -1,23 +1,39 @@
 <section>
   <h2>Schema Definition JSON Format</h2>
-  <p>Database schema can be defined using a single JSON object. The following
-  example demonstrates how to create a database using such JSON object.</p>
+  <p>Database schema can be defined using a single dictionary object. The
+  following example demonstrates how to create a database using such object.</p>
   <pre class="example highlight">
     {{include: create-by-json.js}}
   </pre>
-  <p>The schema JSON object has three fields:</p>
+
+  <p>The following WebIDL defines <code>Schema</code> dictionary type.
+  <pre class="idl">
+    dictionary Schema {
+      DOMString name;
+      unsigned short version;
+      TableSpec[] table;
+    };
+  </pre>
   <table class="parameters">
     <tr><th>Field</th><th>Description</th></tr>
     <tr><td>name</td><td>Name of the database</td></tr>
     <tr><td>version</td>
       <td>(Optional) Version of the database, for reference only</td>
     </tr>
-    <tr><td>table</td><td>Array of table schemas</td></tr>
+    <tr><td>table</td><td>Array of table specifications</td></tr>
   </table>
 
   <section>
-    <h2>Table Schema</h2>
-    <p>The table schema is also a JSON object with the following fields:</p>
+    <h2>Table Specifications</h2>
+    <p>The following WebIDL defines table specification dictionary type.</p>
+    <pre class="idl">
+      dictionary TableSpec {
+        DOMString name;
+        ColumnSpec[] column;
+        ConstraintSpec? constraint;
+        IndexSpec[]? index;
+      };
+    </pre>
     <table class="parameters">
       <tr><th>Field</th><th>Description</th></tr>
       <tr><td>name</td><td>Name of the table</td></tr>
@@ -26,22 +42,43 @@
       <tr><td>index</td><td>(Optional) Array of index definitions</td></tr>
     </table>
 
-    <p>A column definition is a JSON object with two fields:</p>
+    <p>The following WebIDL defines column definition dictionary type:</p>
+    <pre class="idl">
+      dictionary ColumnSpec {
+        DOMString name;
+        ColumnType type;
+        boolean? notNull;
+      };
+    </pre>
     <table class="parameters">
       <tr><th>Field</th><th>Description</th></tr>
       <tr><td>name</td><td>Name of the column</td></tr>
       <tr><td>type</td><td>Type of the column</td></tr>
+      <tr><td>notNull</td><td>(Optional) Not null</td></tr>
     </table>
   </section>
 
   <section>
     <h2>Index Definition</h2>
-    <p>An index definition is a JSON object with the following fields:</p>
+    <p>The following WebIDL defines index specification dictionary type:</p>
+    <pre class="idl">
+      dictionary IndexSpec {
+        DOMString name;
+        (DOMString or DOMString[] or IndexedColumnSpec[]) column;
+        IndexType type = "btree";
+        boolean unique = false;
+      };
+    </pre>
     <table class="parameters">
       <tr><th>Field</th><th>Description</th></tr>
       <tr><td>name</td><td>Name of the index</td></tr>
-      <tr><td>column</td><td>Array of indexed column definitions</td></tr>
-      <tr><td>type</td><td>Type of index</td></tr>
+      <tr><td>column</td><td>Indexed column definitions. If provided as
+          <code>DOMString</code> or <code>DOMString[]</code>, default sort order
+          of <code>asc</code> is used.</td></tr>
+      <tr><td>type</td>
+          <td>(Optional) Type of index, default to <code>btree</code></td></tr>
+      <tr><td>unique</td><td>(Optional) Keys in index shall be unique or not,
+          default to <code>false</code>.</td></tr>
     </table>
     <p>Index type allows user to hint the implementation what this index is
     best to be used for. The implementation may or may not construct the index
@@ -51,11 +88,23 @@
       <dt>hash</dt><dd>Hash index</dd>
     </dl>
 
-    <p>An indexed column definition is a JSON object with two fields:</p>
+    <p>An index can be keyed by one or more columns unless the
+    <code>unique</code> is set to true. In that case, an
+    <code>ConstraintError</code> will be thrown if user tried to insert/update
+    a row with duplicated key.</p>
+
+    <p>The WebIDL below defines indexed column specification.</p>
+    <pre class="idl">
+      dictionary IndexedColumnSpec {
+        DOMString name;
+        Order order = "asc";
+      };
+    </pre>
     <table class="parameters">
       <tr><th>Field</th><th>Description</th></tr>
       <tr><td>name</td><td>Name of the indexed column</td></tr>
-      <tr><td>order</td><td>Sorting order of the column</td></tr>
+      <tr><td>order</td><td>(Optional) Sorting order of the column, default to
+          <code>asc</code></td></tr>
     </table>
     <p>The name specified in the indexed column must exist in the same table
     defining this index, otherwise an <code>InvalidSchemaError</code> will be
@@ -65,64 +114,77 @@
     constraints (for example, create an index on the same column of the primary
     key), it will be up to the implementation to determine whether or not to
     create this index.</p>
-
-    <p>An index can be keyed by one or more columns. All indices allow
-    duplicate key values to exist. If unique indices are needed, please use
-    the unique constraint to define them.</p>
   </section>
 
   <section>
-    <h2>Constraint Definition</h2>
-    <p>A constraint JSON object contains following fields, and all fields are
-    optional:</p>
+    <h2>Constraint Specification</h2>
+    <p>The following WebIDL defines constraint specification.</p>
+    <pre class="idl">
+      dictionary ConstraintSpec {
+        (DOMString or DOMString[] or IndexedColumnSpec[] or PrimaryKeySpec)? primaryKey;
+        ForeignKeySpec? foreignKey;
+        (DOMString or DOMString[] or IndexedColumnSpec[])? unique;
+        (DOMString or DOMString[])? notNull;
+      };
+    </pre>
     <table class="parameters">
       <tr><th>Field</th><th>Description</th></tr>
-      <tr><td>primaryKey</td><td>(Optional) Primary key definition</td></tr>
+      <tr><td>primaryKey</td><td>(Optional) Primary key specification</td></tr>
       <tr><td>foreignKey</td><td>(Optional) Foreign key definition</td></tr>
-      <tr><td>unique</td>
-          <td>(Optional) Array of unique constraint definitions</td>
-      </tr>
-      <tr><td>notNull</td>
-          <td>(Optional) Array of column names that are not null</td>
-      </tr>
+      <tr><td>unique</td><td>(Optional) Unique index definitions</td></tr>
+      <tr><td>notNull</td><td>(Optional) Column(s) that are not null</td></tr>
     </table>
-    <p>The name specified in the notNull array must exist in the same table
+    <p>The name(s) specified in the notNull must exist in the same table
     defining this constraint, otherwise an <code>InvalidSchemaError</code>
     will be thrown. By default all columns accept null as valid value, unless
     the column is constrainted with notNull.</p>
   </section>
 
   <section>
-    <h2>Unique Constraint Definition</h2>
-    <p>Unique constraint is a specialized index that disallows duplicated keys.
+    <h2>Unique Index Definition</h2>
+    <p>Unique index is a specialized index that disallows duplicated keys.
     Its definition format is the same as index definition. If two or more
     columns are defined as keys, the combination of the columns forms the
     uniqueness.</p>
   </section>
 
   <section>
-    <h2>Primary Key Definition</h2>
+    <h2>Primary Key Specification</h2>
     <p>Each table can only have one primary key definition. The primary key
     will implicitly create an unique constraint and enforce it. A primary key
-    definition can be an object or an array of indexed column definitions. When
-    it is an object, it can have following fields:</p>
+    can be specified using normal index specifications, or use the following
+    WebIDL.</p>
+    <pre class="idl">
+      dictionary PrimaryKeySpec {
+        DOMString name;
+        boolean autoIncrement;
+      };
+    </pre>
     <table class="parameters">
       <tr><th>Field</th><th>Description</th></tr>
       <tr><td>name</td><td>Column name of the primary key</td></tr>
-      <tr><td>order</td><td>(Optional) Sorting order, default to asc</td></tr>
-      <tr><td>autoIncrement</td>
-          <td>(Optional) <code>true</code> if this is auto-increment</td>
+      <tr><td>autoIncrement</td><td>Create auto-increment key</td>
       </tr>
     </table>
     <p>When the autoIncrement field is specified, the specified column must be
-    of type <code>Number</code>, and the order field must not be
-    <code>desc</code>, otherwise an <code>InvalidSchemaError</code> will be
-    thrown.</p>
+    of type <code>Number</code>, otherwise an <code>InvalidSchemaError</code>
+    will be thrown. An auto-increment key will start from zero. When a new row
+    is inserted into the table, the key will increase by one and assigned to
+    that row regardless the original key value given to the row.</p>
   </section>
 
   <section>
-    <h2>Foreign Key Definition</h2>
-    <p>The foreign key definition is a JSON object with following fields:</p>
+    <h2>Foreign Key Specification</h2>
+    <p>The following WebIDL defines foreign key specification.</p>
+    <pre class="idl">
+      dictionary ForeignKeySpec {
+        DOMString name;
+        DOMString local;
+        DOMString remote;
+        ForeignKeyAction action = "restrict";
+        ForeignKeyTiming timing = "immediate";
+      };
+    </pre>
     <table class="parameters">
       <tr><th>Field</th><th>Description</th></tr>
       <tr><td>name</td><td>Name of the foreign key</td></tr>
