@@ -1,0 +1,57 @@
+<section>
+  <h2>Database</h2>
+  <p>The database is defined by the following WebIDL.</p>
+  <pre class="idl">
+    interface IRelationalDatabase {
+      Promise< IDatabaseConnection > open(DOMString name, OpenDatabaseOptions? opt);
+      Promise< void > drop(DOMString name);
+      readonly IDatabaseFunctionProvider fn;
+      IBindableValue bind(unsigned short index);
+    };
+  </pre>
+
+  <p>Open database options.</p>
+  <pre class="idl">
+    dictionary OpenDatabaseOptions {
+      storageType: RDBStorageType;
+    };
+  </pre>
+
+  <p>The relational database is part of <code>Navigator</code> as defined in
+  following WebIDL.</p>
+  <pre class="idl">
+    partial interface Navigator {
+      IRelationalDatabase db;
+    };
+  </pre>
+
+  The <code>RDBStorageType</code> is an enum:
+  <dl title="enum RDBStorageType" class="idl">
+    <dt>persistent</dt><dd>Data will be persisted in permanent storage</dd>
+    <dt>temporary</dt><dd>Data will be persisted in memory only</dd>
+  </dl>
+
+  <p>When <code>storageType</code> is set to <code>temporary</code>, the
+  relational database acts as in-memory cache of data and offers only the
+  relational query capability. The <code>storageType</code> is fixed for the
+  lifetime of returned database connection.</p>
+
+  <p>Members of <code>IRelationalDatabase</code> are described below.</p>
+  <dl class="idl">
+    <dt><code>Promise<IDatabaseConnection> open(DOMString name, OpenDatabaseOptions? opt)</code></dt>
+    <dd>Opens a database using provided name. If the database does not exist,
+    create a new database instance and returns connection to it. If the database
+    is marked delete pending, <code>BlockingError</code> will be thrown. If the
+    <code>OpenDatabaseOptions</code> is not specified, a <code>persistent</code>
+    database with the given name will be opened/created.</dd>
+    <dt><code>Promise<void> drop()</code></dt>
+    <dd>Deletes a database using provided name. This must follow the delete
+    database algorithm.</dd>
+    <dt><code>IDatabaseFunctionProvider fn</code></dt>
+    <dd>Provides a namespace for aggregation functions that can be used in
+    queries.</dd>
+    <dt><code>IBindableValue bind(unsigned short index);</code></dt>
+    <dd>Provides a bindable value that can be used to construct parameterized
+    queries.</dd>
+  </dl>
+</section>

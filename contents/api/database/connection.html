@@ -1,0 +1,11 @@
+<section>
+  <h2>Connection</h2>
+  <p>The following WebIDL defines a database connection.</p>
+  <pre class="idl">
+    interface IDatabaseConnection : IDatabaseObserver, ISchemaQueryProvider, IDataQueryProvider, IDatabaseSerialization {
+      readonly DOMString name;
+      ITransaction createTransaction(TransactionMode mode = "readonly");
+      Promise< void > close();
+    };
+  </pre>
+</section>

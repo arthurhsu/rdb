@@ -1,0 +1,10 @@
+<section>
+  <h2>Serialization</h2>
+  <p>The following WebIDL defines database serialization.</p>
+  <pre class="idl">
+    interface IDatabaseSerialization {
+      Promise< object > export();
+      Promise< void > import(object data);
+    };
+  </pre>
+</section>

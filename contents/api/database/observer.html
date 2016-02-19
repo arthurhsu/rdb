@@ -1,0 +1,9 @@
+<section>
+  <h2>Observers</h2>
+  <pre class="idl">
+    interface IDatabaseObserver {
+      DOMString observe(ISelectQuery query, function(object[]) callbackFn);
+      void unobserve(DOMString observerKey);
+    };
+  </pre>
+</section>

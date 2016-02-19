@@ -4,11 +4,15 @@
   specified error type.</p>
   <table class="parameters">
     <tr><th>Field</th><th>Description</th></tr>
+    <tr><td><code>BlockingError</code></td>
+        <td>Attempts to open a delete pending database.</td></tr>
     <tr><td><code>ConstraintError</code></td>
         <td>Constraints are violated.</td>
     </tr>
     <tr><td><code>InvalidSchemaError</code></td>
         <td>Provided schema is invalid.</td>
     </tr>
+    <tr><td><code>TransactionStateError</code></td>
+        <td>Attempts to commit or rollback a finished transaction.</td></tr>
   </table>
 </section>
