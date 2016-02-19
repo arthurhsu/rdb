@@ -31,6 +31,14 @@
     <dd>Returns a table builder for altering an existing table.</dd>
   </dl>
 
+  <pre class="idl">
+    interface IDatabaseSchema {
+      readonly attribute DOMString name;
+      readonly attribute unsigned short version;
+      object table(DOMString tableName);
+    };
+  </pre>
+
   <p>The following example demonstrates how to create a database schema.</p>
     <pre class="example highlight">
     {{include: create-by-api.js}}

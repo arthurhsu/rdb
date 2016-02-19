@@ -1,0 +1,30 @@
+<section>
+  <h2>Transaction</h2>
+  <p>Transaction is related to a journaled execution context, which is defined
+  by the WebIDL below.</p>
+  <pre class="idl">
+    typedef (void or object[]) TransactionResults;
+
+    interface IExecutionContext {
+      Promise< TransactionResults > commit();
+      Promise< void > rollback();
+    };
+  </pre>
+
+  <p>The following WebIDL defines explicit transaction.</p>
+  <pre class="idl">
+    interface ITransaction {
+      Promise< void > begin();
+      Promise< TransactionResults > attach(IQuery query);
+    };
+  </pre>
+
+  <p>All queries must inherit from this base query interface.</p>
+  <pre class="idl">
+    interface IQuery : IExecutionContext {
+      Promise< DOMString > explain();
+      IQuery bind(any... values);
+      DOMString toSql();
+    };
+  </pre>
+</section>

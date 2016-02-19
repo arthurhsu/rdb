@@ -5,7 +5,7 @@
     interface IRelationalDatabase {
       Promise< IDatabaseConnection > open(DOMString name, OpenDatabaseOptions? opt);
       Promise< void > drop(DOMString name);
-      readonly IDatabaseFunctionProvider fn;
+      readonly attribute IDatabaseFunctionProvider fn;
       IBindableValue bind(unsigned short index);
     };
   </pre>
@@ -13,7 +13,7 @@
   <p>Open database options.</p>
   <pre class="idl">
     dictionary OpenDatabaseOptions {
-      storageType: RDBStorageType;
+      RDBStorageType storageType;
     };
   </pre>
 
@@ -21,7 +21,7 @@
   following WebIDL.</p>
   <pre class="idl">
     partial interface Navigator {
-      IRelationalDatabase db;
+      readonly attribute IRelationalDatabase db;
     };
   </pre>
 
