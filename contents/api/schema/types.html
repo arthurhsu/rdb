@@ -2,18 +2,16 @@
   <h2>Types</h2>
   <p>All columns in a table schema must be associated with a given type. Valid
   types of a column are defined in <code>ColumnType</code></p>
-  <pre class="idl">
-    enum ColumnType {
-      "arraybuffer",
-      "boolean",
-      "date",
-      "number",
-      "string",
-      "object"
-    };
-  </pre>
+  <dl title="enum ColumnType" class="idl">
+    <dt>blob</dt><dd>JavaScript type <code>ArrayBuffer</code></dd>
+    <dt>boolean</dt><dd>JavaScript type <code>boolean</code></dd>
+    <dt>date</dt><dd>JavaScript type <code>Date</code></dd>
+    <dt>number</dt><dd>JavaScript type <code>number</code></dd>
+    <dt>string</dt><dd>JavaScript type <code>string</code></dd>
+    <dt>object</dt><dd>Generic JavaScript <code>Object</code></dd>
+  </dl>
 
-  <p><code>arraybuffer</code> and <code>object</code> types are not
+  <p><code>blob</code> and <code>object</code> types are not
   <em>indexable</em>, which means columns of these types could not be used to
   create indices and predicates (except the <code>isNull()</code> and
   <code>isNotNull()</code> predicates).</p>

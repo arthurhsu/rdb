@@ -6,21 +6,20 @@ var hrSchema = {
     {
       'name': 'Dept',
       'column': [
-        {'name': 'id', 'type': 'String'},
-        {'name': 'name', 'type': 'String'}
+        {'name': 'id', 'type': 'string'},
+        {'name': 'name', 'type': 'string', 'notNull': true}
       ],
       'constraint': {
-        'primaryKey': [{'name': 'id'}],
-        'notNull': ['name']
+        'primaryKey': 'id'
       }
     },
     {
       'name': 'Emp',
       'column': [
-        {'name': 'id', 'type': 'Number'},
-        {'name': 'name', 'type': 'String'},
-        {'name': 'deptId', 'type': 'String'},
-        {'name': 'title', 'type': 'String'}
+        {'name': 'id', 'type': 'number'},
+        {'name': 'name', 'type': 'string'},
+        {'name': 'deptId', 'type': 'string'},
+        {'name': 'title', 'type': 'string'}
       ],
       'constraint': {
         'primaryKey': [{'name': 'id', 'order': 'desc'}],
@@ -47,8 +46,8 @@ var hrSchema = {
   ]
 };
 
-db.create(hrSchema).commit().then(function(instance) {
-  // Instance is the connected instance.
+navigator.db.open(hrSchema).then(function(connection) {
+  // Do something.
 }, function(e) {
-  // e is the DOMError if any, e.g. AlreadyExists.
+  // Maybe the database is currently being deleted.
 });

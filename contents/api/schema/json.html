@@ -14,14 +14,14 @@
       TableSpec[] table;
     };
   </pre>
-  <table class="parameters">
-    <tr><th>Field</th><th>Description</th></tr>
-    <tr><td>name</td><td>Name of the database</td></tr>
-    <tr><td>version</td>
-      <td>(Optional) Version of the database, for reference only</td>
-    </tr>
-    <tr><td>table</td><td>Array of table specifications</td></tr>
-  </table>
+  <dl class="dictionary-members">
+    <dt><code>name</code></dt>
+    <dd>Name of the database</dd>
+    <dt><code>version</code></dt>
+    <dd>(Optional) Version of the database, for reference only</dd>
+    <dt><code>table</code></dt>
+    <dd>Array of table specifications</dd>
+  </dl>
 
   <section>
     <h2>Table Specifications</h2>
@@ -34,13 +34,16 @@
         IndexSpec[]? index;
       };
     </pre>
-    <table class="parameters">
-      <tr><th>Field</th><th>Description</th></tr>
-      <tr><td>name</td><td>Name of the table</td></tr>
-      <tr><td>column</td><td>Array of column definitions</td></tr>
-      <tr><td>constraint</td><td>(Optional) Constraint definitions</td></tr>
-      <tr><td>index</td><td>(Optional) Array of index definitions</td></tr>
-    </table>
+    <dl class="dictionary-members">
+      <dt><code>name</code></dt>
+      <dd>Name of the table</dd>
+      <dt><code>column</code></dt>
+      <dd>Array of column definitions</dd>
+      <dt><code>constraint</code></dt>
+      <dd>(Optional) Constraint definitions</dd>
+      <dt><code>index</code></dt>
+      <dd>(Optional) Array of index definitions</dd>
+    </dl>
 
     <p>The following WebIDL defines column definition dictionary type:</p>
     <pre class="idl">
@@ -50,12 +53,14 @@
         boolean? notNull;
       };
     </pre>
-    <table class="parameters">
-      <tr><th>Field</th><th>Description</th></tr>
-      <tr><td>name</td><td>Name of the column</td></tr>
-      <tr><td>type</td><td>Type of the column</td></tr>
-      <tr><td>notNull</td><td>(Optional) Not null</td></tr>
-    </table>
+    <dl class="dictionary-members">
+      <dt><code>name</code></dt>
+      <dd>Name of the column</dd>
+      <dt><code>type</code></dt>
+      <dd>Type of the column</dd>
+      <dt><code>notNull</code></dt>
+      <dd>(Optional) Not null</dd>
+    </dl>
   </section>
 
   <section>
@@ -70,17 +75,19 @@
         boolean unique = false;
       };
     </pre>
-    <table class="parameters">
-      <tr><th>Field</th><th>Description</th></tr>
-      <tr><td>name</td><td>Name of the index</td></tr>
-      <tr><td>column</td><td>Indexed column definitions. If provided as
-          <code>DOMString</code> or <code>DOMString[]</code>, default sort order
-          of <code>asc</code> is used.</td></tr>
-      <tr><td>type</td>
-          <td>(Optional) Type of index, default to <code>btree</code></td></tr>
-      <tr><td>unique</td><td>(Optional) Keys in index shall be unique or not,
-          default to <code>false</code>.</td></tr>
-    </table>
+    <dl class="dictionary-members">
+      <dt><code>name</code></dt>
+      <dd>Name of the index</dd>
+      <dt><code>column</code></dt>
+      <dd>Indexed column definitions. If provided as
+          <code>DOMString</code> or <code>DOMString[]</code>, default sort
+          order of <code>asc</code> is used.</dd>
+      <dt><code>type</code></dt>
+      <dd>(Optional) Type of index, default to <code>btree</code></dd>
+      <dt><code>unique</code></dt>
+      <dd>(Optional) Keys in index shall be unique or not,
+          default to <code>false</code>.</dd>
+    </dl>
     <p>Index type allows user to hint the implementation what this index is
     best to be used for. The implementation may or may not construct the index
     using corresponding algorithm. The index type is an enum:</p>
@@ -101,12 +108,13 @@
         Order order = "asc";
       };
     </pre>
-    <table class="parameters">
-      <tr><th>Field</th><th>Description</th></tr>
-      <tr><td>name</td><td>Name of the indexed column</td></tr>
-      <tr><td>order</td><td>(Optional) Sorting order of the column, default to
-          <code>asc</code></td></tr>
-    </table>
+    <dl class="dictionary-members">
+      <dt><code>name</code></dt>
+      <dd>Name of the indexed column</dd>
+      <dt><code>order</code></dt>
+      <dd>(Optional) Sorting order of the column, default to
+          <code>asc</code></dd>
+    </dl>
     <p>The name specified in the indexed column must exist in the same table
     defining this index, otherwise an <code>InvalidSchemaError</code> will be
     thrown. If the specified column is not indexable, an
@@ -129,13 +137,16 @@
         (DOMString or DOMString[])? notNull;
       };
     </pre>
-    <table class="parameters">
-      <tr><th>Field</th><th>Description</th></tr>
-      <tr><td>primaryKey</td><td>(Optional) Primary key specification</td></tr>
-      <tr><td>foreignKey</td><td>(Optional) Foreign key definition</td></tr>
-      <tr><td>unique</td><td>(Optional) Unique index definitions</td></tr>
-      <tr><td>notNull</td><td>(Optional) Column(s) that are not null</td></tr>
-    </table>
+    <dl class="dictionary-members">
+      <dt><code>primaryKey</code></dt>
+      <dd>(Optional) Primary key specification</dd>
+      <dt><code>foreignKey</code></dt>
+      <dd>(Optional) Foreign key definition</dd>
+      <dt><code>unique</code></dt>
+      <dd>(Optional) Unique index definitions</dd>
+      <dt><code>notNull</code></dt>
+      <dd>(Optional) Column(s) that are not null</dd>
+    </dl>
     <p>The name(s) specified in the notNull must exist in the same table
     defining this constraint, otherwise an <code>InvalidSchemaError</code>
     will be thrown. By default all columns accept null as valid value, unless
@@ -168,12 +179,10 @@
         boolean autoIncrement;
       };
     </pre>
-    <table class="parameters">
-      <tr><th>Field</th><th>Description</th></tr>
-      <tr><td>name</td><td>Column name of the primary key</td></tr>
-      <tr><td>autoIncrement</td><td>Create auto-increment key</td>
-      </tr>
-    </table>
+    <dl class="dictionary-members">
+      <dt><code>name</code></dt><dd>Column name of the primary key</dd>
+      <dt><code>autoIncrement</code></dt><dd>Create auto-increment key</dd>
+    </dl>
     <p>When the autoIncrement field is specified, the specified column must be
     of type <code>Number</code>, otherwise an <code>InvalidSchemaError</code>
     will be thrown. An auto-increment key will start from zero. When a new row
@@ -193,20 +202,18 @@
         ForeignKeyTiming timing = "immediate";
       };
     </pre>
-    <table class="parameters">
-      <tr><th>Field</th><th>Description</th></tr>
-      <tr><td>name</td><td>Name of the foreign key</td></tr>
-      <tr><td>local</td><td>Referring column name</td></tr>
-      <tr><td>remote</td><td>Referred column canonical name</td></tr>
-      <tr>
-        <td>action</td>
-        <td>(Optional) Foreign key action, default: <code>restrict</code></td>
-      </tr>
-      <tr>
-        <td>timing</td>
-        <td>(Optional) Foreign key timing, default: <code>immediate</code></td>
-      </tr>
-    </table>
+    <dl class="dictionary-members">
+      <dt><code>name</code></dt>
+      <dd>Name of the foreign key</dd>
+      <dt><code>local</code></dt>
+      <dd>Referring column name</dd>
+      <dt><code>remote</code></dt>
+      <dd>Referred column canonical name</dd>
+      <dt><code>action</code></dt>
+      <dd>(Optional) Foreign key action, default: <code>restrict</code></dd>
+      <dt><code>timing</code></dt>
+      <dd>(Optional) Foreign key timing, default: <code>immediate</code></dd>
+    </dl>
     <p>Foreign key actions are enum values as defined in the following:</p>
     <dl title="enum ForeignKeyAction" class="idl">
       <dt>restrict</dt>
