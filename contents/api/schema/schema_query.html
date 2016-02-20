@@ -39,6 +39,31 @@
     };
   </pre>
 
+  <pre class="idl">
+    interface ITableBuilder : IExecutionContext {
+      ITableBuilder column(DOMString name, ColumnType type, optional boolean notNull = false);
+      ITableBuilder primaryKey(PrimaryKeyDefinition primaryKey);
+      ITableBuilder foreignKey(ForeignKeySpec foreignKey);
+      ITableBuilder unique(DOMString name, IndexedColumnDefinition columns);
+      ITableBuilder index(DOMString name, IndexedColumnDefinition columns);
+    };
+  </pre>
+
+  <pre class="idl">
+    interface ITableChanger : IExecutionContext {
+      ITableChanger rename(DOMString newTableName);
+      ITableChanger addColumn(DOMString name, ColumnType type, optional boolean notNull = false);
+      ITableChanger dropColumn(DOMString name);
+      IColumnChanger setColumn(DOMString name);
+    };
+  </pre>
+
+  <pre class="idl">
+    interface IColumnChanger {
+      ITableChanger set(DOMString newColumnName, ColumnType newType, optional boolean notNull = true);
+    };
+  </pre>
+
   <p>The following example demonstrates how to create a database schema.</p>
     <pre class="example highlight">
     {{include: create-by-api.js}}

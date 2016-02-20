@@ -1,0 +1,28 @@
+<section>
+  <h2>Data Query</h2>
+  <pre class="idl">
+    interface ITable {
+      readonly attribute DOMString name;
+      ITable as(DOMString alias);
+    };
+  </pre>
+
+  <pre class="idl">
+    interface IColumn {
+      readonly attribute DOMString name;
+      readonly attribute ColumnType type;
+      readonly attribute boolean nullable;
+      IColumn as(DOMString alias);
+    };
+  </pre>
+
+  <pre class="idl">
+    interface IDataQueryProvider {
+      IQuery select(IColumn... columns);
+      IQuery insert();
+      IQuery insertOrReplace();
+      IQuery update(ITable table);
+      IQuery delete();
+    };
+  </pre>
+</section>

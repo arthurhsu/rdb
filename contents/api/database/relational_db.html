@@ -3,7 +3,7 @@
   <p>The database is defined by the following WebIDL.</p>
   <pre class="idl">
     interface IRelationalDatabase {
-      Promise< IDatabaseConnection > open(DOMString name, OpenDatabaseOptions? opt);
+      Promise< DatabaseConnection > open(DOMString name, OpenDatabaseOptions? opt);
       Promise< void > drop(DOMString name);
       readonly attribute IDatabaseFunctionProvider fn;
       IBindableValue bind(unsigned short index);

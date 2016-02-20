@@ -62,9 +62,10 @@
     <h2>Index Definition</h2>
     <p>The following WebIDL defines index specification dictionary type:</p>
     <pre class="idl">
+      typedef (DOMString or DOMString[] or IndexedColumnSpec[]) IndexedColumnDefinition;
       dictionary IndexSpec {
         DOMString name;
-        (DOMString or DOMString[] or IndexedColumnSpec[]) column;
+        IndexedColumnDefinition column;
         IndexType type = "btree";
         boolean unique = false;
       };
@@ -120,10 +121,11 @@
     <h2>Constraint Specification</h2>
     <p>The following WebIDL defines constraint specification.</p>
     <pre class="idl">
+      typedef (DOMString or DOMString[] or IndexedColumnSpec[] or PrimaryKeySpec) PrimaryKeyDefinition;
       dictionary ConstraintSpec {
-        (DOMString or DOMString[] or IndexedColumnSpec[] or PrimaryKeySpec)? primaryKey;
+        PrimaryKeyDefinition? primaryKey;
         ForeignKeySpec? foreignKey;
-        (DOMString or DOMString[] or IndexedColumnSpec[])? unique;
+        UniqueSpec? unique;
         (DOMString or DOMString[])? notNull;
       };
     </pre>
@@ -146,6 +148,12 @@
     Its definition format is the same as index definition. If two or more
     columns are defined as keys, the combination of the columns forms the
     uniqueness.</p>
+    <pre class="idl">
+      dictionary UniqueSpec {
+        DOMString name;
+        IndexedColumnDefinition column;
+      };
+    </pre>
   </section>
 
   <section>
