@@ -27,4 +27,12 @@
       DOMString toSql();
     };
   </pre>
+
+  <pre class="idl">
+    interface IBindableValue {
+      readonly attribute any value;
+    };
+  </pre>
+  <p>Type check of bound value is performed by query engine before executing
+  the query.</p>
 </section>

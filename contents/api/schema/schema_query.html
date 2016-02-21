@@ -68,4 +68,20 @@
     <pre class="example highlight">
     {{include: create-by-api.js}}
   </pre>
+
+  <pre class="idl">
+    interface ITable {
+      readonly attribute DOMString name;
+      ITable as(DOMString alias);
+    };
+  </pre>
+
+  <pre class="idl">
+    interface IColumn : IPredicate {
+      readonly attribute DOMString name;
+      readonly attribute ColumnType type;
+      readonly attribute boolean nullable;
+      IColumn as(DOMString alias);
+    };
+  </pre>
 </section>

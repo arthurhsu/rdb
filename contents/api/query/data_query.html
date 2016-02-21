@@ -1,28 +1,81 @@
 <section>
   <h2>Data Query</h2>
   <pre class="idl">
-    interface ITable {
-      readonly attribute DOMString name;
-      ITable as(DOMString alias);
-    };
-  </pre>
-
-  <pre class="idl">
-    interface IColumn {
-      readonly attribute DOMString name;
-      readonly attribute ColumnType type;
-      readonly attribute boolean nullable;
-      IColumn as(DOMString alias);
-    };
-  </pre>
-
-  <pre class="idl">
     interface IDataQueryProvider {
-      IQuery select(IColumn... columns);
-      IQuery insert();
-      IQuery insertOrReplace();
-      IQuery update(ITable table);
-      IQuery delete();
+      ISelectQuery select(IColumn... columns);
+      IInsertQuery insert();
+      IInsertQuery insertOrReplace();
+      IUpdateQuery update(ITable table);
+      IDeleteQuery delete();
+    };
+  </pre>
+  <pre class="idl">
+    interface ISelectQuery : IQuery {
+      ISelectQuery from(ITable... tables);
+      ISelectQuery where(IPredicate searchCondition);
+      ISelectQuery innerJoin(ITable table, Predicate onCondition);
+      ISelectQuery leftOuterJoin(ITable table, Predicate onCondition);
+      ISelectQuery limit((number or IBindableValue) numberOfRows);
+      ISelectQuery skip((number or IBindableValue) numberOfRows);
+      ISelectQuery orderBy(IColumn column, Order order);
+      ISelectQuery groupBy(IColumn... column);
+    };
+  </pre>
+  <pre class="idl">
+    interface IInsertQuery : IQuery {
+      IInsertQuery into(ITable table);
+      IInsertQuery values((object or object[] or IBindableValue[]) rows);
+    };
+  </pre>
+  <pre class="idl">
+    interface IUpdateQuery : IQuery {
+      IUpdateQuery set(IColumn column, ValueType value);
+      IUpdateQuery where(IPredicate searchCondition);
+    };
+  </pre>
+  <pre class="idl">
+    interface IDeleteQuery : IQuery {
+      IDeleteQuery from(ITable table);
+      IDeleteQuery where(IPredicate searchCondition);
+    };
+  </pre>
+  <pre class="idl">
+    typedef (boolean or Date or number or DOMString) IndexableValueType;
+    typedef (IndexableValueType or IBindableValue) ComparableValueType;
+
+    interface IPredicate {
+      IPredicate eq(ComparableValueType value);
+      IPredicate neq(ComparableValueType value);
+      IPredicate lt(ComparableValueType value);
+      IPredicate lte(ComparableValueType value);
+      IPredicate gt(ComparableValueType value);
+      IPredicate gte(ComparableValueType value);
+      IPredicate match((IBindableValue or RegExp) value);
+      IPredicate between(ComparableValueType value, ComparableValueType value);
+      IPredicate in(ComparableValueType[] values);
+      IPredicate isNull();
+      IPredicate isNotNull();
+
+      IPredicate not(IPredicate childPredicate);
+      IPredicate and(IPredicate... childPredicate);
+      IPredicate or(IPredicate... childPredicate);
+    };
+  </pre>
+  <pre class="idl">
+    interface IAggregateFunction {
+      IColumn avg(IColumn col);
+      IColumn count(optional IColumn col = null);
+      IColumn geomean(IColumn col);
+      IColumn max(IColumn col);
+      IColumn min(IColumn col);
+      IColumn stddev(IColumn col);
+      IColumn sum(IColumn col);
+      IColumn var(IColumn col);
+    };
+  </pre>
+  <pre class="idl">
+    interface IDatabaseFunctionProvider : IAggregateFunction {
+      IColumn distinct(IColumn... col);
     };
   </pre>
 </section>
