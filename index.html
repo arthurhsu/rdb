@@ -346,13 +346,19 @@ insertData().then(function() {
   <p>The database is defined by the following WebIDL.</p>
   <pre class="idl">
     interface IRelationalDatabase {
+      readonly attribute IDatabaseFunctionProvider fn;
+
       Promise< DatabaseConnection > open(DOMString name, OpenDatabaseOptions? opt);
       Promise< void > drop(DOMString name);
-      readonly attribute IDatabaseFunctionProvider fn;
       IBindableValue bind(unsigned short index);
     };
   </pre>
-  <dl class="members">
+  <dl class="attributes">
+    <dt><code>IDatabaseFunctionProvider fn</code></dt>
+    <dd>Provides a namespace for aggregation functions that can be used in
+    queries.</dd>
+  </dl>
+  <dl class="methods">
     <dt><code>Promise< DatabaseConnection > open(DOMString name, OpenDatabaseOptions? opt)</code></dt>
     <dd>Opens a database using provided name. If the database does not exist,
     create a new database instance and returns connection to it. If the database
@@ -362,9 +368,6 @@ insertData().then(function() {
     <dt><code>Promise< void > drop()</code></dt>
     <dd>Deletes a database using provided name. This must follow the delete
     database algorithm.</dd>
-    <dt><code>IDatabaseFunctionProvider fn</code></dt>
-    <dd>Provides a namespace for aggregation functions that can be used in
-    queries.</dd>
     <dt><code>IBindableValue bind(unsigned short index);</code></dt>
     <dd>Provides a bindable value that can be used to construct parameterized
     queries.</dd>
@@ -874,6 +877,22 @@ q2.attachTo(tx);
 tx.commit().then(...);
 
   </pre>
+
+  <pre class="idl">
+    interface ITable {
+      readonly attribute DOMString name;
+      ITable as(DOMString alias);
+    };
+  </pre>
+
+  <pre class="idl">
+    interface IColumn : IPredicate {
+      readonly attribute DOMString name;
+      readonly attribute ColumnType type;
+      readonly attribute boolean nullable;
+      IColumn as(DOMString alias);
+    };
+  </pre>
 </section>
 
 
@@ -911,33 +930,94 @@ tx.commit().then(...);
       DOMString toSql();
     };
   </pre>
+
+  <pre class="idl">
+    interface IBindableValue {
+      readonly attribute any value;
+    };
+  </pre>
+  <p>Type check of bound value is performed by query engine before executing
+  the query.</p>
 </section>
 
 <section>
   <h2>Data Query</h2>
   <pre class="idl">
-    interface ITable {
-      readonly attribute DOMString name;
-      ITable as(DOMString alias);
-    };
-  </pre>
-
-  <pre class="idl">
-    interface IColumn {
-      readonly attribute DOMString name;
-      readonly attribute ColumnType type;
-      readonly attribute boolean nullable;
-      IColumn as(DOMString alias);
-    };
-  </pre>
-
-  <pre class="idl">
     interface IDataQueryProvider {
-      IQuery select(IColumn... columns);
-      IQuery insert();
-      IQuery insertOrReplace();
-      IQuery update(ITable table);
-      IQuery delete();
+      ISelectQuery select(IColumn... columns);
+      IInsertQuery insert();
+      IInsertQuery insertOrReplace();
+      IUpdateQuery update(ITable table);
+      IDeleteQuery delete();
+    };
+  </pre>
+  <pre class="idl">
+    interface ISelectQuery : IQuery {
+      ISelectQuery from(ITable... tables);
+      ISelectQuery where(IPredicate searchCondition);
+      ISelectQuery innerJoin(ITable table, Predicate onCondition);
+      ISelectQuery leftOuterJoin(ITable table, Predicate onCondition);
+      ISelectQuery limit((number or IBindableValue) numberOfRows);
+      ISelectQuery skip((number or IBindableValue) numberOfRows);
+      ISelectQuery orderBy(IColumn column, Order order);
+      ISelectQuery groupBy(IColumn... column);
+    };
+  </pre>
+  <pre class="idl">
+    interface IInsertQuery : IQuery {
+      IInsertQuery into(ITable table);
+      IInsertQuery values((object or object[] or IBindableValue[]) rows);
+    };
+  </pre>
+  <pre class="idl">
+    interface IUpdateQuery : IQuery {
+      IUpdateQuery set(IColumn column, ValueType value);
+      IUpdateQuery where(IPredicate searchCondition);
+    };
+  </pre>
+  <pre class="idl">
+    interface IDeleteQuery : IQuery {
+      IDeleteQuery from(ITable table);
+      IDeleteQuery where(IPredicate searchCondition);
+    };
+  </pre>
+  <pre class="idl">
+    typedef (boolean or Date or number or DOMString) IndexableValueType;
+    typedef (IndexableValueType or IBindableValue) ComparableValueType;
+
+    interface IPredicate {
+      IPredicate eq(ComparableValueType value);
+      IPredicate neq(ComparableValueType value);
+      IPredicate lt(ComparableValueType value);
+      IPredicate lte(ComparableValueType value);
+      IPredicate gt(ComparableValueType value);
+      IPredicate gte(ComparableValueType value);
+      IPredicate match((IBindableValue or RegExp) value);
+      IPredicate between(ComparableValueType value, ComparableValueType value);
+      IPredicate in(ComparableValueType[] values);
+      IPredicate isNull();
+      IPredicate isNotNull();
+
+      IPredicate not(IPredicate childPredicate);
+      IPredicate and(IPredicate... childPredicate);
+      IPredicate or(IPredicate... childPredicate);
+    };
+  </pre>
+  <pre class="idl">
+    interface IAggregateFunction {
+      IColumn avg(IColumn col);
+      IColumn count(optional IColumn col = null);
+      IColumn geomean(IColumn col);
+      IColumn max(IColumn col);
+      IColumn min(IColumn col);
+      IColumn stddev(IColumn col);
+      IColumn sum(IColumn col);
+      IColumn var(IColumn col);
+    };
+  </pre>
+  <pre class="idl">
+    interface IDatabaseFunctionProvider : IAggregateFunction {
+      IColumn distinct(IColumn... col);
     };
   </pre>
 </section>
