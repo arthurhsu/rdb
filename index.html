@@ -78,7 +78,7 @@
 // Otherwise, open the existing database named 'hr'.
 var db;
 
-function openDatabase() {
+function connect() {
   return navigator.db.open('hr').then(function(instance) {
     db = instance;
 
@@ -128,14 +128,16 @@ function upgradeDb() {
   return db.alterTable('Dept').addColumn('desc', 'String').commit();
 }
 
-openDatabase().then(function() {
+connect().then(function() {
   // Real work starts here.
 });
 
   </pre>
   <p>Once the database is opened, queries can be performed.</p>
   <pre class="example highlight">
-var d = db.table('Dept');
+/** @type {DatabaseConnection} */
+var db;
+var d = db.schema().table('Dept');
 
 function insertData() {
   var deptData = [
@@ -162,9 +164,9 @@ function selectData() {
 insertData().then(function() {
   return updateData();
 }).then(function() {
-  return deleteData() {
+  return deleteData();
 }).then(function() {
-  return selectData() {
+  return selectData();
 }).then(function(rows) {
   // Expected returns:
   // [{'id': 'HR', 'name': 'Human Resources', 'desc': 'Rock stars'},
@@ -350,7 +352,6 @@ insertData().then(function() {
 
       Promise< DatabaseConnection > open(DOMString name, OpenDatabaseOptions? opt);
       Promise< void > drop(DOMString name);
-      IBindableValue bind(unsigned short index);
     };
   </pre>
   <dl class="attributes">
@@ -407,6 +408,7 @@ insertData().then(function() {
     interface IDatabaseConnection {
       ITransaction createTransaction(optional TransactionMode mode = "readonly");
       Promise< void > close();
+      IBindableValue bind(unsigned short index);
     };
 
     interface DatabaseConnection : IDatabaseConnection {
@@ -465,6 +467,9 @@ insertData().then(function() {
     <dt>string</dt><dd>JavaScript type <code>string</code></dd>
     <dt>object</dt><dd>Generic JavaScript <code>Object</code></dd>
   </dl>
+  <pre class="idl">
+    typedef (ArrayBuffer or boolean or Date or number or DOMString or object) ValueType;
+  </pre>
 
   <p><code>blob</code> and <code>object</code> types are not
   <em>indexable</em>, which means columns of these types could not be used to
@@ -541,10 +546,16 @@ var hrSchema = {
   ]
 };
 
-navigator.db.open(hrSchema).then(function(connection) {
-  // Do something.
-}, function(e) {
-  // Maybe the database is currently being deleted.
+var db;
+navigator.db.open('hr').then(function(connection) {
+  db = connection;
+  var version = db.schema().version;
+  if (version == 0) {
+    return db.create(hrSchema).commit();
+  }
+  return Promise.resolve();
+}).then(function() {
+  // Database created, do something here.
 });
 
   </pre>
@@ -791,6 +802,7 @@ navigator.db.open(hrSchema).then(function(connection) {
     interface ISchemaQueryProvider {
       IExecutionContext exportSchema();
       IExecutionContext create(Object schema);
+      IExecutionContext setVersion(unsigned short version);
       IDatabaseSchema schema();
       ITableBuilder createTable();
       ITableChanger alterTable();
@@ -848,6 +860,8 @@ navigator.db.open(hrSchema).then(function(connection) {
 
   <p>The following example demonstrates how to create a database schema.</p>
     <pre class="example highlight">
+/** @type {DatabaseConnection} */
+var db;
 var tx = db.createTransaction('readwrite');
 var q1 = db.createTable('Dept')
            .column(/* column_name */ 'id',
@@ -874,7 +888,9 @@ var q2 = db.createTable('Emp')
            });
 q2.attachTo(tx);
 
-tx.commit().then(...);
+tx.commit().then(function() {
+  // Table created, do something here.
+});
 
   </pre>
 
@@ -916,7 +932,7 @@ tx.commit().then(...);
 
   <p>The following WebIDL defines explicit transaction.</p>
   <pre class="idl">
-    interface ITransaction {
+    interface ITransaction : IExecutionContext {
       Promise< void > begin();
       Promise< TransactionResults > attach(IExecutionContext query);
     };
@@ -927,6 +943,7 @@ tx.commit().then(...);
     interface IQuery : IExecutionContext {
       Promise< DOMString > explain();
       IQuery bind(any... values);
+      void attachTo(ITransaction tx);
       DOMString toSql();
     };
   </pre>
@@ -957,16 +974,16 @@ tx.commit().then(...);
       ISelectQuery where(IPredicate searchCondition);
       ISelectQuery innerJoin(ITable table, Predicate onCondition);
       ISelectQuery leftOuterJoin(ITable table, Predicate onCondition);
-      ISelectQuery limit((number or IBindableValue) numberOfRows);
-      ISelectQuery skip((number or IBindableValue) numberOfRows);
-      ISelectQuery orderBy(IColumn column, Order order);
+      ISelectQuery limit((unsigned long or IBindableValue) numberOfRows);
+      ISelectQuery skip((unsigned long or IBindableValue) numberOfRows);
+      ISelectQuery orderBy(IColumn column, optional Order order);
       ISelectQuery groupBy(IColumn... column);
     };
   </pre>
   <pre class="idl">
     interface IInsertQuery : IQuery {
       IInsertQuery into(ITable table);
-      IInsertQuery values((object or object[] or IBindableValue[]) rows);
+      IInsertQuery values((object or object[] or IBindableValue or IBindableValue[]) rows);
     };
   </pre>
   <pre class="idl">
@@ -994,7 +1011,7 @@ tx.commit().then(...);
       IPredicate gte(ComparableValueType value);
       IPredicate match((IBindableValue or RegExp) value);
       IPredicate between(ComparableValueType value, ComparableValueType value);
-      IPredicate in(ComparableValueType[] values);
+      IPredicate in((ComparableValueType[] or IBindableValue) values);
       IPredicate isNull();
       IPredicate isNotNull();
 
