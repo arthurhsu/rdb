@@ -9,6 +9,7 @@
     interface ISchemaQueryProvider {
       IExecutionContext exportSchema();
       IExecutionContext create(Object schema);
+      IExecutionContext setVersion(unsigned short version);
       IDatabaseSchema schema();
       ITableBuilder createTable();
       ITableChanger alterTable();

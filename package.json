@@ -21,7 +21,8 @@
     "gulp-closure-compiler": "0.3.1",
     "gulp-connect": "^2.3.1",
     "gulp-foreach": "^0.1.0",
-    "nopt": "~2.2.1"
+    "nopt": "~2.2.1",
+    "temp": "^0.8.3"
   },
   "engines": {
     "node": ">=0.12"

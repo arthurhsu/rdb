@@ -1,3 +1,5 @@
+/** @type {DatabaseConnection} */
+var db;
 var tx = db.createTransaction('readwrite');
 var q1 = db.createTable('Dept')
            .column(/* column_name */ 'id',
@@ -24,4 +26,6 @@ var q2 = db.createTable('Emp')
            });
 q2.attachTo(tx);
 
-tx.commit().then(...);
+tx.commit().then(function() {
+  // Table created, do something here.
+});

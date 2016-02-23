@@ -5,6 +5,7 @@ var gulpForEach = require('gulp-foreach');
 var closureCompiler = require('gulp-closure-compiler');
 var nopt = require('nopt');
 var path = require('path');
+var temp = require('temp');
 
 gulp.task('default', function() {
   log('Usage: ');
@@ -71,7 +72,8 @@ gulp.task('lint', function() {
   var ccPath = path.resolve(path.join(__dirname,
       'node_modules/google-closure-compiler/compiler.jar'));
   var ccOptions = {
-    'checks-only': true,
+    // gulp-closure-compiler does not support checks only.
+    //'checks-only': true,
     'jscomp_error': [
       'accessControls',
       'ambiguousFunctionDecl',
@@ -108,6 +110,7 @@ gulp.task('lint', function() {
              .pipe(gulpForEach(function(stream, file) {
                return stream.pipe(closureCompiler({
                  compilerPath: ccPath,
+                 fileName: temp.path({'suffix': '.js'}),
                  compilerFlags: ccOptions
                }));
              }));

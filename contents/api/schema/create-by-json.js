@@ -46,8 +46,14 @@ var hrSchema = {
   ]
 };
 
-navigator.db.open(hrSchema).then(function(connection) {
-  // Do something.
-}, function(e) {
-  // Maybe the database is currently being deleted.
+var db;
+navigator.db.open('hr').then(function(connection) {
+  db = connection;
+  var version = db.schema().version;
+  if (version == 0) {
+    return db.create(hrSchema).commit();
+  }
+  return Promise.resolve();
+}).then(function() {
+  // Database created, do something here.
 });

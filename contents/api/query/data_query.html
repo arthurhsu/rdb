@@ -15,16 +15,16 @@
       ISelectQuery where(IPredicate searchCondition);
       ISelectQuery innerJoin(ITable table, Predicate onCondition);
       ISelectQuery leftOuterJoin(ITable table, Predicate onCondition);
-      ISelectQuery limit((number or IBindableValue) numberOfRows);
-      ISelectQuery skip((number or IBindableValue) numberOfRows);
-      ISelectQuery orderBy(IColumn column, Order order);
+      ISelectQuery limit((unsigned long or IBindableValue) numberOfRows);
+      ISelectQuery skip((unsigned long or IBindableValue) numberOfRows);
+      ISelectQuery orderBy(IColumn column, optional Order order);
       ISelectQuery groupBy(IColumn... column);
     };
   </pre>
   <pre class="idl">
     interface IInsertQuery : IQuery {
       IInsertQuery into(ITable table);
-      IInsertQuery values((object or object[] or IBindableValue[]) rows);
+      IInsertQuery values((object or object[] or IBindableValue or IBindableValue[]) rows);
     };
   </pre>
   <pre class="idl">
@@ -52,7 +52,7 @@
       IPredicate gte(ComparableValueType value);
       IPredicate match((IBindableValue or RegExp) value);
       IPredicate between(ComparableValueType value, ComparableValueType value);
-      IPredicate in(ComparableValueType[] values);
+      IPredicate in((ComparableValueType[] or IBindableValue) values);
       IPredicate isNull();
       IPredicate isNotNull();
 

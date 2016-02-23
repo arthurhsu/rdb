@@ -3,7 +3,7 @@
 // Otherwise, open the existing database named 'hr'.
 var db;
 
-function openDatabase() {
+function connect() {
   return navigator.db.open('hr').then(function(instance) {
     db = instance;
 
@@ -53,6 +53,6 @@ function upgradeDb() {
   return db.alterTable('Dept').addColumn('desc', 'String').commit();
 }
 
-openDatabase().then(function() {
+connect().then(function() {
   // Real work starts here.
 });

@@ -13,7 +13,7 @@
 
   <p>The following WebIDL defines explicit transaction.</p>
   <pre class="idl">
-    interface ITransaction {
+    interface ITransaction : IExecutionContext {
       Promise< void > begin();
       Promise< TransactionResults > attach(IExecutionContext query);
     };
@@ -24,6 +24,7 @@
     interface IQuery : IExecutionContext {
       Promise< DOMString > explain();
       IQuery bind(any... values);
+      void attachTo(ITransaction tx);
       DOMString toSql();
     };
   </pre>

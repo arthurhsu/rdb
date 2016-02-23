@@ -1,4 +1,6 @@
-var d = db.table('Dept');
+/** @type {DatabaseConnection} */
+var db;
+var d = db.schema().table('Dept');
 
 function insertData() {
   var deptData = [
@@ -25,9 +27,9 @@ function selectData() {
 insertData().then(function() {
   return updateData();
 }).then(function() {
-  return deleteData() {
+  return deleteData();
 }).then(function() {
-  return selectData() {
+  return selectData();
 }).then(function(rows) {
   // Expected returns:
   // [{'id': 'HR', 'name': 'Human Resources', 'desc': 'Rock stars'},

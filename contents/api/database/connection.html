@@ -5,6 +5,7 @@
     interface IDatabaseConnection {
       ITransaction createTransaction(optional TransactionMode mode = "readonly");
       Promise< void > close();
+      IBindableValue bind(unsigned short index);
     };
 
     interface DatabaseConnection : IDatabaseConnection {
