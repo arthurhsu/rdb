@@ -1,6 +1,8 @@
 var fs = require('fs-extra');
 var gulp = require('gulp');
 var gulpConnect = require('gulp-connect');
+var gulpForEach = require('gulp-foreach');
+var closureCompiler = require('gulp-closure-compiler');
 var nopt = require('nopt');
 var path = require('path');
 
@@ -63,4 +65,50 @@ gulp.task('debug', ['watch'], function() {
     port: port,
     root: getOutputPath()
   });
+});
+
+gulp.task('lint', function() {
+  var ccPath = path.resolve(path.join(__dirname,
+      'node_modules/google-closure-compiler/compiler.jar'));
+  var ccOptions = {
+    'checks-only': true,
+    'jscomp_error': [
+      'accessControls',
+      'ambiguousFunctionDecl',
+      'checkDebuggerStatement',
+      'checkRegExp',
+      'checkTypes',
+      'checkVars',
+      'const',
+      'constantProperty',
+      'duplicate',
+      'es5Strict',
+      'externsValidation',
+      'fileoverviewTags',
+      'globalThis',
+      'invalidCasts',
+      'missingProperties',
+      'missingReturn',
+      'nonStandardJsDocs',
+      'strictModuleDepCheck',
+      'suspiciousCode',
+      'undefinedNames',
+      'undefinedVars',
+      'unknownDefines',
+      'uselessCode',
+      'visibility'
+    ],
+    'externs': path.resolve(path.join(__dirname, 'tools/externs.js')),
+    'jscomp_off': 'deprecated',
+    'language_in': 'ECMASCRIPT5_STRICT',
+    'warning_level': 'VERBOSE'
+  };
+
+  return gulp.src('contents/**/*.js')
+             .pipe(gulpForEach(function(stream, file) {
+               return stream.pipe(closureCompiler({
+                 compilerPath: ccPath,
+                 compilerFlags: ccOptions
+               }));
+             }));
 });
