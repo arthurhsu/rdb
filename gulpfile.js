@@ -19,20 +19,26 @@ function getOutputPath() {
 
 function copyLines(lines, contents, baseDir) {
   lines.forEach(function(line) {
-    if (line.match(/{{.*?}}/)) {
-      expandLine(line, contents, baseDir);
-    } else {
-      contents.push(line);
+    if (line.match(/\/\*\* @/) == null) {  // Skip Closure annotations
+      if (line.match(/{{.*?}}/)) {
+        expandLine(line, contents, baseDir);
+      } else {
+        contents.push(line);
+      }
     }
   });
 }
 
 function expandLine(line, contents, baseDir) {
-  var includeFile = path.resolve(path.join(
+  try {
+    var includeFile = path.resolve(path.join(
         baseDir, 
         line.match(/{{include:(.*?)}}/)[1].trim()));
-  var lines = fs.readFileSync(includeFile, 'utf8').split('\n');
-  copyLines(lines, contents, path.dirname(includeFile));
+    var lines = fs.readFileSync(includeFile, 'utf8').split('\n');
+    copyLines(lines, contents, path.dirname(includeFile));
+  } catch (e) {
+    console.log('Error parsing: ', line);
+  }
 }
 
 function generateIndex() {
