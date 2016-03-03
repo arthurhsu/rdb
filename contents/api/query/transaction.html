@@ -15,6 +15,7 @@
   <pre class="idl">
     interface ITransaction : IExecutionContext {
       Promise< void > begin();
+      Promise< TransactionResults > exec(IExecutionContext[] queries);
       Promise< TransactionResults > attach(IExecutionContext query);
     };
   </pre>
