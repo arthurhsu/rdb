@@ -100,7 +100,7 @@ does not need also makes no sense.
 
 IndexedDB and relational DB are different from algorithms. Relational DB is also
 very self-contained and well defined. It should be viewed as a separate
-component. Many other platforms (noteably iOS and Android) already take this
+component. Many other platforms (notably iOS and Android) already take this
 approach and provide dedicated APIs for developers.
 
 
@@ -157,7 +157,7 @@ generation is not complicated, see [polyfill](
 https://github.com/google/lovefield/blob/master/lib/query/to_sql.js), and I
 expect most of the efforts will be quite boiler-plate.
 
-If any vendor want to go full-fledge (i.e. create a real database from scratch),
+If any vendor want to go full-fledged (i.e. create a real database from scratch),
 then yes that would be a significant investment decision to make. Even so there
 are quite a few existing C++ class libraries to start with, so it's not from
 zero. At least one doesn't really need to write B+-Tree from scratch as I did for
