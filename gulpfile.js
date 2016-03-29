@@ -7,10 +7,14 @@ var nopt = require('nopt');
 var path = require('path');
 var temp = require('temp');
 
+var log = console.log;
+
 gulp.task('default', function() {
   log('Usage: ');
   log('  gulp debug [--port <port number>]');
   log('      Start a debug server (default is test at port 8000)');
+  log('  gulp lint');
+  log('      Launch Closure compiler to check JS errors');
 });
 
 function getOutputPath() {
