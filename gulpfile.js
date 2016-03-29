@@ -32,7 +32,7 @@ function copyLines(lines, contents, baseDir) {
 function expandLine(line, contents, baseDir) {
   try {
     var includeFile = path.resolve(path.join(
-        baseDir, 
+        baseDir,
         line.match(/{{include:(.*?)}}/)[1].trim()));
     var lines = fs.readFileSync(includeFile, 'utf8').split('\n');
     copyLines(lines, contents, path.dirname(includeFile));
@@ -45,9 +45,9 @@ function generateIndex() {
   console.log('Regenerating index.html ...');
   fs.ensureDirSync(getOutputPath());
   var lines = fs.readFileSync(path.resolve(
-        path.join(__dirname, 'contents/main.html')), 'utf8').split('\n');
+        path.join(__dirname, 'spec/main.html')), 'utf8').split('\n');
   var contents = [];
-  copyLines(lines, contents, path.resolve(path.join(__dirname, 'contents')));
+  copyLines(lines, contents, path.resolve(path.join(__dirname, 'spec')));
   fs.writeFileSync(
       path.resolve(path.join(__dirname, 'out/index.html')),
       contents.join('\n'),
@@ -55,7 +55,7 @@ function generateIndex() {
 }
 
 gulp.task('watch', function() {
-  gulp.watch('contents/**/*').on('change', generateIndex);
+  gulp.watch('spec/**/*').on('change', generateIndex);
 });
 
 gulp.task('debug', ['watch'], function() {
@@ -112,7 +112,7 @@ gulp.task('lint', function() {
     'warning_level': 'VERBOSE'
   };
 
-  return gulp.src('contents/**/*.js')
+  return gulp.src('spec/**/*.js')
              .pipe(gulpForEach(function(stream, file) {
                return stream.pipe(closureCompiler({
                  compilerPath: ccPath,
