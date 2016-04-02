@@ -29,9 +29,8 @@
   <body>
     <section id="abstract">
       <p>
-      This document defines APIs for a database of tables holding rows, each row
-      represents a tuple of data fields. The type of data fields must be
-      predefined. These APIs provide query capabilities that are comparable to a
+      This document defines APIs and behaviors of a relational database. The
+      capabilities of the defined relational database are comparable to a 
       subset of SQL-03 standard.
       </p>
     </section>
@@ -45,8 +44,8 @@
   <p>Relational data manipulation for the web apps has been in a difficult
   state for years. WebSQL has quite a few problems with itself and hence
   deprecated. IndexedDB, on the other hand, is an object database. In this
-  document, an easy-to-use APIs are defined to promote readable, maintainable,
-  and performance code for apps needing relational data.</p>
+  document, a set of easy-to-use APIs are defined to promote readable,
+  maintainable, and performant code for apps needing relational data.</p>
 
   <p>The APIs proposed in this document are designed for small-scale relational
   data manipulation. The following example shows how to open a database.</p>
@@ -336,7 +335,7 @@ navigator.db.open('hr').then(function(connection) {
     <dt><code>name</code></dt>
     <dd>Name of the database.</dd>
     <dt><code>version</code></dt>
-    <dd>Version of the database, for reference only. This value cannot be set
+    <dd>Version of the database, for reference only. This value MUST NOT be set
     to <code>0</code>, because it's reserved to indicate a newly created
     database.</dd>
     <dt><code>table</code></dt>
@@ -950,7 +949,7 @@ tx.commit().then(function() {
   discarded.</p>
 
   <p>When a transaction is committed or rolled back, it is said to be
-  <em>finished</em>. A finished transaction cannot be started nor rolled back.
+  <em>finished</em>. A finished transaction MUST NOT be started nor rolled back.
   If a transaction's connection is lost before transaction being finished, the
   transaction is effectively aborted and no changes will be persisted.</p>
 
