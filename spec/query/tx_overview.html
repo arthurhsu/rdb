@@ -49,7 +49,7 @@
   discarded.</p>
 
   <p>When a transaction is committed or rolled back, it is said to be
-  <em>finished</em>. A finished transaction cannot be started nor rolled back.
+  <em>finished</em>. A finished transaction MUST NOT be started nor rolled back.
   If a transaction's connection is lost before transaction being finished, the
   transaction is effectively aborted and no changes will be persisted.</p>
 
