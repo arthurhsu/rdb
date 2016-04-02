@@ -1,44 +1,74 @@
 <section>
   <h2>Schema Query</h2>
-  <p>Schema is created using schema queries. Schema queries can be used to
-  create or modify database schema. Schema queries are run in the context of
-  <em>transaction</em> and can be executed any time during the life time of the
-  database. The schema query starts with the <code>ISchemaQueryProvider</code>:
-  </p>
-  <pre class="idl">
-    interface ISchemaQueryProvider {
-      IExecutionContext exportSchema();
-      IExecutionContext create(Object schema);
-      IExecutionContext setVersion(unsigned short version);
-      IDatabaseSchema schema();
-      ITableBuilder createTable();
-      ITableChanger alterTable();
-    };
-  </pre>
-  <dl class="methods">
-    <dt><code>IExecutionContext exportSchema();</code></dt>
-    <dd>Export schema object. This is run in the context of transaction.</dd>
-    <dt><code>IExecutionContext create(Object schema);</code></dt>
-    <dd>Create database schema from provided schema object. The schema object
-    MUST conform to the format defined in Schema Definition JSON Format.
-    Any error in the schema will result in transaction failure with
-    <a>InvalidSchemaError</a>.</dd>
-    <dt><code>IDatabaseSchema schema();</code></dt>
-    <dd>Returns an <code>IDatabaseSchema</code> object for crafting data
-    manipulation queries.</dd>
-    <dt><code>ITableBuilder createTable();</code></dt>
-    <dd>Returns a table builder for creating a new table.</dd>
-    <dt><code>ITableChanger alterTable(string tableName);</code></dt>
-    <dd>Returns a table builder for altering an existing table.</dd>
-  </dl>
+  <p>A database instance is created using schema queries. The associated schema
+  of the database can also be altered using schema queries. Schema queries are
+  run in the context of <a>transaction</a> and can be executed any time during
+  the life time of the database.</p>
 
-  <pre class="idl">
-    interface IDatabaseSchema {
-      readonly attribute DOMString name;
-      readonly attribute unsigned short version;
-      object table(DOMString tableName);
-    };
-  </pre>
+  <section>
+    <h2>Database-Level Schema Query</h2>
+    <p>The <code>ISchemaQueryProvider</code> is the interface of manipulating
+    database-level schema:</p>
+    <pre class="idl">
+      interface ISchemaQueryProvider {
+        IExecutionContext exportSchema();
+        IExecutionContext create(Object schema);
+        IExecutionContext setVersion(unsigned short version);
+        IDatabaseSchema schema();
+        ITableBuilder createTable();
+        ITableChanger alterTable();
+      };
+    </pre>
+    <dl class="methods">
+      <dt><code>IExecutionContext exportSchema();</code></dt>
+      <dd>Export schema object, MUST be run in the context of a
+      <a>transaction</a>.</dd>
+      <dt><code>IExecutionContext create(Object schema);</code></dt>
+      <dd>Create database schema from provided schema object, MUST be run in
+      the context of a <a>transaction</a>. The schema object MUST conform to
+      the format defined in <a href="#schema-definition-json-format">
+      Schema Definition JSON Format</a>. Any error in the schema will result in
+      transaction failure with <a>InvalidSchemaError</a>.</dd>
+      <dt><code>IExecutionContext setVersion(unsigned short version);</code>
+      </dt>
+      <dd>Sets the version number of the schema, MUST be run in the context of
+      a <a>transaction</a>.</dd>
+      <dt><code>IDatabaseSchema schema();</code></dt>
+      <dd>Returns an <code>IDatabaseSchema</code> object for crafting data
+      manipulation queries.</dd>
+      <dt><code>ITableBuilder createTable();</code></dt>
+      <dd>Returns a table builder for creating a new table.</dd>
+      <dt><code>ITableChanger alterTable(string tableName);</code></dt>
+      <dd>Returns a table builder for altering an existing table. The table
+      referred by <code>tableName</code> MUST already exist in the database,
+      otherwise a <a>DataError</a> will be raised.</dd>
+    </dl>
+  </section>
+  <section>
+    <h2>Database Schema</h2>
+    <p>Database schema obtained from <code>ISchemaQueryProvider.schema()</code>
+    provides <code>IDatabaseSchema</code> interface.</p>
+    <pre class="idl">
+      interface IDatabaseSchema {
+        readonly attribute DOMString name;
+        readonly attribute unsigned short version;
+        object table(DOMString tableName);
+      };
+    </pre>
+    <dl class="attributes">
+      <dt><code>DOMString name</code></dt>
+      <dd>Name of the database.</dd>
+      <dt><code>unsigned short version</code></dt>
+      <dd>Version of the database schema.</dd>
+    </dl>
+    <dl class="methods">
+      <dt><code>object table(DOMString tableName);</code></dt>
+      <dd>Returns a read-only dictionary object, whose members are
+      <a>IColumn</a> objects representing columns in the specified table.
+      The table referred by <code>tableName</code> MUST already exist in the
+      database, otherwise a <a>DataError</a> will be raised.</dd>
+    </dl>
+  </section>
 
   <pre class="idl">
     interface ITableBuilder : IExecutionContext {

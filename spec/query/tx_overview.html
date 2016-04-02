@@ -1,7 +1,11 @@
 <section>
   <h2>Transaction</h2>
-  <p>A <em>transaction</em> is used to interact with data in a database. Data is
-  read from or written to database via transaction.</p>
+  <p>A <dfn>transaction</dfn> is an atomic unit of reading and writing data in
+  a database. A transaction contains one or more queries that indicate how to
+  interact with the database. A transaction is an atomic unit of execution that
+  guarantees all queries inside this transaction to be committed as a whole, or
+  none get committed. A committed transaction guarantees all data being written
+  to storage.</p>
 
   <p>All transactions are associated with a database connection, which is the
   <em>connection</em> that the transaction is created within. A transaction has
@@ -15,12 +19,6 @@
     <dt>readwrite</dt>
     <dd>Transaction intends to read/write rows and/or change schema.</dd>
   </dl>
-
-  <p>A transaction contains one or more <em>queries</em> that indicate how to
-  interact with the database. A transaction is an atomic unit of execution that
-  guarantees all queries inside this transaction to be committed as a whole, or
-  none get committed. A committed transaction guarantees all persistent data
-  being written to the persistent storage.</p>
 
   <p>A transaction has a <em>scope</em> that determines the rows affected by
   this transaction. The scope is automatically calculated. A transaction's scope
