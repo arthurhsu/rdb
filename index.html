@@ -44,31 +44,9 @@
   <h2>Introduction</h2>
   <p>Relational data manipulation for the web apps has been in a difficult
   state for years. WebSQL has quite a few problems with itself and hence
-  deprecated. The poised substitute, IndexedDB, is actually an object database.
-  In this document, an easy-to-use APIs are defined to promote readable,
-  maintainable, and performance code for apps needing relational data.</p>
-
-  <p>Why a new standard is proposed instead of modifying existing IndexedDB?
-  There are some very good reasons of doing so.</p>
-  <ul>
-    <li>Making IndexedDB more bloated with the features that object databases
-    don't need simply makes no sense.</li>
-
-    <li>At the time of drafting this spec, most browsers carry a C++ relational
-    database implementation without exposing it.</li>
-
-    <li>The algorithms behind an object database and a relational database are
-    different. Shoehorning a relational query layer on top of IndexedDB creates
-    unnecessary complexity. Users are either forced to write their own
-    domain-specific query engine, or to include a third party JS library (e.g.
-    Lovefield).</li>
-
-    <li>IndexedDB assumes single-level B-Tree index and object store structure
-    are good enough, which is not true for relational data manipulation.</li>
-
-    <li>JavaScript lacks many fundamental support needed by relational query
-    engine, especially for memory management and storage management.</li>
-  </ul>
+  deprecated. IndexedDB, on the other hand, is an object database. In this
+  document, an easy-to-use APIs are defined to promote readable, maintainable,
+  and performance code for apps needing relational data.</p>
 
   <p>The APIs proposed in this document are designed for small-scale relational
   data manipulation. The following example shows how to open a database.</p>
@@ -175,6 +153,15 @@ insertData().then(function() {
 });
 
   </pre>
+
+  <p>The proposed spec defines the behaviors of a database. A database consists
+  of two parts: storage and query engine. Data is stored in the storage as
+  rows, each row is a tuple of values, and the types of values are defined as
+  columns. Same class of rows are grouped together as a table. The database
+  has a concept named schema to define columns inside tables, and the relations
+  among rows. Query engine is responsible for reading and writing rows from the
+  storage, enforcing relations defined in the schema, and providing various
+  functions to manipulate how the rows are read and written.</p>
 </section>
 
     <section id="conformance"></section>
@@ -183,52 +170,51 @@ insertData().then(function() {
   <h2>Schema</h2>
   <section>
     <h2>Overview</h2>
-    <p>This section is non-normative.</p>
-
-    <p>Schema defines the storage structure of a relational database. A schema
-    has a name. The origin of the page and the schema name together uniquely
-    identify a database instance.</p>
+    <p>A schema defines the storage structure of a relational database.
+    A schema MUST have a name. The origin of the page and the schema name
+    together uniquely identify a database instance during runtime.</p>
 
     <p>A schema has a referential version number associated with it. Version
-    number is an integer greater than zero and can be freely assigned. It has no
-    effect on identifying a database. It is provided for the convenience of
+    number is an integer greater than zero and can be freely assigned. It has
+    no effect on identifying a database. It is provided for the convenience of
     developers to version their schema without extra table.</p>
 
-    <p>A schema is structured in a hierachical way. A database contains one or
-    more tables. A table contains one or more columns, zero or more indices, and
-    zero or more constraints. The collection of columns in a table defines the
-    data carried by a row, which is the fundamental unit of data storage in
-    relational database. The indices hint the database engine to build index
+    <p>A schema is structured in a hierachical way. A database schema contains
+    one or more tables. A table contains one or more columns, zero or more
+    indices, and zero or more constraints. The collection of columns in a table
+    defines the fields carried by a row, which is the fundamental unit of data
+    storage in relational database. Each column consists a name and an
+    associated data type. The indices hint the database engine to build index
     structures so that subsequent queries can be acclerated. Index definitions
-    may not be honored if the database engine determined that they are not
-    necessary. The constraints define the relations of data and ensures data
-    integrity.</p>
+    MAY be honored if the database engine determined that they are necessary.
+    The constraints define the relations of rows and ensures data integrity,
+    and MUST be honored.</p>
 
-    <p>The database schema can be described in JSON format or via builder
-    pattern APIs. Schema can be changed through schema queries within any
-    <code>readwrite</code> transactions. The JSON format and related APIs are
-    described in the following sections.</p>
+    <p>The database schema can be described in JSON format or constructed via
+    builder pattern APIs. Schema can be changed through schema queries within
+    any <code>readwrite</code> transactions. The JSON format and related APIs
+    are described in the following sections.</p>
   </section>
 
 <section>
   <h2>Naming Rules</h2>
   <p>Names in schema means identifiers used to identify an entity, such as
   database, table, column, index, constraint, and so on. All names used in the
-  database schema must abide the following rules:</p>
+  database schema MUST abide the following rules:</p>
   <ul>
     <li>Names are case sensitive</li>
-    <li>A name must pass the following check:
+    <li>A name MUST pass the following check:
         <code>/^[A-Za-z_][A-Za-z0-9_]*$/.test(name)</code>
     </li>
-    <li>A name must not conflict with fields defined in
+    <li>A name MUST NOT conflict with fields defined in
         <code>Object.prototype</code>
     </li>
   </ul>
 </section>
 
 <section>
-  <h2>Types</h2>
-  <p>All columns in a table schema must be associated with a given type. Valid
+  <h2>Column Types</h2>
+  <p>All columns in a table schema MUST be associated with a given type. Valid
   types of a column are defined in <code>ColumnType</code></p>
   <dl title="enum ColumnType" class="idl">
     <dt>blob</dt><dd>JavaScript type <code>ArrayBuffer</code></dd>
@@ -240,12 +226,14 @@ insertData().then(function() {
   </dl>
   <pre class="idl">
     typedef (ArrayBuffer or boolean or Date or number or DOMString or object) ValueType;
+    typedef (boolean or Date or number or DOMString) IndexableValueType;
   </pre>
 
-  <p><code>blob</code> and <code>object</code> types are not
-  <em>indexable</em>, which means columns of these types could not be used to
-  create indices and predicates (except the <code>isNull()</code> and
-  <code>isNotNull()</code> predicates).</p>
+  <p>Only some value types are <dfn>indexable</dfn>, which means that they can 
+  be compared, sorted, and used in indices and predicates. Non-indexable types,
+  <code>blob</code> and <code>object</code>, MUST NOT be used to create indices
+  and predicates, except the <code>isNull()</code> and <code>isNotNull()</code>
+  predicates.</p>
 </section>
 
 <section>
@@ -259,9 +247,9 @@ insertData().then(function() {
   </dl>
   <p>Ascending sort order is the natural sort order, which means that if two
   fields are ordered as <code>a, b</code>, then <code>(a <= b) === true</code>.
-  <code>blob</code> and <code>object</code> types are not <em>indexable</em>,
-  which implied they were not <em>comparable</em> and thus the orders have no
-  effect for these two types.</p>
+  <code>blob</code> and <code>object</code> types are not <a>indexable</a>,
+  which implied they were not comparable and thus the orders have no effect for
+  these two types.</p>
 </section>
 
 <section>
@@ -331,21 +319,29 @@ navigator.db.open('hr').then(function(connection) {
 
   </pre>
 
+  <p>Any violation of the rules described in this section will result in
+  <a>InvalidSchemaError</a> exception. Any name not obeying
+  <a href="#naming-rules">Naming Rules</a> will also result in
+  <a>InvalidSchemaError</a> exception.</p>
+
   <p>The following WebIDL defines <code>Schema</code> dictionary type.
   <pre class="idl">
     dictionary Schema {
       DOMString name;
-      unsigned short version;
+      unsigned short version = 1;
       TableSpec[] table;
     };
   </pre>
   <dl class="dictionary-members">
     <dt><code>name</code></dt>
-    <dd>Name of the database</dd>
+    <dd>Name of the database.</dd>
     <dt><code>version</code></dt>
-    <dd>(Optional) Version of the database, for reference only</dd>
+    <dd>Version of the database, for reference only. This value cannot be set
+    to <code>0</code>, because it's reserved to indicate a newly created
+    database.</dd>
     <dt><code>table</code></dt>
-    <dd>Array of table specifications</dd>
+    <dd>Array of <a href="#table-specifications">table specifications</a>, and
+    it MUST NOT be empty.</dd>
   </dl>
 
   <section>
@@ -361,35 +357,50 @@ navigator.db.open('hr').then(function(connection) {
     </pre>
     <dl class="dictionary-members">
       <dt><code>name</code></dt>
-      <dd>Name of the table</dd>
+      <dd>Name of the table, MUST be unique within the database.</dd>
       <dt><code>column</code></dt>
-      <dd>Array of column definitions</dd>
+      <dd>Array of <a href="#column-specifications">column specifications</a>,
+      and it MUST NOT be empty.</dd>
       <dt><code>constraint</code></dt>
-      <dd>(Optional) Constraint definitions</dd>
+      <dd>(Optional)
+      <a href="#constraint-specifications">Constraint specifications</a>.</dd>
       <dt><code>index</code></dt>
-      <dd>(Optional) Array of index definitions</dd>
-    </dl>
-
-    <p>The following WebIDL defines column definition dictionary type:</p>
-    <pre class="idl">
-      dictionary ColumnSpec {
-        DOMString name;
-        ColumnType type;
-        boolean? notNull;
-      };
-    </pre>
-    <dl class="dictionary-members">
-      <dt><code>name</code></dt>
-      <dd>Name of the column</dd>
-      <dt><code>type</code></dt>
-      <dd>Type of the column</dd>
-      <dt><code>notNull</code></dt>
-      <dd>(Optional) Not null</dd>
+      <dd>(Optional) Array of
+      <a href="#index-specifications">index specifications</a>, and it MUST NOT
+      be empty when specified.</dd>
     </dl>
   </section>
 
   <section>
-    <h2>Index Definition</h2>
+    <h2>Column Specifications</h2>
+    <p>The following WebIDL defines column specification dictionary type:</p>
+    <pre class="idl">
+      dictionary ColumnSpec {
+        DOMString name;
+        ColumnType type;
+        boolean notNull = false;
+      };
+    </pre>
+    <dl class="dictionary-members">
+      <dt><code>name</code></dt>
+      <dd>Name of the column, MUST be unique within the containing table.</dd>
+      <dt><code>type</code></dt>
+      <dd>Associated column type of the column.</dd>
+      <dt><code>notNull</code></dt>
+      <dd>When specified as <code>true</code>, the column is <a>NOT NULL</a>.
+      </dd>
+    </dl>
+    <p><dfn>NOT NULL</dfn> means the column MUST NOT have a value of
+    <code>undefined</code> or <code>null</code>.</p>
+    <p>A column has a <dfn>canonical name</dfn>, which is represented as
+    <code>&lt;containing table name&gt;.&lt;column name&gt;</code>. One can
+    <dfn>refer</dfn> to a column by its name, if the referral is happened
+    within the table scope; or by its <a>canonical name</a> from anywhere
+    within the database.</p>
+  </section>
+
+  <section>
+    <h2>Index Specifications</h2>
     <p>The following WebIDL defines index specification dictionary type:</p>
     <pre class="idl">
       typedef (DOMString or DOMString[] or IndexedColumnSpec[]) IndexedColumnDefinition;
@@ -402,29 +413,41 @@ navigator.db.open('hr').then(function(connection) {
     </pre>
     <dl class="dictionary-members">
       <dt><code>name</code></dt>
-      <dd>Name of the index</dd>
+      <dd>Name of the index, MUST be unique within the containing table.</dd>
       <dt><code>column</code></dt>
       <dd>Indexed column definitions. If provided as
-          <code>DOMString</code> or <code>DOMString[]</code>, default sort
-          order of <code>asc</code> is used.</dd>
+          <code>DOMString</code>, the string MUST <a>refer</a> to an
+          <a>indexable</a> column of the containing table; if provided as
+          <code>DOMString[]</code>, it MUST NOT be empty, and the strings MUST
+          <a>refer</a> to different <a>indexable</a> columns of the containing
+          table. In these two cases, default sort order of <code>asc</code> is
+          used. If provided as <code>IndexedColumnSpec[]</code>, it MUST NOT
+          be empty, and each <code>IndexedColumnSpec</code> MUST <a>refer</a>
+          to different column.</dd>
       <dt><code>type</code></dt>
       <dd>(Optional) Type of index, default to <code>btree</code></dd>
       <dt><code>unique</code></dt>
       <dd>(Optional) Keys in index shall be unique or not,
           default to <code>false</code>.</dd>
     </dl>
-    <p>Index type allows user to hint the implementation what this index is
-    best to be used for. The implementation may or may not construct the index
-    using corresponding algorithm. The index type is an enum:</p>
+    <p>Index type allows user to hint the query engine to create an index on
+    specified columns in given sorting orders. The query engine MAY construct
+    the index, MAY follow the given sorting orders, and MAY use the specified
+    type. The query engine can refuse to construct the index as specified, or
+    construct a different index.</p>
+
+    <p>The index type is an enum:</p>
     <dl title="enum IndexType" class="idl">
       <dt>btree</dt><dd>B+ Tree index</dd>
       <dt>hash</dt><dd>Hash index</dd>
     </dl>
 
-    <p>An index can be keyed by one or more columns unless the
-    <code>unique</code> is set to true. In that case, an
-    <code>ConstraintError</code> will be thrown if user tried to insert/update
-    a row with duplicated key.</p>
+    <p>An index can be keyed by one or more columns. A <dfn>unique key</dfn>
+    means that the value or combination of values used as index key is unique
+    within the index. By default, all indices allow duplicate keys unless the
+    <code>unique</code> is set to true. A <a>ConstraintError</a> will be thrown
+    if user tried to insert/update a row with duplicated key when a unique
+    index is specified.</p>
 
     <p>The WebIDL below defines indexed column specification.</p>
     <pre class="idl">
@@ -435,23 +458,20 @@ navigator.db.open('hr').then(function(connection) {
     </pre>
     <dl class="dictionary-members">
       <dt><code>name</code></dt>
-      <dd>Name of the indexed column</dd>
+      <dd>Name of the indexed column, MUST <a>refer</a> to an <a>indexable</a>
+      column of the containing table.</dd>
       <dt><code>order</code></dt>
       <dd>(Optional) Sorting order of the column, default to
-          <code>asc</code></dd>
+          <code>asc</code>.</dd>
     </dl>
-    <p>The name specified in the indexed column must exist in the same table
-    defining this index, otherwise an <code>InvalidSchemaError</code> will be
-    thrown. If the specified column is not indexable, an
-    <code>InvalidSchemaError</code> will be thrown.</p>
     <p>If an index definition overlapped with implicit indices created by
     constraints (for example, create an index on the same column of the primary
-    key), it will be up to the implementation to determine whether or not to
+    key), it will be up to the query engine to determine whether or not to
     create this index.</p>
   </section>
 
   <section>
-    <h2>Constraint Specification</h2>
+    <h2>Constraint Specifications</h2>
     <p>The following WebIDL defines constraint specification.</p>
     <pre class="idl">
       typedef (DOMString or DOMString[] or IndexedColumnSpec[] or PrimaryKeySpec) PrimaryKeyDefinition;
@@ -464,25 +484,28 @@ navigator.db.open('hr').then(function(connection) {
     </pre>
     <dl class="dictionary-members">
       <dt><code>primaryKey</code></dt>
-      <dd>(Optional) Primary key specification</dd>
+      <dd>(Optional) <a href="#primary-key-specification">Primary key
+      specification</a>.</dd>
       <dt><code>foreignKey</code></dt>
-      <dd>(Optional) Foreign key definition</dd>
+      <dd>(Optional) <a href="#foreign-key-specification">Foreign key
+      specification</a>.</dd>
       <dt><code>unique</code></dt>
-      <dd>(Optional) Unique index definitions</dd>
+      <dd>(Optional) <a href="#unique-index-specification">Unique index
+      specification</a>.</dd>
       <dt><code>notNull</code></dt>
-      <dd>(Optional) Column(s) that are not null</dd>
+      <dd>(Optional) Column(s) that are <a>NOT NULL</a>.</dd>
     </dl>
-    <p>The name(s) specified in the notNull must exist in the same table
-    defining this constraint, otherwise an <code>InvalidSchemaError</code>
-    will be thrown. By default all columns accept null as valid value, unless
-    the column is constrainted with notNull.</p>
+    <p>The name(s) specified in the notNull MUST <a>refer</a> to column(s)
+    of the containing table. When provided as <code>DOMString[]</code>, the
+    array MUST NOT be empty, and they MUST <a>refer</a> to different
+    columns.</p>
   </section>
 
   <section>
-    <h2>Unique Index Definition</h2>
+    <h2>Unique Index Specification</h2>
     <p>Unique index is a specialized index that disallows duplicated keys.
     Its definition format is the same as index definition. If two or more
-    columns are defined as keys, the combination of the columns forms the
+    columns are defined as keys, the combination of the column values forms the
     uniqueness.</p>
     <pre class="idl">
       dictionary UniqueSpec {
@@ -490,14 +513,20 @@ navigator.db.open('hr').then(function(connection) {
         IndexedColumnDefinition column;
       };
     </pre>
+    <dl class="dictionary-members">
+      <dt><code>name</code></dt>
+      <dd>Name of the index, MUST be unique within the containing table.</dd>
+      <dt><code>column</code></dt>
+      <dd>Same as the <code>column</code> in <a href="#index-specifications">
+      Index Specifications</a>.</dd>
+    </dl>
   </section>
 
   <section>
     <h2>Primary Key Specification</h2>
-    <p>Each table can only have one primary key definition. The primary key
-    will implicitly create an unique constraint and enforce it. A primary key
-    can be specified using normal index specifications, or use the following
-    WebIDL.</p>
+    <p>Primary key is a specialized unique index. Each table can have only one
+    primary key. A primary key can be specified using unique index
+    specification, or use the following WebIDL:</p>
     <pre class="idl">
       dictionary PrimaryKeySpec {
         DOMString name;
@@ -505,14 +534,16 @@ navigator.db.open('hr').then(function(connection) {
       };
     </pre>
     <dl class="dictionary-members">
-      <dt><code>name</code></dt><dd>Column name of the primary key</dd>
-      <dt><code>autoIncrement</code></dt><dd>Create auto-increment key</dd>
+      <dt><code>name</code></dt><dd>Column name of the primary key, MUST
+      <a>refer</a> to <a>indexable</a> column of the containing table.</dd>
+      <dt><code>autoIncrement</code></dt><dd>Create auto-increment
+      primary key.</dd>
     </dl>
-    <p>When the autoIncrement field is specified, the specified column must be
-    of type <code>Number</code>, otherwise an <code>InvalidSchemaError</code>
-    will be thrown. An auto-increment key will start from zero. When a new row
-    is inserted into the table, the key will increase by one and assigned to
-    that row regardless the original key value given to the row.</p>
+    <p>When the autoIncrement field is specified, the specified column MUST be
+    of type <code>Number</code>. An auto-increment key will start from zero.
+    When a new row is inserted into the table, the key will increase by one and
+    assigned to that row regardless the original key value given to the
+    row.</p>
   </section>
 
   <section>
@@ -529,16 +560,25 @@ navigator.db.open('hr').then(function(connection) {
     </pre>
     <dl class="dictionary-members">
       <dt><code>name</code></dt>
-      <dd>Name of the foreign key</dd>
+      <dd>Name of the foreign key, MUST be unique withing the containing table.
+      </dd>
       <dt><code>local</code></dt>
-      <dd>Referring column name</dd>
+      <dd>Referring column name, MUST <a>refer</a> to an <a>indexable</a>
+      column of the containing table.</dd>
       <dt><code>remote</code></dt>
-      <dd>Referred column canonical name</dd>
+      <dd>Referred column <a>canonical name</a>, MUST <a>refer</a> to an
+      <a>indexable</a> column.</dd>
       <dt><code>action</code></dt>
-      <dd>(Optional) Foreign key action, default: <code>restrict</code></dd>
+      <dd>(Optional) Foreign key action, default to <code>restrict</code>.</dd>
       <dt><code>timing</code></dt>
-      <dd>(Optional) Foreign key timing, default: <code>immediate</code></dd>
+      <dd>(Optional) Foreign key timing, default to <code>immediate</code>.
+      </dd>
     </dl>
+    <p>A <dfn>chainned foreign key</dfn> means the <code>remote</code> column
+    is also a <code>local</code> column of another foreign key, which forms a
+    dependency. The query engine MAY support chainned foreign key. The query
+    engine MAY support referred column to be within the containing table.</p>
+
     <p>Foreign key actions are enum values as defined in the following:</p>
     <dl title="enum ForeignKeyAction" class="idl">
       <dt>restrict</dt>
@@ -584,9 +624,9 @@ navigator.db.open('hr').then(function(connection) {
     <dd>Export schema object. This is run in the context of transaction.</dd>
     <dt><code>IExecutionContext create(Object schema);</code></dt>
     <dd>Create database schema from provided schema object. The schema object
-    must conform to the format defined in Schema Definition JSON Format.
+    MUST conform to the format defined in Schema Definition JSON Format.
     Any error in the schema will result in transaction failure with
-    <code>InvalidSchemaError</code>.</dd>
+    <a>InvalidSchemaError</a>.</dd>
     <dt><code>IDatabaseSchema schema();</code></dt>
     <dd>Returns an <code>IDatabaseSchema</code> object for crafting data
     manipulation queries.</dd>
@@ -699,15 +739,15 @@ tx.commit().then(function() {
   or more tables which hold the data stored in the database.</p>
 
   <p>Every database has a <em>name</em> which identifies it within a specific
-  origin. The name must satisfy the Naming Rules, and stay constant for the
+  origin. The name MUST satisfy the Naming Rules, and stay constant for the
   lifetime of the database.</p>
 
   <p>Each database also has a version number for reference only. When a
   database is first created, its version is 0.</p>
 
-  <p class="note">Implementations must support all names. If an implementation
+  <p class="note">Implementations MUST support all names. If an implementation
   uses a storage mechanism which can't handle arbitrary database names, the
-  implementation must use an escaping mechanism or something similar to map
+  implementation MUST use an escaping mechanism or something similar to map
   the provided name to a name that it can handle.</p>
 
   <p>Databases has a <em>delete pending</em> flag which is used during
@@ -771,11 +811,11 @@ tx.commit().then(function() {
     <dt><code>Promise< DatabaseConnection > open(DOMString name, OpenDatabaseOptions? opt)</code></dt>
     <dd>Opens a database using provided name. If the database does not exist,
     create a new database instance and returns connection to it. If the database
-    is marked delete pending, <code>BlockingError</code> will be thrown. If the
+    is marked delete pending, <a>BlockingError</a> will be thrown. If the
     <code>OpenDatabaseOptions</code> is not specified, a <code>persistent</code>
     database with the given name will be opened/created.</dd>
     <dt><code>Promise< void > drop()</code></dt>
-    <dd>Deletes a database using provided name. This must follow the delete
+    <dd>Deletes a database using provided name. This MUST follow the delete
     database algorithm.</dd>
     <dt><code>IBindableValue bind(unsigned short index);</code></dt>
     <dd>Provides a bind-able value that can be used to construct parameterized
@@ -1073,16 +1113,25 @@ function updateModel(employeeId) {
   specified error type.</p>
   <table class="parameters">
     <tr><th>Field</th><th>Description</th></tr>
-    <tr><td><code>BlockingError</code></td>
+    <tr><td><dfn><code>BlockingError</code></dfn></td>
         <td>Attempts to open a delete pending database.</td></tr>
-    <tr><td><code>ConstraintError</code></td>
+    <tr><td><dfn><code>ConstraintError</code></dfn></td>
         <td>Constraints are violated.</td>
     </tr>
-    <tr><td><code>InvalidSchemaError</code></td>
+    <tr><td><dfn><code>DataError</code></dfn></td>
+        <td>Data given to a column is invalid. For example, assigning <code>
+            null</code> or <code>undefined</code> to a <a>NOT NULL</a> column,
+            or assigning values of different <a href="#column-type">column type
+            </a>.</td>
+    </tr>
+    <tr><td><dfn><code>InvalidSchemaError</code></dfn></td>
         <td>Provided schema is invalid.</td>
     </tr>
-    <tr><td><code>TransactionStateError</code></td>
-        <td>Attempts to commit or rollback a finished transaction.</td></tr>
+    <tr><td><dfn><code>TransactionStateError</code></dfn></td>
+      <td>Attempts to commit or rollback a finished transaction.</td></tr>
+    <tr><td><dfn><code>UnsupportedError</code></dfn></td>
+      <td>Attempts to use MAY support features that are not supported yet.
+      </td></tr>
   </table>
 </section>
 
