@@ -6,21 +6,29 @@
     {{include: create-by-json.js}}
   </pre>
 
+  <p>Any violation of the rules described in this section will result in
+  <a>InvalidSchemaError</a> exception. Any name not obeying
+  <a href="#naming-rules">Naming Rules</a> will also result in
+  <a>InvalidSchemaError</a> exception.</p>
+
   <p>The following WebIDL defines <code>Schema</code> dictionary type.
   <pre class="idl">
     dictionary Schema {
       DOMString name;
-      unsigned short version;
+      unsigned short version = 1;
       TableSpec[] table;
     };
   </pre>
   <dl class="dictionary-members">
     <dt><code>name</code></dt>
-    <dd>Name of the database</dd>
+    <dd>Name of the database.</dd>
     <dt><code>version</code></dt>
-    <dd>(Optional) Version of the database, for reference only</dd>
+    <dd>Version of the database, for reference only. This value cannot be set
+    to <code>0</code>, because it's reserved to indicate a newly created
+    database.</dd>
     <dt><code>table</code></dt>
-    <dd>Array of table specifications</dd>
+    <dd>Array of <a href="#table-specifications">table specifications</a>, and
+    it MUST NOT be empty.</dd>
   </dl>
 
   <section>
@@ -36,35 +44,50 @@
     </pre>
     <dl class="dictionary-members">
       <dt><code>name</code></dt>
-      <dd>Name of the table</dd>
+      <dd>Name of the table, MUST be unique within the database.</dd>
       <dt><code>column</code></dt>
-      <dd>Array of column definitions</dd>
+      <dd>Array of <a href="#column-specifications">column specifications</a>,
+      and it MUST NOT be empty.</dd>
       <dt><code>constraint</code></dt>
-      <dd>(Optional) Constraint definitions</dd>
+      <dd>(Optional)
+      <a href="#constraint-specifications">Constraint specifications</a>.</dd>
       <dt><code>index</code></dt>
-      <dd>(Optional) Array of index definitions</dd>
-    </dl>
-
-    <p>The following WebIDL defines column definition dictionary type:</p>
-    <pre class="idl">
-      dictionary ColumnSpec {
-        DOMString name;
-        ColumnType type;
-        boolean? notNull;
-      };
-    </pre>
-    <dl class="dictionary-members">
-      <dt><code>name</code></dt>
-      <dd>Name of the column</dd>
-      <dt><code>type</code></dt>
-      <dd>Type of the column</dd>
-      <dt><code>notNull</code></dt>
-      <dd>(Optional) Not null</dd>
+      <dd>(Optional) Array of
+      <a href="#index-specifications">index specifications</a>, and it MUST NOT
+      be empty when specified.</dd>
     </dl>
   </section>
 
   <section>
-    <h2>Index Definition</h2>
+    <h2>Column Specifications</h2>
+    <p>The following WebIDL defines column specification dictionary type:</p>
+    <pre class="idl">
+      dictionary ColumnSpec {
+        DOMString name;
+        ColumnType type;
+        boolean notNull = false;
+      };
+    </pre>
+    <dl class="dictionary-members">
+      <dt><code>name</code></dt>
+      <dd>Name of the column, MUST be unique within the containing table.</dd>
+      <dt><code>type</code></dt>
+      <dd>Associated column type of the column.</dd>
+      <dt><code>notNull</code></dt>
+      <dd>When specified as <code>true</code>, the column is <a>NOT NULL</a>.
+      </dd>
+    </dl>
+    <p><dfn>NOT NULL</dfn> means the column MUST NOT have a value of
+    <code>undefined</code> or <code>null</code>.</p>
+    <p>A column has a <dfn>canonical name</dfn>, which is represented as
+    <code>&lt;containing table name&gt;.&lt;column name&gt;</code>. One can
+    <dfn>refer</dfn> to a column by its name, if the referral is happened
+    within the table scope; or by its <a>canonical name</a> from anywhere
+    within the database.</p>
+  </section>
+
+  <section>
+    <h2>Index Specifications</h2>
     <p>The following WebIDL defines index specification dictionary type:</p>
     <pre class="idl">
       typedef (DOMString or DOMString[] or IndexedColumnSpec[]) IndexedColumnDefinition;
@@ -77,29 +100,41 @@
     </pre>
     <dl class="dictionary-members">
       <dt><code>name</code></dt>
-      <dd>Name of the index</dd>
+      <dd>Name of the index, MUST be unique within the containing table.</dd>
       <dt><code>column</code></dt>
       <dd>Indexed column definitions. If provided as
-          <code>DOMString</code> or <code>DOMString[]</code>, default sort
-          order of <code>asc</code> is used.</dd>
+          <code>DOMString</code>, the string MUST <a>refer</a> to an
+          <a>indexable</a> column of the containing table; if provided as
+          <code>DOMString[]</code>, it MUST NOT be empty, and the strings MUST
+          <a>refer</a> to different <a>indexable</a> columns of the containing
+          table. In these two cases, default sort order of <code>asc</code> is
+          used. If provided as <code>IndexedColumnSpec[]</code>, it MUST NOT
+          be empty, and each <code>IndexedColumnSpec</code> MUST <a>refer</a>
+          to different column.</dd>
       <dt><code>type</code></dt>
       <dd>(Optional) Type of index, default to <code>btree</code></dd>
       <dt><code>unique</code></dt>
       <dd>(Optional) Keys in index shall be unique or not,
           default to <code>false</code>.</dd>
     </dl>
-    <p>Index type allows user to hint the implementation what this index is
-    best to be used for. The implementation may or may not construct the index
-    using corresponding algorithm. The index type is an enum:</p>
+    <p>Index type allows user to hint the query engine to create an index on
+    specified columns in given sorting orders. The query engine MAY construct
+    the index, MAY follow the given sorting orders, and MAY use the specified
+    type. The query engine can refuse to construct the index as specified, or
+    construct a different index.</p>
+
+    <p>The index type is an enum:</p>
     <dl title="enum IndexType" class="idl">
       <dt>btree</dt><dd>B+ Tree index</dd>
       <dt>hash</dt><dd>Hash index</dd>
     </dl>
 
-    <p>An index can be keyed by one or more columns unless the
-    <code>unique</code> is set to true. In that case, an
-    <code>ConstraintError</code> will be thrown if user tried to insert/update
-    a row with duplicated key.</p>
+    <p>An index can be keyed by one or more columns. A <dfn>unique key</dfn>
+    means that the value or combination of values used as index key is unique
+    within the index. By default, all indices allow duplicate keys unless the
+    <code>unique</code> is set to true. A <a>ConstraintError</a> will be thrown
+    if user tried to insert/update a row with duplicated key when a unique
+    index is specified.</p>
 
     <p>The WebIDL below defines indexed column specification.</p>
     <pre class="idl">
@@ -110,23 +145,20 @@
     </pre>
     <dl class="dictionary-members">
       <dt><code>name</code></dt>
-      <dd>Name of the indexed column</dd>
+      <dd>Name of the indexed column, MUST <a>refer</a> to an <a>indexable</a>
+      column of the containing table.</dd>
       <dt><code>order</code></dt>
       <dd>(Optional) Sorting order of the column, default to
-          <code>asc</code></dd>
+          <code>asc</code>.</dd>
     </dl>
-    <p>The name specified in the indexed column must exist in the same table
-    defining this index, otherwise an <code>InvalidSchemaError</code> will be
-    thrown. If the specified column is not indexable, an
-    <code>InvalidSchemaError</code> will be thrown.</p>
     <p>If an index definition overlapped with implicit indices created by
     constraints (for example, create an index on the same column of the primary
-    key), it will be up to the implementation to determine whether or not to
+    key), it will be up to the query engine to determine whether or not to
     create this index.</p>
   </section>
 
   <section>
-    <h2>Constraint Specification</h2>
+    <h2>Constraint Specifications</h2>
     <p>The following WebIDL defines constraint specification.</p>
     <pre class="idl">
       typedef (DOMString or DOMString[] or IndexedColumnSpec[] or PrimaryKeySpec) PrimaryKeyDefinition;
@@ -139,25 +171,28 @@
     </pre>
     <dl class="dictionary-members">
       <dt><code>primaryKey</code></dt>
-      <dd>(Optional) Primary key specification</dd>
+      <dd>(Optional) <a href="#primary-key-specification">Primary key
+      specification</a>.</dd>
       <dt><code>foreignKey</code></dt>
-      <dd>(Optional) Foreign key definition</dd>
+      <dd>(Optional) <a href="#foreign-key-specification">Foreign key
+      specification</a>.</dd>
       <dt><code>unique</code></dt>
-      <dd>(Optional) Unique index definitions</dd>
+      <dd>(Optional) <a href="#unique-index-specification">Unique index
+      specification</a>.</dd>
       <dt><code>notNull</code></dt>
-      <dd>(Optional) Column(s) that are not null</dd>
+      <dd>(Optional) Column(s) that are <a>NOT NULL</a>.</dd>
     </dl>
-    <p>The name(s) specified in the notNull must exist in the same table
-    defining this constraint, otherwise an <code>InvalidSchemaError</code>
-    will be thrown. By default all columns accept null as valid value, unless
-    the column is constrainted with notNull.</p>
+    <p>The name(s) specified in the notNull MUST <a>refer</a> to column(s)
+    of the containing table. When provided as <code>DOMString[]</code>, the
+    array MUST NOT be empty, and they MUST <a>refer</a> to different
+    columns.</p>
   </section>
 
   <section>
-    <h2>Unique Index Definition</h2>
+    <h2>Unique Index Specification</h2>
     <p>Unique index is a specialized index that disallows duplicated keys.
     Its definition format is the same as index definition. If two or more
-    columns are defined as keys, the combination of the columns forms the
+    columns are defined as keys, the combination of the column values forms the
     uniqueness.</p>
     <pre class="idl">
       dictionary UniqueSpec {
@@ -165,14 +200,20 @@
         IndexedColumnDefinition column;
       };
     </pre>
+    <dl class="dictionary-members">
+      <dt><code>name</code></dt>
+      <dd>Name of the index, MUST be unique within the containing table.</dd>
+      <dt><code>column</code></dt>
+      <dd>Same as the <code>column</code> in <a href="#index-specifications">
+      Index Specifications</a>.</dd>
+    </dl>
   </section>
 
   <section>
     <h2>Primary Key Specification</h2>
-    <p>Each table can only have one primary key definition. The primary key
-    will implicitly create an unique constraint and enforce it. A primary key
-    can be specified using normal index specifications, or use the following
-    WebIDL.</p>
+    <p>Primary key is a specialized unique index. Each table can have only one
+    primary key. A primary key can be specified using unique index
+    specification, or use the following WebIDL:</p>
     <pre class="idl">
       dictionary PrimaryKeySpec {
         DOMString name;
@@ -180,14 +221,16 @@
       };
     </pre>
     <dl class="dictionary-members">
-      <dt><code>name</code></dt><dd>Column name of the primary key</dd>
-      <dt><code>autoIncrement</code></dt><dd>Create auto-increment key</dd>
+      <dt><code>name</code></dt><dd>Column name of the primary key, MUST
+      <a>refer</a> to <a>indexable</a> column of the containing table.</dd>
+      <dt><code>autoIncrement</code></dt><dd>Create auto-increment
+      primary key.</dd>
     </dl>
-    <p>When the autoIncrement field is specified, the specified column must be
-    of type <code>Number</code>, otherwise an <code>InvalidSchemaError</code>
-    will be thrown. An auto-increment key will start from zero. When a new row
-    is inserted into the table, the key will increase by one and assigned to
-    that row regardless the original key value given to the row.</p>
+    <p>When the autoIncrement field is specified, the specified column MUST be
+    of type <code>Number</code>. An auto-increment key will start from zero.
+    When a new row is inserted into the table, the key will increase by one and
+    assigned to that row regardless the original key value given to the
+    row.</p>
   </section>
 
   <section>
@@ -204,16 +247,25 @@
     </pre>
     <dl class="dictionary-members">
       <dt><code>name</code></dt>
-      <dd>Name of the foreign key</dd>
+      <dd>Name of the foreign key, MUST be unique withing the containing table.
+      </dd>
       <dt><code>local</code></dt>
-      <dd>Referring column name</dd>
+      <dd>Referring column name, MUST <a>refer</a> to an <a>indexable</a>
+      column of the containing table.</dd>
       <dt><code>remote</code></dt>
-      <dd>Referred column canonical name</dd>
+      <dd>Referred column <a>canonical name</a>, MUST <a>refer</a> to an
+      <a>indexable</a> column.</dd>
       <dt><code>action</code></dt>
-      <dd>(Optional) Foreign key action, default: <code>restrict</code></dd>
+      <dd>(Optional) Foreign key action, default to <code>restrict</code>.</dd>
       <dt><code>timing</code></dt>
-      <dd>(Optional) Foreign key timing, default: <code>immediate</code></dd>
+      <dd>(Optional) Foreign key timing, default to <code>immediate</code>.
+      </dd>
     </dl>
+    <p>A <dfn>chainned foreign key</dfn> means the <code>remote</code> column
+    is also a <code>local</code> column of another foreign key, which forms a
+    dependency. The query engine MAY support chainned foreign key. The query
+    engine MAY support referred column to be within the containing table.</p>
+
     <p>Foreign key actions are enum values as defined in the following:</p>
     <dl title="enum ForeignKeyAction" class="idl">
       <dt>restrict</dt>

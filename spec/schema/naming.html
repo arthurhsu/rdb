@@ -2,13 +2,13 @@
   <h2>Naming Rules</h2>
   <p>Names in schema means identifiers used to identify an entity, such as
   database, table, column, index, constraint, and so on. All names used in the
-  database schema must abide the following rules:</p>
+  database schema MUST abide the following rules:</p>
   <ul>
     <li>Names are case sensitive</li>
-    <li>A name must pass the following check:
+    <li>A name MUST pass the following check:
         <code>/^[A-Za-z_][A-Za-z0-9_]*$/.test(name)</code>
     </li>
-    <li>A name must not conflict with fields defined in
+    <li>A name MUST NOT conflict with fields defined in
         <code>Object.prototype</code>
     </li>
   </ul>

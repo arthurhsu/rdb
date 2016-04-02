@@ -2,31 +2,30 @@
   <h2>Schema</h2>
   <section>
     <h2>Overview</h2>
-    <p>This section is non-normative.</p>
-
-    <p>Schema defines the storage structure of a relational database. A schema
-    has a name. The origin of the page and the schema name together uniquely
-    identify a database instance.</p>
+    <p>A schema defines the storage structure of a relational database.
+    A schema MUST have a name. The origin of the page and the schema name
+    together uniquely identify a database instance during runtime.</p>
 
     <p>A schema has a referential version number associated with it. Version
-    number is an integer greater than zero and can be freely assigned. It has no
-    effect on identifying a database. It is provided for the convenience of
+    number is an integer greater than zero and can be freely assigned. It has
+    no effect on identifying a database. It is provided for the convenience of
     developers to version their schema without extra table.</p>
 
-    <p>A schema is structured in a hierachical way. A database contains one or
-    more tables. A table contains one or more columns, zero or more indices, and
-    zero or more constraints. The collection of columns in a table defines the
-    data carried by a row, which is the fundamental unit of data storage in
-    relational database. The indices hint the database engine to build index
+    <p>A schema is structured in a hierachical way. A database schema contains
+    one or more tables. A table contains one or more columns, zero or more
+    indices, and zero or more constraints. The collection of columns in a table
+    defines the fields carried by a row, which is the fundamental unit of data
+    storage in relational database. Each column consists a name and an
+    associated data type. The indices hint the database engine to build index
     structures so that subsequent queries can be acclerated. Index definitions
-    may not be honored if the database engine determined that they are not
-    necessary. The constraints define the relations of data and ensures data
-    integrity.</p>
+    MAY be honored if the database engine determined that they are necessary.
+    The constraints define the relations of rows and ensures data integrity,
+    and MUST be honored.</p>
 
-    <p>The database schema can be described in JSON format or via builder
-    pattern APIs. Schema can be changed through schema queries within any
-    <code>readwrite</code> transactions. The JSON format and related APIs are
-    described in the following sections.</p>
+    <p>The database schema can be described in JSON format or constructed via
+    builder pattern APIs. Schema can be changed through schema queries within
+    any <code>readwrite</code> transactions. The JSON format and related APIs
+    are described in the following sections.</p>
   </section>
 
   {{include: naming.html}}

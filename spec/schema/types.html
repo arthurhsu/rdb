@@ -1,6 +1,6 @@
 <section>
-  <h2>Types</h2>
-  <p>All columns in a table schema must be associated with a given type. Valid
+  <h2>Column Types</h2>
+  <p>All columns in a table schema MUST be associated with a given type. Valid
   types of a column are defined in <code>ColumnType</code></p>
   <dl title="enum ColumnType" class="idl">
     <dt>blob</dt><dd>JavaScript type <code>ArrayBuffer</code></dd>
@@ -12,10 +12,12 @@
   </dl>
   <pre class="idl">
     typedef (ArrayBuffer or boolean or Date or number or DOMString or object) ValueType;
+    typedef (boolean or Date or number or DOMString) IndexableValueType;
   </pre>
 
-  <p><code>blob</code> and <code>object</code> types are not
-  <em>indexable</em>, which means columns of these types could not be used to
-  create indices and predicates (except the <code>isNull()</code> and
-  <code>isNotNull()</code> predicates).</p>
+  <p>Only some value types are <dfn>indexable</dfn>, which means that they can 
+  be compared, sorted, and used in indices and predicates. Non-indexable types,
+  <code>blob</code> and <code>object</code>, MUST NOT be used to create indices
+  and predicates, except the <code>isNull()</code> and <code>isNotNull()</code>
+  predicates.</p>
 </section>
