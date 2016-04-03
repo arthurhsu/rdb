@@ -335,9 +335,7 @@ navigator.db.open('hr').then(function(connection) {
     <dt><code>name</code></dt>
     <dd>Name of the database.</dd>
     <dt><code>version</code></dt>
-    <dd>Version of the database, for reference only. This value MUST NOT be set
-    to <code>0</code>, because it's reserved to indicate a newly created
-    database.</dd>
+    <dd>Version of the database, for reference only.</dd>
     <dt><code>table</code></dt>
     <dd>Array of <a href="#table-specifications">table specifications</a>, and
     it MUST NOT be empty.</dd>
@@ -543,6 +541,7 @@ navigator.db.open('hr').then(function(connection) {
     When a new row is inserted into the table, the key will increase by one and
     assigned to that row regardless the original key value given to the
     row.</p>
+    <p class="note">Unlike SQL, primary key does not have name.</p>
   </section>
 
   <section>
@@ -603,88 +602,228 @@ navigator.db.open('hr').then(function(connection) {
 
 <section>
   <h2>Schema Query</h2>
-  <p>Schema is created using schema queries. Schema queries can be used to
-  create or modify database schema. Schema queries are run in the context of
-  <em>transaction</em> and can be executed any time during the life time of the
-  database. The schema query starts with the <code>ISchemaQueryProvider</code>:
-  </p>
-  <pre class="idl">
-    interface ISchemaQueryProvider {
-      IExecutionContext exportSchema();
-      IExecutionContext create(Object schema);
-      IExecutionContext setVersion(unsigned short version);
-      IDatabaseSchema schema();
-      ITableBuilder createTable();
-      ITableChanger alterTable();
-    };
-  </pre>
-  <dl class="methods">
-    <dt><code>IExecutionContext exportSchema();</code></dt>
-    <dd>Export schema object. This is run in the context of transaction.</dd>
-    <dt><code>IExecutionContext create(Object schema);</code></dt>
-    <dd>Create database schema from provided schema object. The schema object
-    MUST conform to the format defined in Schema Definition JSON Format.
-    Any error in the schema will result in transaction failure with
-    <a>InvalidSchemaError</a>.</dd>
-    <dt><code>IDatabaseSchema schema();</code></dt>
-    <dd>Returns an <code>IDatabaseSchema</code> object for crafting data
-    manipulation queries.</dd>
-    <dt><code>ITableBuilder createTable();</code></dt>
-    <dd>Returns a table builder for creating a new table.</dd>
-    <dt><code>ITableChanger alterTable(string tableName);</code></dt>
-    <dd>Returns a table builder for altering an existing table.</dd>
-  </dl>
+  <p>A database instance is created using schema queries. The associated schema
+  of the database can also be altered using schema queries. Schema queries are
+  run in the context of <a>transaction</a> and can be executed any time during
+  the life time of the database.</p>
 
-  <pre class="idl">
-    interface IDatabaseSchema {
-      readonly attribute DOMString name;
-      readonly attribute unsigned short version;
-      object table(DOMString tableName);
-    };
-  </pre>
+  <section>
+    <h2>Database-Level Schema Query</h2>
+    <p>The <code>ISchemaQueryProvider</code> is the interface of manipulating
+    database-level schema:</p>
+    <pre class="idl">
+      interface ISchemaQueryProvider {
+        IExecutionContext exportSchema();
+        IExecutionContext create(Object schema);
+        IExecutionContext setVersion(unsigned short version);
+        IExecutionContext setForeignKeyCheck(boolean value);
+        IDatabaseSchema schema();
+        ITableBuilder createTable();
+        ITableChanger alterTable();
+        IExecutionContext dropTable(DOMString name);
+      };
+    </pre>
+    <dl class="methods">
+      <dt><code>IExecutionContext exportSchema();</code></dt>
+      <dd>Export schema object, MUST be run in the context of a
+      <a>transaction</a>.</dd>
+      <dt><code>IExecutionContext create(Object schema);</code></dt>
+      <dd>Create database schema from provided schema object, MUST be run in
+      the context of a <a>transaction</a>. The schema object MUST conform to
+      the format defined in <a href="#schema-definition-json-format">
+      Schema Definition JSON Format</a>. Any error in the schema will result in
+      transaction failure with <a>InvalidSchemaError</a>.</dd>
+      <dt><code>IExecutionContext setVersion(unsigned short version);</code>
+      </dt>
+      <dd>Sets the version number of the schema, MUST be run in the context of
+      a <a>transaction</a>.</dd>
+      <dt><code>IExecutionContext setForeignKeyCheck(boolean value);</code></dt>
+      <dd>Enables or disables foreign key constraint enforcement within the
+      transaction that the execution context returned by this function is in.
+      Misuse of this function MAY cause broken data integrity.
+      </dd>
+      <dt><code>IDatabaseSchema schema();</code></dt>
+      <dd>Returns an <code>IDatabaseSchema</code> object for crafting data
+      manipulation queries.</dd>
+      <dt><code>ITableBuilder createTable();</code></dt>
+      <dd>Returns a <a href="#table-builder">table builder</a> for creating a
+      new table.</dd>
+      <dt><code>ITableChanger alterTable(string tableName);</code></dt>
+      <dd>Returns a <a href="#table-changer">table changer</a> for altering an
+      existing table. The table referred by <code>tableName</code> MUST already
+      exist in the database, otherwise a <a>DataError</a> will be raised.</dd>
+      <dt><code>IExecutionContext dropTable(DOMString name);</code></dt>
+      <dd>Removes a table and all its rows from database. The table referred by 
+      <code>name</code> MUST already exist in the database, otherwise a
+      <a>DataError</a> will be raised.</dd>
+    </dl>
+  </section>
+  <section>
+    <h2>Database Schema</h2>
+    <p>Database schema obtained from <code>ISchemaQueryProvider.schema()</code>
+    provides <code>IDatabaseSchema</code> interface.</p>
+    <pre class="idl">
+      interface IDatabaseSchema {
+        readonly attribute DOMString name;
+        readonly attribute unsigned short version;
+        object table(DOMString tableName);
+      };
+    </pre>
+    <dl class="attributes">
+      <dt><code>DOMString name</code></dt>
+      <dd>Name of the database.</dd>
+      <dt><code>unsigned short version</code></dt>
+      <dd>Version of the database schema.</dd>
+    </dl>
+    <dl class="methods">
+      <dt><code>object table(DOMString tableName);</code></dt>
+      <dd>Returns a read-only dictionary object, whose members are
+      <a>IColumn</a> objects representing columns in the specified table.
+      The table referred by <code>tableName</code> MUST already exist in the
+      database, otherwise a <a>DataError</a> will be raised.</dd>
+    </dl>
+  </section>
 
-  <pre class="idl">
-    interface ITableBuilder : IExecutionContext {
-      ITableBuilder column(DOMString name, ColumnType type, optional boolean notNull = false);
-      ITableBuilder primaryKey(PrimaryKeyDefinition primaryKey);
-      ITableBuilder foreignKey(ForeignKeySpec foreignKey);
-      ITableBuilder unique(DOMString name, IndexedColumnDefinition columns);
-      ITableBuilder index(DOMString name, IndexedColumnDefinition columns);
-    };
-  </pre>
+  <section>
+    <h2>Table Builder</h2>
+    <p>Table builder is used to describe the new table that will be created,
+    and MUST be used within the context of a <a>transaction</a>.</p>
+    <pre class="idl">
+      interface ITableBuilder : IExecutionContext {
+        ITableBuilder column(DOMString name, ColumnType type, optional boolean notNull = false);
+        ITableBuilder primaryKey(PrimaryKeyDefinition primaryKey);
+        ITableBuilder foreignKey(ForeignKeySpec foreignKey);
+        ITableBuilder unique(DOMString name, IndexedColumnDefinition columns);
+        ITableBuilder index(DOMString name, IndexedColumnDefinition columns);
+      };
+    </pre>
+    <p>All methods returns the same <code>ITableBuilder</code> object that
+    they were called from to make cascade builder pattern possible. If any of
+    the rule described in the following table were violated, an
+    <a>InvalidSchemaError</a> will be thrown. All methods can be called
+    multiple times except <code>primaryKey</code>.</p>
+    <dl class="methods">
+      <dt><code>ITableBuilder column(DOMString name, ColumnType type, optional boolean notNull = false);</code></dt>
+      <dd>Adds a column to table. <code>name</code> MUST be unique within the
+      containing table.</dd>
+      <dt><code>ITableBuilder primaryKey(PrimaryKeyDefinition primaryKey);</code></dt>
+      <dd>Adds a primary key to table. This method MUST NOT be called multiple
+      times.</dd>
+      <dt><code>ITableBuilder foreignKey(ForeignKeySpec foreignKey);</code></dt>
+      <dd>Adds a foreign key to table.</dd>
+      <dt><code>ITableBuilder unique(DOMString name, IndexedColumnDefinition columns);
+</code></dt>
+      <dd>Adds an unique index to table. The <code>name</code> is the name of
+      the index, and it MUST be unique within the containing table.</dd>
+      <dt><code>ITableBuilder index(DOMString name, IndexedColumnDefinition columns);
+</code></dt>
+      <dd>Adds an index to table. The <code>name</code> is the name of the
+      index, and it MUST be unique within the containing table.</dd>
+    </dl>
+  </section>
 
-  <pre class="idl">
-    interface ITableChanger : IExecutionContext {
-      ITableChanger rename(DOMString newTableName);
-      ITableChanger addColumn(DOMString name, ColumnType type, optional boolean notNull = false);
-      ITableChanger dropColumn(DOMString name);
-      IColumnChanger setColumn(DOMString name);
-    };
-  </pre>
+  <section>
+    <h2>Table Changer</h2>
+    <p>Table changer is used to change the schema of an existing table, and
+    MUST be used within the context of a <a>transaction</a>. If the table
+    already contains data, altering table schema can cause constraint
+    violations and fail the transaction.</p>
+    <pre class="idl">
+      interface ITableChanger : IExecutionContext {
+        ITableChanger rename(DOMString newTableName);
+        ITableChanger addColumn(DOMString name, ColumnType type, optional boolean notNull = false, optional ValueType defaultValue = null);
+        ITableChanger dropColumn(DOMString name);
+        ITableChanger addPrimaryKey(PrimaryKeyDefinition primaryKey);
+        ITableChanger dropPrimaryKey();
+        ITableChanger addForeignKey(ForeignKeySpec foreignKey);
+        ITableChanger addUnique(DOMString name, IndexedColumnDefinition columns);
+        ITableChanger addIndex(DOMString name, IndexedColumnDefinition columns);
+        ITableChanger dropConstraintOrIndex(DOMString name);
+        IColumnChanger setColumn(DOMString name);
+      };
+    </pre>
+    <p>All methods returns the same <code>ITableChanger</code> object that
+    they were called from to make cascade builder pattern possible, except that
+    <code>setColumn</code> will return a <a>IColumnChanger</a> instead. If any
+    of the rule described in the following table were violated, an
+    <a>InvalidSchemaError</a> will be thrown. All methods can be called
+    multiple times.</p>
+    <dl class="methods">
+      <dt><code>ITableChanger rename(DOMString newTableName);</code></dt>
+      <dd>Renames the table, <code>newTableName</code> MUST be unique within the
+      database, and MUST NOT be the same as existing table name.</dd>
+      <dt><code>ITableChanger addColumn(DOMString name, ColumnType type, optional boolean notNull = false, optional ValueType defaultValue = null);</code></dt>
+      <dd>Adds a new column to table, <code>name</code> MUST be unique within
+      the containing table. If <code>defaultValue</code> is given, it MUST
+      be of the same type as specified in <code>type</code>. Every existing row
+      in the table will be added a new column with </code>defaultValue</code>.
+      </dd>
+      <dt><code>ITableChanger dropColumn(DOMString name);</code></dt>
+      <dd>Removes a column from table. The <code>name</code> MUST <a>refer</a>
+      to an existing column in the table schema. The referred column MUST NOT
+      be the only column in the table schema, and MUST NOT be referred by any
+      index nor constraints. Every existing row in the table will be modified
+      to remove the field represented by that column.</dd>
+      <dt><code>ITableChanger addPrimaryKey(PrimaryKeyDefinition primaryKey);</code></dt>
+      <dd>Adds a primary key to table, the table MUST not have existing primary
+      key.</dd>
+      <dt><code>ITableChanger dropPrimaryKey();</code></dt>
+      <dd>Removes primary key from table. If the table does not have primary
+      key, this method will do nothing.</dd>
+      <dt><code>ITableChanger addForeignKey(ForeignKeySpec foreignKey);</code></dt>
+      <dd>Adds a foreign key to the table.</dd>
+      <dt><code>ITableChanger addUnique(DOMString name, IndexedColumnDefinition columns);</code></dt>
+      <dd>Adds an unique index to the table. The <code>name</code> is the name
+      of the unique index and MUST be unique within the containing table.</dd>
+      <dt><code>ITableChanger addIndex(DOMString name, IndexedColumnDefinition columns);</code></dt>
+      <dd>Adds an index to the table. The <code>name</code> is the name
+      of the index and MUST be unique within the containing table.</dd>
+      <dt><code>ITableChanger dropConstraintOrIndex(DOMString name);</code></dt>
+      <dd>Removes a constraint or index in table by name. The <code>name</code>
+      MUST refer to an existing constraint or index.</dd>
+      <dt><code>IColumnChanger setColumn(DOMString name);</code></dt>
+      <dd>Changes a column in the table, and the <code>name</code> MUST
+      <a>refer</a> to an existing column in the table schema.</dd>
+    </dl>
+  </section>
 
-  <pre class="idl">
-    interface IColumnChanger {
-      ITableChanger set(DOMString newColumnName, ColumnType newType, optional boolean notNull = true);
-    };
-  </pre>
+  <section>
+    <h2>Column Changer</h2>
+    <pre class="idl">
+      interface IColumnChanger {
+        ITableChanger set(DOMString newColumnName, optional boolean notNull = true);
+      };
+    </pre>
+    <dl class="methods">
+      <dt><code>ITableChanger set(DOMString newColumnName, optional boolean notNull = true);</code></dt>
+      <dd>Changes the column's name or <a>NOT NULL</a> property. The returned
+      <code>ITableChanger</code> is the parent object that creates this object.
+      </dd>
+      <p class="note">Changing column data type is not supported by this spec.
+      JavaScript is famous of tricky type conversions and it is unlikely to
+      have conversion rules that covers every corner case.</p>
+    </dl>
+  </section>
 
-  <p>The following example demonstrates how to create a database schema.</p>
+  <section class="informative">
+    <h2>Schema Query Examples</h2>
+    <p>The following example demonstrates how to create a database schema.</p>
     <pre class="example highlight">
 var db;
 var tx = db.createTransaction('readwrite');
 var q1 = db.createTable('Dept')
            .column(/* column_name */ 'id',
-                   /* column_type */ 'String',
+                   /* column_type */ 'string',
                    /* not_null */ true)
-           .column('name', 'String', true)
+           .column('name', 'string', true)
            .primaryKey([{'name': 'id'}]);
 tx.append(q1);
 
 var q2 = db.createTable('Emp')
-           .column('id', 'Number', true)
-           .column('name', 'String', true)
-           .column('deptId', 'String', true)
-           .column('title', 'String')
+           .column('id', 'number', true)
+           .column('name', 'string', true)
+           .column('deptId', 'string', true)
+           .column('title', 'string')
            .primaryKey([{'name': 'id', 'order': 'asc'}])
            .unique(['name'])
            .index('idx_Desc', [{'name': 'desc', 'order': 'asc'}])
@@ -701,23 +840,32 @@ tx.commit().then(function() {
   // Table created, do something here.
 });
 
-  </pre>
+    </pre>
+    <p>The following example shows how to alter database schema during schema
+    upgrade.</p>
+    <pre class="example highlight">
+var db;
+var version = db.schema().version();
 
-  <pre class="idl">
-    interface ITable {
-      readonly attribute DOMString name;
-      ITable as(DOMString alias);
-    };
-  </pre>
+if (version < 2) {
+  // Need DB upgrade.
+  var tx = db.createTransaction('readwrite');
+  var q1 = db.setVersion(2);
+  var q2 = db.createTable('NewTable')
+             .column('id', 'string', true)
+             .column('name', 'string', true);
+  var q3 = db.alterTable('Emp')
+             .addColumn('location', 'string', true, 'LAX')
+             .setColumn('title').set('title', true)  // Change to NOT NULL
+             .addIndex('idx_location', 'location');
+  var q4 = db.dropTable('Foo');
+  tx.exec([q1, q2, q3, q4]).then(function() {
+    // Update data after schema has changed.
+  });
+}
 
-  <pre class="idl">
-    interface IColumn : IPredicate {
-      readonly attribute DOMString name;
-      readonly attribute ColumnType type;
-      readonly attribute boolean nullable;
-      IColumn as(DOMString alias);
-    };
-  </pre>
+    </pre>
+  </section>
 </section>
 
 
@@ -899,9 +1047,32 @@ tx.commit().then(function() {
   <h2>Query and Transaction</h2>
 
 <section>
+  <h2>Schema Representation</h2>
+  <pre class="idl">
+    interface ITable {
+      readonly attribute DOMString name;
+      ITable as(DOMString alias);
+    };
+  </pre>
+
+  <pre class="idl">
+    interface IColumn : IPredicate {
+      readonly attribute DOMString name;
+      readonly attribute ColumnType type;
+      readonly attribute boolean nullable;
+      IColumn as(DOMString alias);
+    };
+  </pre>
+</section>
+
+<section>
   <h2>Transaction</h2>
-  <p>A <em>transaction</em> is used to interact with data in a database. Data is
-  read from or written to database via transaction.</p>
+  <p>A <dfn>transaction</dfn> is an atomic unit of reading and writing data in
+  a database. A transaction contains one or more queries that indicate how to
+  interact with the database. A transaction is an atomic unit of execution that
+  guarantees all queries inside this transaction to be committed as a whole, or
+  none get committed. A committed transaction guarantees all data being written
+  to storage.</p>
 
   <p>All transactions are associated with a database connection, which is the
   <em>connection</em> that the transaction is created within. A transaction has
@@ -915,12 +1086,6 @@ tx.commit().then(function() {
     <dt>readwrite</dt>
     <dd>Transaction intends to read/write rows and/or change schema.</dd>
   </dl>
-
-  <p>A transaction contains one or more <em>queries</em> that indicate how to
-  interact with the database. A transaction is an atomic unit of execution that
-  guarantees all queries inside this transaction to be committed as a whole, or
-  none get committed. A committed transaction guarantees all persistent data
-  being written to the persistent storage.</p>
 
   <p>A transaction has a <em>scope</em> that determines the rows affected by
   this transaction. The scope is automatically calculated. A transaction's scope
