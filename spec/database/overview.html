@@ -9,26 +9,22 @@
   <p>Each origin has an associated set of databases. A database comprises one
   or more tables which hold the data stored in the database.</p>
 
-  <p>Every database has a <em>name</em> which identifies it within a specific
-  origin. The name MUST satisfy the Naming Rules, and stay constant for the
-  lifetime of the database.</p>
-
-  <p>Each database also has a version number for reference only. When a
-  database is first created, its version is 0.</p>
-
-  <p class="note">Implementations MUST support all names. If an implementation
-  uses a storage mechanism which can't handle arbitrary database names, the
-  implementation MUST use an escaping mechanism or something similar to map
-  the provided name to a name that it can handle.</p>
+  <p>Every database has a predefined layout of the data structures persisted,
+  which is referred as <a href="#schema">schema</a>. The <em>database name</em>
+  specified in schema identifies the database within a specific origin.
+  The name MUST satisfy the <a href="#naming-rules">Naming Rules</a>, and stay
+  constant for the lifetime of the database. Each database also has a version
+  number for reference only.</p>
 
   <p>Databases has a <em>delete pending</em> flag which is used during
   deletion. When a database is requested to be deleted the flag is set to true
   and all attempts at opening the database are stalled until database is
   deleted.</p>
 
-  <p>The act of opening a database creates a <em>connection</em>. There may be
-  multiple connections to a given database at any given time. Each connection
-  has a <em>closePending</em> flag which initially is set to false.</p>
+  <p>The act of opening a database creates a <dfn>connection</dfn>. There MAY
+  be multiple connections to a given database at any given time. Each
+  connection has a <em>closePending</em> flag which initially is set to
+  false.</p>
 
   <p>When a connection is initially created it is in opened state. The
   connection can be closed through several means. If the connection is garbage
@@ -40,24 +36,8 @@
   uncommitted transactions will be canceled if their associated connections
   are marked close pending.</p>
 
-  <p>Every database contains zero or more <em>tables</em> to store data. A
-  table contains zero or more <em>rows</em>. A row is also known as a record or
-  a tuple, which represents a single structured data item in a table. A row
-  consists zero or more <em>columns</em>, each with predefined data types.
-  A database can also contain <em>indices</em>. An index is a data structure
-  that enables fast look up and/or enforces data integrity.</p>
-
-  <p>Every database has a predefined layout of the data structures persisted,
-  which is referred as <em>schema</em> throughout this document. A database
-  schema consists of a list of table schema. Each table schema describes the
-  structures of the rows stored within it, which is also referred as 
-  <em>column definitions</em>. A table schema also describes
-  <em>constraints</em> and <em>index</em> structures for that table.</p>
-
   <p>Users can create observers associated with a given database. Each
   observer consists a select query. When the results of that select query
-  change, the observer will be triggered.</p>
-
-  <p>The <code>IDatabaseConnection</code> interface represents a connection to
-  a database.</p>
+  change, the observer will be triggered. The change MAY come from other
+  connections.</p>
 </section>
