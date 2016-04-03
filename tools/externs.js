@@ -287,6 +287,13 @@ ISchemaQueryProvider.prototype.create;
 ISchemaQueryProvider.prototype.setVersion;
 
 
+/**
+ * @param {boolean} value
+ * @return {!IExecutionContext}
+ */
+ISchemaQueryProvider.prototype.setForeignKeyCheck;
+
+
 /** @return {!IDatabaseSchema} */
 ISchemaQueryProvider.prototype.schema;
 
@@ -297,6 +304,13 @@ ISchemaQueryProvider.prototype.createTable;
 
 /** @return {!ITableChanger} */
 ISchemaQueryProvider.prototype.alterTable;
+
+
+/**
+ * @param {string} name
+ * @return {!IExecutionContext}
+ */
+ISchemaQueryProvider.prototype.dropTable;
 
 
 
@@ -398,6 +412,47 @@ ITableChanger.prototype.dropColumn;
 
 
 /**
+ * @param {!rdb.PrimaryKeyDefinition} pk
+ * @return {!ITableChanger}
+ */
+ITableChanger.prototype.addPrimaryKey;
+
+
+/** @return {!ITableChanger} */
+ITableChanger.prototype.dropPrimaryKey;
+
+
+/**
+ * @param {!rdb.ForeignKeySpec} fk
+ * @return {!ITableChanger}
+ */
+ITableChanger.prototype.addForeignKey;
+
+
+/**
+ * @param {string} name
+ * @param {!rdb.IndexedColumnDefinition} columns
+ * @return {!ITableChanger}
+ */
+ITableChanger.prototype.addUnique;
+
+
+/**
+ * @param {string} name
+ * @param {!rdb.IndexedColumnDefinition} columns
+ * @return {!ITableChanger}
+ */
+ITableChanger.prototype.addIndex;
+
+
+/**
+ * @param {string} name
+ * @return {!ITableChanger}
+ */
+ITableChanger.prototype.dropConstraintOrIndex;
+
+
+/**
  * @param {string} name
  * @return {!IColumnChanger}
  */
@@ -405,15 +460,12 @@ ITableChanger.prototype.setColumn;
 
 
 
-// TODO(arthurhsu): design disable constraints, otherwise alter will fail.
-// TODO(arthurhsu): this interface seems unnecessary
 /** @interface */
 function IColumnChanger() {}
 
 
 /**
  * @param {string} newName
- * @param {!rdb.ColumnType} type
  * @param {boolean=} opt_notNull
  * @return {!ITableChanger}
  */
@@ -893,6 +945,7 @@ IDatabaseFunctionProvider.prototype.distinct;
 /** @override */ DatabaseConnection.prototype.createTable;
 /** @override */ DatabaseConnection.prototype.createTransaction;
 /** @override */ DatabaseConnection.prototype.delete;
+/** @override */ DatabaseConnection.prototype.dropTable;
 /** @override */ DatabaseConnection.prototype.export;
 /** @override */ DatabaseConnection.prototype.exportSchema;
 /** @override */ DatabaseConnection.prototype.import;
@@ -902,6 +955,7 @@ IDatabaseFunctionProvider.prototype.distinct;
 /** @override */ DatabaseConnection.prototype.schema;
 /** @override */ DatabaseConnection.prototype.select;
 /** @override */ DatabaseConnection.prototype.setVersion;
+/** @override */ DatabaseConnection.prototype.setForeignKeyCheck;
 /** @override */ DatabaseConnection.prototype.unobserve;
 /** @override */ DatabaseConnection.prototype.update;
 
