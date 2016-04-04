@@ -1,0 +1,79 @@
+<section>
+  <h2>Relational Database</h2>
+  <p>The relational database is part of <code>Navigator</code> as defined in
+  following WebIDL.</p>
+  <pre class="idl">
+    partial interface Navigator {
+      readonly attribute IRelationalDatabase db;
+    };
+  </pre>
+
+  <p>The relational database is defined by the following WebIDL.</p>
+  <pre class="idl">
+    interface IRelationalDatabase {
+      readonly attribute IDatabaseFunctionProvider fn;
+
+      Promise< DatabaseConnection > open(DOMString name, OpenDatabaseOptions? opt);
+      Promise< void > drop(DOMString name);
+    };
+  </pre>
+  <dl class="attributes">
+    <dt><code>IDatabaseFunctionProvider fn</code></dt>
+    <dd>Provides a namespace for <a href="#aggregation-functions">aggregation
+    functions</a> that can be used in queries.</dd>
+  </dl>
+  <dl class="methods">
+    <dt><code>Promise< DatabaseConnection > open(DOMString name, OpenDatabaseOptions? opt)</code></dt>
+    <dd>Opens a database connection using provided name. If the database does
+    not exist, create a new database instance and returns connection to it.
+    If the database is marked delete pending, the promise will be rejected with
+    <a>BlockingError</a>. If the <code>OpenDatabaseOptions</code> is not
+    specified, a <code>persistent</code> database with the given name will be
+    opened/created.</dd>
+    <dt><code>Promise< void > drop()</code></dt>
+    <dd>Deletes a database using provided <code>name</code>. This MUST follow
+    the <a href="#delete-database-algorithm">delete database algorithm</a>. If
+    the database does not exist, the returned promise will resolve immediately.
+    If the database is marked delete pending, the promise will resolve when the
+    database is deleted.</dd>
+    <dt><code>IBindableValue bind(unsigned short index);</code></dt>
+    <dd>Provides a bind-able value that can be used to construct parameterized
+    queries.</dd>
+  </dl>
+
+  <p>Open database options are specified as a dictionary object.</p>
+  <pre class="idl">
+    dictionary OpenDatabaseOptions {
+      RDBStorageType storageType;
+    };
+  </pre>
+
+  
+  The <code>RDBStorageType</code> is an enum:
+  <dl title="enum RDBStorageType" class="idl">
+    <dt>persistent</dt><dd>Data will be persisted in permanent storage.</dd>
+    <dt>temporary</dt><dd>Data will be persisted in memory only.</dd>
+  </dl>
+
+  <p>When <code>storageType</code> is set to <code>temporary</code>, the
+  relational database acts as in-memory cache of data and offers only the
+  relational query capability. The <code>storageType</code> is fixed for the
+  lifetime of returned database connection.</p>
+
+  <section>
+    <h2>Delete Database Algorithm</h2>
+    <p>The delete database algorithm is performed in following steps:</p>
+    <ol>
+      <li>Marks each connection to this database as delete pending, which will
+      effectively prevent new transactions from creating.</li>
+      <li>Waits for all pending transactions to finish.</li>
+      <li>Closes all connections.</li>
+      <li>Schedules a special drop database transaction. If any subsequent
+      delete database request comes in, chain the promise of this
+      transaction.</li>
+      <li>Query engine executes the drop database transaction, deletes the
+      database.</li>
+      <li>Resolves the promise.</li>
+    </ol>
+  </section>
+</section>

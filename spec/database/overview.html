@@ -6,9 +6,6 @@
   <p class="note">The database origin is not affected by changes to
   <code>document.domain</code>.</p>
 
-  <p>Each origin has an associated set of databases. A database comprises one
-  or more tables which hold the data stored in the database.</p>
-
   <p>Every database has a predefined layout of the data structures persisted,
   which is referred as <a href="#schema">schema</a>. The <em>database name</em>
   specified in schema identifies the database within a specific origin.
@@ -22,8 +19,9 @@
   deleted.</p>
 
   <p>The act of opening a database creates a <dfn>connection</dfn>. There MAY
-  be multiple connections to a given database at any given time. Each
-  connection has a <em>closePending</em> flag which initially is set to
+  be multiple connections to a given <code>persistent</code> database at any
+  given time, where <code>temporary</code> database accepts only one connection.
+  Each connection has a <em>closePending</em> flag which initially is set to
   false.</p>
 
   <p>When a connection is initially created it is in opened state. The

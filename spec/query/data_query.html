@@ -61,18 +61,21 @@
       IPredicate or(IPredicate... childPredicate);
     };
   </pre>
-  <pre class="idl">
-    interface IAggregateFunction {
-      IColumn avg(IColumn col);
-      IColumn count(optional IColumn col = null);
-      IColumn geomean(IColumn col);
-      IColumn max(IColumn col);
-      IColumn min(IColumn col);
-      IColumn stddev(IColumn col);
-      IColumn sum(IColumn col);
-      IColumn var(IColumn col);
-    };
-  </pre>
+  <section>
+    <h2>Aggregation Functions</h2>
+    <pre class="idl">
+      interface IAggregateFunction {
+        IColumn avg(IColumn col);
+        IColumn count(optional IColumn col = null);
+        IColumn geomean(IColumn col);
+        IColumn max(IColumn col);
+        IColumn min(IColumn col);
+        IColumn stddev(IColumn col);
+        IColumn sum(IColumn col);
+        IColumn var(IColumn col);
+      };
+    </pre>
+  </section>
   <pre class="idl">
     interface IDatabaseFunctionProvider : IAggregateFunction {
       IColumn distinct(IColumn... col);
