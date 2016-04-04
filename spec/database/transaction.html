@@ -1,0 +1,138 @@
+<section>
+  <h2>Transaction</h2>
+  <p>A <dfn>transaction</dfn> is an atomic unit of reading and writing data in
+  a database. A transaction contains one or more queries that indicate how to
+  interact with the database. A transaction is an atomic unit of execution that
+  guarantees all queries inside this transaction to be committed as a whole, or
+  none get committed. A committed transaction guarantees all data being written
+  to storage. This execution behavior is modeled as the following:</p>
+
+  <pre class="idl">
+    typedef (void or object[]) TransactionResults;
+
+    interface IExecutionContext {
+      Promise< TransactionResults > commit();
+      Promise< void > rollback();
+    };
+  </pre>
+  <dl class="methods">
+    <dt><code>Promise< TransactionResults > commit();</code></dt>
+    <dd>Runs <a href="#commit-algorithm">commit algorithm</a>.</dd>
+    <dt><code>Promise< void > rollback();</code></dt>
+    <dd>Runs <a href="#rollback-algorithm">rollback algorithm</a>.</dd>
+  </dl>
+
+  <p>All transactions are associated with a database connection, which is the
+  <a>connection</a> that the transaction is created within. A transaction has
+  a predetermined <em>mode</em> to indicate what access this transaction is
+  asking for. The mode is set when the transaction is created and remains fixed
+  for the life of the transaction. There are two transaction modes:</p>
+
+  <dl title="enum TransactionMode" class="idl">
+    <dt>readonly</dt>
+    <dd>Transaction intends to read rows only.</dd>
+    <dt>readwrite</dt>
+    <dd>Transaction intends to read/write rows and/or change schema.</dd>
+  </dl>
+
+  <p>A transaction has a <dfn>scope</dfn> that determines the rows affected by
+  this transaction. The scope is automatically calculated. The scope of a
+  transaction MAY dynamically change during the lifetime of the transaction.
+  </p>
+
+  <p>A transaction can be created explicitly or implicitly. An explicit
+  transaction is created directly from
+  <code>IDatabaseConnection.createTransaction()</code>. An implicit transaction
+  is created when the <a href="#commit-algorithm">commit algorithm</a> needs
+  one. The explicit transaction is modeled as following:</p>
+
+  <pre class="idl">
+    interface ITransaction : IExecutionContext {
+      Promise< void > begin();
+      Promise< TransactionResults > exec(IExecutionContext[] queries);
+      Promise< TransactionResults > attach(IExecutionContext query);
+    };
+  </pre>
+  <dl class="methods">
+    <dt><code>Promise< void > begin();</code></dt>
+    <dd>Starts <em>sequence mode</em> execution.</dd>
+    <dt><code>Promise< TransactionResults > exec(IExecutionContext[] queries);</code></dt>
+    <dd>Starts <em>batch mode</em> execution and auto-commit.</dd>
+    <dt><code>Promise< TransactionResults > attach(IExecutionContext query);</code></dt>
+    <dd>Schedules a query to existing <em>sequence mode</em> execution. The
+    promise will be resolved with the results when the query is executed.
+    The query MUST NOT be an explicit transaction, i.e. <a>ITransaction</a>
+    object.</dd>
+  </dl>
+
+  <p class="note">This specification does not support nested transactions.</p>
+
+  <p>The lifetime of an explicit transaction is controlled by the user.
+  There are two ways to start execution: <em>batch mode</em> and
+  <em>sequence mode</em>. In batch mode, an explicit transaction is started
+  with <code>exec(queriesArray)</code> and returns
+  a result <code>Promise</code>. All queries will be executed sequentially in
+  the order received, and the results of last query in the transaction are
+  returned in the promise. In sequence mode, user calls <code>begin()</code> to
+  start the transaction, calls <code>attach(query)</code> to attach a query to
+  the transaction's execution context. The user can call <code>commit()</code>
+  to indicate the end of transaction, and a final result <code>Promise</code>
+  will be returned; or the user can call <code>rollback()</code> to abort the
+  transaction, and all modifications done by previous attached queries will be
+  discarded.</p>
+
+  <p>When a transaction is committed or rolled back, it is said to be
+  <em>finished</em>. A finished transaction MUST NOT be started nor rolled
+  back. If a transaction's connection is lost before transaction being
+  finished, the transaction is effectively rolled back and no change will be
+  persisted.</p>
+
+  <section>
+    <h2>Commit Algorithm</h2>
+    <p>An <a>IExecutionContext</a> can be obtained from <a>ITransaction</a>, or
+    other classes such as <a>IQuery</a> or <a>ITableBuilder</a>. The execution
+    context from <a>ITransaction</a> is a <em>bound context</em>, which means
+    that it has an associated transaction. An execution contexta from sources
+    other than <a>ITransaction</a> is an <em>unbound context</em>, which means
+    that it does not have an associated transaction.</p>
+
+    <p>The commit algorithm is described in following steps:</p>
+    <ol>
+      <li>If the execution context is a bound context, go to step 3.</li>
+      <li>If the context can be carried out using <code>readonly</code>
+      transaction mode, create a transaction using that mode; otherwise create
+      a <code>readwrite</code> transaction. Associate the transaction with the
+      execution context.</li>
+      <li>If the associated transaction is marked as <em>pending finish</em>,
+      throws <a>TransactionStateError</a>.
+      <li>Mark the associated transaction as <em>pending finish</em>, which
+      will prohibit the transaction from attaching more queries, or calling
+      <code>rollback</code>.
+      <li>Retrieves the result promise <code>R</code> of the last execution
+      context in the associated transaction from query engine.</li>
+      <li>If the transaction is already running in sequence mode, returns
+      <code>R</code>.</li>
+      <li>If the associated transaction is not started, notifies the query
+      engine to execute it in batch mode, and returns <code>R</code>.</li>
+      <li>When <code>R</code> resolves or rejects, mark transaction as
+      <em>finished</em>.</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>Rollback Algorithm</h2>
+    <p>The rollback algorithm is described in following steps:</p>
+    <ol>
+      <li>If the execution context is an unbound context, returns a resolved
+      promise.</li>
+      <li>If the associated tranaction is marked as <em>pending finish</em> or
+      <em>finished</em>, throws <a>TransactionStateError</a>.</li>
+      <li>If the associated transaction is not executed yet, mark the
+      transaction as <em>finished</em> and returns a resolved promise.</li>
+      <li>Marks the associated transaction as <em>finish pending</em>, and
+      notifies query engine to rollback. Returns a promise.</li>
+      <li>When the query engine rolled back the transaction, resolve promise;
+      otherwise, reject promise with <a>IntegrityError</a>.</li>
+    </ol>
+  </section>
+</section>

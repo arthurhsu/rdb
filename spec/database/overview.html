@@ -18,7 +18,7 @@
   and all attempts at opening the database are stalled until database is
   deleted.</p>
 
-  <p>The act of opening a database creates a <dfn>connection</dfn>. There MAY
+  <p>The act of opening a database creates a <a>connection</a>. There MAY
   be multiple connections to a given <code>persistent</code> database at any
   given time, where <code>temporary</code> database accepts only one connection.
   Each connection has a <em>closePending</em> flag which initially is set to
@@ -28,11 +28,10 @@
   connection can be closed through several means. If the connection is garbage
   collected or execution context where the connection is created is destroyed
   (for example due to the user navigating away from that page), the connection
-  is closed. The connection can also be closed explicitly using the steps for
-  closing a database connection. When the connection is closed the
-  closePending flag is always set to true if it hasn't already been. All
-  uncommitted transactions will be canceled if their associated connections
-  are marked close pending.</p>
+  is closed. The connection can also be closed explicitly via API. When the
+  connection is closed the closePending flag is always set to true if it
+  hasn't already been. All uncommitted transactions will be canceled if their
+  associated connections are marked close pending.</p>
 
   <p>Users can create observers associated with a given database. Each
   observer consists a select query. When the results of that select query

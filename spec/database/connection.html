@@ -1,20 +1,50 @@
 <section>
   <h2>Connection</h2>
-  <p>The following WebIDL defines a database connection.</p>
+  <p>The database <dfn>connection</dfn> is the means by which the browser
+  session and underlying database communicate with each other. The following
+  is the main interface of a database connection:</p>
+
   <pre class="idl">
     interface IDatabaseConnection {
       ITransaction createTransaction(optional TransactionMode mode = "readonly");
       Promise< void > close();
       IBindableValue bind(unsigned short index);
     };
+  </pre>
+  <dl class="methods">
+    <dt><code>ITransaction createTransaction(optional TransactionMode mode = "readonly");</code></dt>
+    <dd>Creates an explicit transaction. If the connection is marked as close
+    pending, throws <a>BlockingError</a>.</dd>
+    <dt><code>Promise< void > close();</code></dt>
+    <dd>Closes the connection. The promise will resolve if and only if all
+    scheduled transactions are finished. The connection will be marked as
+    close pending immediately after this call, and no more new transaction
+    can be created within this connection.</dd>
+    <dt><code>IBindableValue bind(unsigned short index);</code></dt>
+    <dd>Returns a bindable value that can be used in parameterized query.</dd>
+  </dl>
 
+  <p>The actual database connection returned from <code>Navigator</code> is a
+  class object that implements four different interfaces.</p>
+  <pre class="idl">
     interface DatabaseConnection : IDatabaseConnection {
       readonly attribute DOMString name;
     };
     DatabaseConnection implements IDatabaseObserver;
-    DatabaseConnection implements IDatabaseSerialization;
     DatabaseConnection implements IDataQueryProvider;
     DatabaseConnection implements ISchemaQueryProvider;
-
   </pre>
+  <dl class="attributes">
+    <dt><code>name</code></dt>
+    <dd>Name of the database. It MUST be the same as the <code>name</code>
+    field specified in schema.</dd>
+  </dl>
+  <p>The <a>ISchemaQueryProvider</a> provides
+  <a href="#database-level-schema-query">database-level schema query</a> and
+  allows creating or changing the database schema. The
+  <a>IDataQueryProvider</a> provides APIs to construct
+  <a href="#data-manipulation-query">data manipulation query</a> to be used
+  to manipulate data within a transaction. The <a>IDatabaseObserver</a>
+  provides change observation for the results of a select query, regardless
+  the changes are from this connection or not.</p>
 </section>

@@ -80,7 +80,6 @@ IDatabaseConnection.prototype.bind;
  * @constructor
  * @implements {IDatabaseConnection}
  * @implements {IDatabaseObserver}
- * @implements {IDatabaseSerialization}
  * @implements {IDataQueryProvider}
  * @implements {ISchemaQueryProvider}
  */
@@ -89,22 +88,6 @@ function DatabaseConnection() {}
 
 /** @const {string} */
 DatabaseConnection.prototype.name;
-
-
-
-/** @interface */
-function IDatabaseSerialization() {}
-
-
-/** @return {!Promise<Object>} */
-IDatabaseSerialization.prototype.export;
-
-
-/**
- * @param {!Object} data
- * @return {!Promise}
- */
-IDatabaseSerialization.prototype.import;
 
 
 
@@ -570,10 +553,6 @@ IQuery.prototype.explain;
 IQuery.prototype.bind;
 
 
-/** @param {!ITransaction} tx */
-IQuery.prototype.attachTo;
-
-
 /** @return {string} */
 IQuery.prototype.toSql;
 
@@ -946,9 +925,7 @@ IDatabaseFunctionProvider.prototype.distinct;
 /** @override */ DatabaseConnection.prototype.createTransaction;
 /** @override */ DatabaseConnection.prototype.delete;
 /** @override */ DatabaseConnection.prototype.dropTable;
-/** @override */ DatabaseConnection.prototype.export;
 /** @override */ DatabaseConnection.prototype.exportSchema;
-/** @override */ DatabaseConnection.prototype.import;
 /** @override */ DatabaseConnection.prototype.insert;
 /** @override */ DatabaseConnection.prototype.insertOrReplace;
 /** @override */ DatabaseConnection.prototype.observe;

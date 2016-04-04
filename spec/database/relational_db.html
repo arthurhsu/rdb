@@ -34,8 +34,8 @@
     <dd>Deletes a database using provided <code>name</code>. This MUST follow
     the <a href="#delete-database-algorithm">delete database algorithm</a>. If
     the database does not exist, the returned promise will resolve immediately.
-    If the database is marked delete pending, the promise will resolve when the
-    database is deleted.</dd>
+    If the database is marked delete pending, the promise will resolve
+    immediately.</dd>
     <dt><code>IBindableValue bind(unsigned short index);</code></dt>
     <dd>Provides a bind-able value that can be used to construct parameterized
     queries.</dd>
@@ -64,15 +64,12 @@
     <h2>Delete Database Algorithm</h2>
     <p>The delete database algorithm is performed in following steps:</p>
     <ol>
-      <li>Marks each connection to this database as delete pending, which will
+      <li>Marks this database as delete pending.</li>
+      <li>Marks each connection to this database as close pending, which will
       effectively prevent new transactions from creating.</li>
-      <li>Waits for all pending transactions to finish.</li>
+      <li>Waits for all pending transactions to be cancelled.</li>
       <li>Closes all connections.</li>
-      <li>Schedules a special drop database transaction. If any subsequent
-      delete database request comes in, chain the promise of this
-      transaction.</li>
-      <li>Query engine executes the drop database transaction, deletes the
-      database.</li>
+      <li>Deletes the database.</li>
       <li>Resolves the promise.</li>
     </ol>
   </section>

@@ -5,7 +5,8 @@
   <table class="parameters">
     <tr><th>Field</th><th>Description</th></tr>
     <tr><td><dfn><code>BlockingError</code></dfn></td>
-        <td>Attempts to open a delete pending database.</td></tr>
+      <td>Attempts to open a delete pending database, or to create a
+      transaction in a close pending connection.</td></tr>
     <tr><td><dfn><code>ConstraintError</code></dfn></td>
         <td>Constraints are violated.</td>
     </tr>
@@ -15,11 +16,15 @@
             or assigning values of different <a href="#column-type">column type
             </a>.</td>
     </tr>
+    <tr><td><dfn><code>IntegrityError</code></dfn></td>
+        <td>Query engine is not able to ensure data integrity. For example,
+        failed to rollback a sequence mode transaction.</td></tr>
     <tr><td><dfn><code>InvalidSchemaError</code></dfn></td>
         <td>Provided schema is invalid.</td>
     </tr>
     <tr><td><dfn><code>TransactionStateError</code></dfn></td>
-      <td>Attempts to commit or rollback a finished transaction.</td></tr>
+      <td>Attempts to commit/rollback/attach query to a finished/pending finish
+      transaction.</td></tr>
     <tr><td><dfn><code>UnsupportedError</code></dfn></td>
       <td>Attempts to use MAY support features that are not supported yet.
       </td></tr>

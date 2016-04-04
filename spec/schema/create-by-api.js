@@ -7,7 +7,6 @@ var q1 = db.createTable('Dept')
                    /* not_null */ true)
            .column('name', 'string', true)
            .primaryKey([{'name': 'id'}]);
-tx.append(q1);
 
 var q2 = db.createTable('Emp')
            .column('id', 'number', true)
@@ -24,8 +23,7 @@ var q2 = db.createTable('Emp')
              'action': 'restrict',
              'timing': 'immediate'
            });
-q2.attachTo(tx);
 
-tx.commit().then(function() {
+tx.exec([q1, q2]).then(function() {
   // Table created, do something here.
 });
