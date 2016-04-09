@@ -1,0 +1,57 @@
+<section>
+  <h2>Common Query Behaviors</h2>
+  <p>Data manipulation queries are created from the <a>IDataQueryProvider</a>
+  interface, which is implemented by the <a>DatabaseConnection</a> object.</p>
+
+  <pre class="idl">
+    interface IDataQueryProvider {
+      ISelectQuery select(IColumn... columns);
+      IInsertQuery insert();
+      IInsertQuery insertOrReplace();
+      IUpdateQuery update(ITable table);
+      IDeleteQuery delete();
+    };
+  </pre>
+  <dl class="methods">
+    <dt><code>ISelectQuery select(IColumn... columns);</code></dt>
+    <dd>Creates a <a href="#select-query">select query</a> to retrieve data
+    from database.</dd>
+    <dt><code>IInsertQuery insert();</code></dt>
+    <dd>Creates an <a href="#insert-query">insert query</a> to insert data into
+    database.</dd>
+    <dt><code>IInsertQuery insertOrReplace();</code></dt>
+    <dd>Similar to <a href="#insert-query">insert query</a>, but behaves
+    differently for primary key conflicts.</dd>
+    <dt><code>IUpdateQuery update(ITable table);</code></dt>
+    <dd>Creates an <a href="#update-query">update query</a> to update existing
+    data in the database.</dd>
+    <dt><code>IDeleteQuery delete();</code></dt>
+    <dd>Creates a <a href="#delete-query">delete query</a> to remove data from
+    database.</dd>
+  </dl>
+
+  <p>All queries MUST inherit from this base query interface.</p>
+  <pre class="idl">
+    interface IQuery : IExecutionContext {
+      Promise< DOMString > explain();
+      IQuery bind(any... values);
+      DOMString toSql();
+    };
+  </pre>
+  <dl class="methods">
+    <dt><code>Promise< DOMString > explain();</code></dt>
+    <dd>Explains how this query will be executed in transaction. The returned
+    string representation will be implementation-dependent. The specification
+    recommends implementations to return the query execution plan and other
+    useful information for developers to do performance tuning of their
+    queries.</dd>
+    <dt><code>IQuery bind(any... values);</code></dt>
+    <dd>Creates a clone of this query, assigns values to <a>IBindableValue</a>
+    inside the cloned query, and returns the cloned query for execution.</a>
+    <dt><code>DOMString toSql();</code></dt>
+    <dd>Converts the query to equivalent SQL statements. The returned SQL
+    string will also be implementation-dependent, or <code>null</code> if the
+    implementation does not support this feature. The specification recommends
+    SQL-03 standard for generating SQL statements.</dd>
+  </dl>
+</section>

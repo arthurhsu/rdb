@@ -1,14 +1,5 @@
 <section>
-  <h2>Transaction API</h2>
-  <p>All queries must inherit from this base query interface.</p>
-  <pre class="idl">
-    interface IQuery : IExecutionContext {
-      Promise< DOMString > explain();
-      IQuery bind(any... values);
-      DOMString toSql();
-    };
-  </pre>
-
+  <h2>Bindable Values</h2>
   <pre class="idl">
     interface IBindableValue {
       readonly attribute any value;

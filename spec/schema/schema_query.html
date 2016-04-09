@@ -64,7 +64,7 @@
       interface IDatabaseSchema {
         readonly attribute DOMString name;
         readonly attribute unsigned short version;
-        object table(DOMString tableName);
+        ITable table(DOMString tableName);
       };
     </pre>
     <dl class="attributes">
@@ -74,11 +74,12 @@
       <dd>Version of the database schema.</dd>
     </dl>
     <dl class="methods">
-      <dt><code>object table(DOMString tableName);</code></dt>
-      <dd>Returns a read-only dictionary object, whose members are
-      <a>IColumn</a> objects representing columns in the specified table.
-      The table referred by <code>tableName</code> MUST already exist in the
-      database, otherwise a <a>DataError</a> will be raised.</dd>
+      <dt><code>ITable table(DOMString tableName);</code></dt>
+      <dd>Returns a read-only object that implements <a>ITable</a> interface,
+      whose members are <a>IColumn</a> objects representing columns in the
+      specified table. The table referred by <code>tableName</code> MUST
+      already exist in the database, otherwise a <a>DataError</a> will be
+      raised.</dd>
     </dl>
   </section>
 

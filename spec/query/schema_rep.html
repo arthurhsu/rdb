@@ -1,11 +1,24 @@
 <section>
   <h2>Schema Representation</h2>
+  <p>The fundamental part of data manipulation is to specify what to
+  manipulate. In a relational database, this implies table and columns in the
+  schema. The schema objects for data manipulation are acquired through
+  <a>IDatabaseSchema</a> objects obtained from
+  <a>ISchemaQueryProvider</a><code>.schema()</code> offered by
+  <a>DatabaseConnection</a>. The schema table is modeled as following:</p>
+
   <pre class="idl">
     interface ITable {
-      readonly attribute DOMString name;
       ITable as(DOMString alias);
     };
   </pre>
+  <dl class="methods">
+    <dt><code>ITable as(DOMString alias)</code><dt>
+    <dd>Creates an alias for the table, this is useful for self-join.</dd>
+  </dl>
+
+  <p>The <a>ITable</a> objects MUST have attributes that are named as columns
+  of that table, and the attributes are <a>IColumn</a> objects.</a>
 
   <pre class="idl">
     interface IColumn : IPredicate {
@@ -15,4 +28,17 @@
       IColumn as(DOMString alias);
     };
   </pre>
+  <dl class="attributes">
+    <dt><code>name</code></dt>
+    <dd>The <a>canonical name</a> of the column.</dd>
+    <dt><code>type</code></dt>
+    <dd>Data type of the column.</dd>
+    <dt><code>nullable</code></dt>
+    <dd>When <code>false</code>, the column is <a>NOT NULL</a></dd>
+  </dl>
+  <dl class="methods">
+    <dt><code>IColumn as(DOMString alias);</code></dt>
+    <dd>Creates an alias for the column. The alias will be honored in select
+    queries only.</dd>
+  </dl>
 </section>

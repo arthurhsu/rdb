@@ -1,11 +1,35 @@
 <section>
   <h2>Observers</h2>
+  <p>Observers monitor row changes inside a database. If the results from
+  registered query change due to data changes in the database, the callback in
+  corresponding observer will be invoked. Observer management are performed
+  via the following interface:</p>
+
   <pre class="idl">
-    callback observerCallback = void (object[] rows);
+    callback observerCallback = void ();
 
     interface IDatabaseObserver {
       DOMString observe(ISelectQuery query, observerCallback callbackFn);
       void unobserve(DOMString observerKey);
     };
   </pre>
+  <dl class="methods">
+    <dt><code>DOMString observe(ISelectQuery query, observerCallback callbackFn);</code></dt>
+    <dd>Registers a select query for observation, returns a unique observer key
+    within the connection.</dd>
+    <dt><code>void unobserve(DOMString observerKey);</code></dt>
+    <dd>Removes a registered observer in the connection.</dd>
+  </dl>
+
+  <p>Although observers are registered/unregistered via a database connection
+  object, the changes they receive may come from other connections.
+  The callback function is only a signal of query result change, and the users
+  are responsible to re-execute observed query in a transaction if desired.
+  Unlike trigger in relational databases, observers do not require
+  implementations to execute the observed query.</p>
+
+  <p class="note">
+  The specification supports observations only for single select queries, not
+  for <code>readonly</code> transactions.
+  </p>
 </section>

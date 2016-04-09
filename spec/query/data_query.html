@@ -1,15 +1,6 @@
 <section>
   <h2>Data Query</h2>
   <pre class="idl">
-    interface IDataQueryProvider {
-      ISelectQuery select(IColumn... columns);
-      IInsertQuery insert();
-      IInsertQuery insertOrReplace();
-      IUpdateQuery update(ITable table);
-      IDeleteQuery delete();
-    };
-  </pre>
-  <pre class="idl">
     interface ISelectQuery : IQuery {
       ISelectQuery from(ITable... tables);
       ISelectQuery where(IPredicate searchCondition);
