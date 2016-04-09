@@ -666,7 +666,7 @@ navigator.db.open('hr').then(function(connection) {
       interface IDatabaseSchema {
         readonly attribute DOMString name;
         readonly attribute unsigned short version;
-        object table(DOMString tableName);
+        ITable table(DOMString tableName);
       };
     </pre>
     <dl class="attributes">
@@ -676,11 +676,12 @@ navigator.db.open('hr').then(function(connection) {
       <dd>Version of the database schema.</dd>
     </dl>
     <dl class="methods">
-      <dt><code>object table(DOMString tableName);</code></dt>
-      <dd>Returns a read-only dictionary object, whose members are
-      <a>IColumn</a> objects representing columns in the specified table.
-      The table referred by <code>tableName</code> MUST already exist in the
-      database, otherwise a <a>DataError</a> will be raised.</dd>
+      <dt><code>ITable table(DOMString tableName);</code></dt>
+      <dd>Returns a read-only object that implements <a>ITable</a> interface,
+      whose members are <a>IColumn</a> objects representing columns in the
+      specified table. The table referred by <code>tableName</code> MUST
+      already exist in the database, otherwise a <a>DataError</a> will be
+      raised.</dd>
     </dl>
   </section>
 
@@ -1044,11 +1045,14 @@ if (version < 2) {
 <section>
   <h2>Transaction</h2>
   <p>A <dfn>transaction</dfn> is an atomic unit of reading and writing data in
-  a database. A transaction contains one or more queries that indicate how to
-  interact with the database. A transaction is an atomic unit of execution that
-  guarantees all queries inside this transaction to be committed as a whole, or
-  none get committed. A committed transaction guarantees all data being written
-  to storage. This execution behavior is modeled as the following:</p>
+  a database. The term atomic means it is guaranteed that all operations inside
+  this transaction to be committed as a whole, or none get committed.
+  A committed transaction guarantees all data being written to storage.
+  The operations inside a transaction are referred as queries. A
+  <dfn>query</dfn> means an interaction with the database: data retrieval,
+  data persistence, or change of schema.</p>
+  
+  <p>Transaction execution behavior is modeled as the following:</p>
 
   <pre class="idl">
     typedef (void or object[]) TransactionResults;
@@ -1073,9 +1077,9 @@ if (version < 2) {
 
   <dl title="enum TransactionMode" class="idl">
     <dt>readonly</dt>
-    <dd>Transaction intends to read rows only.</dd>
+    <dd>Transaction intends to read data/schema only.</dd>
     <dt>readwrite</dt>
-    <dd>Transaction intends to read/write rows and/or change schema.</dd>
+    <dd>Transaction intends to read/write data and/or read/change schema.</dd>
   </dl>
 
   <p>A transaction has a <dfn>scope</dfn> that determines the rows affected by
@@ -1182,30 +1186,70 @@ if (version < 2) {
 
 <section>
   <h2>Observers</h2>
+  <p>Observers monitor row changes inside a database. If the results from
+  registered query change due to data changes in the database, the callback in
+  corresponding observer will be invoked. Observer management are performed
+  via the following interface:</p>
+
   <pre class="idl">
-    callback observerCallback = void (object[] rows);
+    callback observerCallback = void ();
 
     interface IDatabaseObserver {
       DOMString observe(ISelectQuery query, observerCallback callbackFn);
       void unobserve(DOMString observerKey);
     };
   </pre>
+  <dl class="methods">
+    <dt><code>DOMString observe(ISelectQuery query, observerCallback callbackFn);</code></dt>
+    <dd>Registers a select query for observation, returns a unique observer key
+    within the connection.</dd>
+    <dt><code>void unobserve(DOMString observerKey);</code></dt>
+    <dd>Removes a registered observer in the connection.</dd>
+  </dl>
+
+  <p>Although observers are registered/unregistered via a database connection
+  object, the changes they receive may come from other connections.
+  The callback function is only a signal of query result change, and the users
+  are responsible to re-execute observed query in a transaction if desired.
+  Unlike trigger in relational databases, observers do not require
+  implementations to execute the observed query.</p>
+
+  <p class="note">
+  The specification supports observations only for single select queries, not
+  for <code>readonly</code> transactions.
+  </p>
 </section>
 
 
 </section>
 
 <section>
-  <h2>Query and Transaction</h2>
+  <h2>Data Manipulation</h2>
+  <p>Data manipulation of a database is carried out through transactions and
+  the queries within. In this section, the APIs for constructing queries will
+  be detailed.</p>
 
 <section>
   <h2>Schema Representation</h2>
+  <p>The fundamental part of data manipulation is to specify what to
+  manipulate. In a relational database, this implies table and columns in the
+  schema. The schema objects for data manipulation are acquired through
+  <a>IDatabaseSchema</a> objects obtained from
+  <a>ISchemaQueryProvider</a><code>.schema()</code> offered by
+  <a>DatabaseConnection</a>. The schema table is modeled as following:</p>
+
   <pre class="idl">
     interface ITable {
-      readonly attribute DOMString name;
       ITable as(DOMString alias);
     };
   </pre>
+  <dl class="methods">
+    <dt><code>ITable as(DOMString alias)</code><dt>
+    <dd>Creates an alias for the table, this is useful for self-join.</dd>
+  </dl>
+
+  <p>The <a>ITable</a> objects MUST have attributes that are named as columns
+  of that table, and the attributes are <a>IColumn</a> objects.</a>
 
   <pre class="idl">
     interface IColumn : IPredicate {
@@ -1215,55 +1259,26 @@ if (version < 2) {
       IColumn as(DOMString alias);
     };
   </pre>
+  <dl class="attributes">
+    <dt><code>name</code></dt>
+    <dd>The <a>canonical name</a> of the column.</dd>
+    <dt><code>type</code></dt>
+    <dd>Data type of the column.</dd>
+    <dt><code>nullable</code></dt>
+    <dd>When <code>false</code>, the column is <a>NOT NULL</a></dd>
+  </dl>
+  <dl class="methods">
+    <dt><code>IColumn as(DOMString alias);</code></dt>
+    <dd>Creates an alias for the column. The alias will be honored in select
+    queries only.</dd>
+  </dl>
 </section>
 
 <section>
-  <h2>Transaction API</h2>
-  <p>All queries must inherit from this base query interface.</p>
-  <pre class="idl">
-    interface IQuery : IExecutionContext {
-      Promise< DOMString > explain();
-      IQuery bind(any... values);
-      DOMString toSql();
-    };
-  </pre>
+  <h2>Common Query Behaviors</h2>
+  <p>Data manipulation queries are created from the <a>IDataQueryProvider</a>
+  interface, which is implemented by the <a>DatabaseConnection</a> object.</p>
 
-  <pre class="idl">
-    interface IBindableValue {
-      readonly attribute any value;
-    };
-  </pre>
-  <p>Type check of bound value is performed by query engine before executing
-  the query.</p>
-
-  <p>The following example demonstrate how to perform parameterized query using
-  data binding:</p>
-  <pre class="example highlight">
-var db;
-
-var query;
-
-function init() {
-  var dept = db.schema().table('Department');
-
-  var emp = db.schema().table('Employee');
-  query = db.select(emp.name.as('ename'), dept.name)
-            .from(dept, emp)
-            .where(dept.id.eq(emp.deptId).and(
-                   emp.id.eq(db.bind(0))));
-}
-
-function updateModel(employeeId) {
-  query.bind(employeeId).commit().then(function(rows) {
-    console.log(rows[0]['ename'], rows[0]['Department.name']);
-  });
-}
-
-  </pre>
-</section>
-
-<section>
-  <h2>Data Query</h2>
   <pre class="idl">
     interface IDataQueryProvider {
       ISelectQuery select(IColumn... columns);
@@ -1273,6 +1288,52 @@ function updateModel(employeeId) {
       IDeleteQuery delete();
     };
   </pre>
+  <dl class="methods">
+    <dt><code>ISelectQuery select(IColumn... columns);</code></dt>
+    <dd>Creates a <a href="#select-query">select query</a> to retrieve data
+    from database.</dd>
+    <dt><code>IInsertQuery insert();</code></dt>
+    <dd>Creates an <a href="#insert-query">insert query</a> to insert data into
+    database.</dd>
+    <dt><code>IInsertQuery insertOrReplace();</code></dt>
+    <dd>Similar to <a href="#insert-query">insert query</a>, but behaves
+    differently for primary key conflicts.</dd>
+    <dt><code>IUpdateQuery update(ITable table);</code></dt>
+    <dd>Creates an <a href="#update-query">update query</a> to update existing
+    data in the database.</dd>
+    <dt><code>IDeleteQuery delete();</code></dt>
+    <dd>Creates a <a href="#delete-query">delete query</a> to remove data from
+    database.</dd>
+  </dl>
+
+  <p>All queries MUST inherit from this base query interface.</p>
+  <pre class="idl">
+    interface IQuery : IExecutionContext {
+      Promise< DOMString > explain();
+      IQuery bind(any... values);
+      DOMString toSql();
+    };
+  </pre>
+  <dl class="methods">
+    <dt><code>Promise< DOMString > explain();</code></dt>
+    <dd>Explains how this query will be executed in transaction. The returned
+    string representation will be implementation-dependent. The specification
+    recommends implementations to return the query execution plan and other
+    useful information for developers to do performance tuning of their
+    queries.</dd>
+    <dt><code>IQuery bind(any... values);</code></dt>
+    <dd>Creates a clone of this query, assigns values to <a>IBindableValue</a>
+    inside the cloned query, and returns the cloned query for execution.</a>
+    <dt><code>DOMString toSql();</code></dt>
+    <dd>Converts the query to equivalent SQL statements. The returned SQL
+    string will also be implementation-dependent, or <code>null</code> if the
+    implementation does not support this feature. The specification recommends
+    SQL-03 standard for generating SQL statements.</dd>
+  </dl>
+</section>
+
+<section>
+  <h2>Data Query</h2>
   <pre class="idl">
     interface ISelectQuery : IQuery {
       ISelectQuery from(ITable... tables);
@@ -1344,6 +1405,42 @@ function updateModel(employeeId) {
     interface IDatabaseFunctionProvider : IAggregateFunction {
       IColumn distinct(IColumn... col);
     };
+  </pre>
+</section>
+
+<section>
+  <h2>Bindable Values</h2>
+  <pre class="idl">
+    interface IBindableValue {
+      readonly attribute any value;
+    };
+  </pre>
+  <p>Type check of bound value is performed by query engine before executing
+  the query.</p>
+
+  <p>The following example demonstrate how to perform parameterized query using
+  data binding:</p>
+  <pre class="example highlight">
+var db;
+
+var query;
+
+function init() {
+  var dept = db.schema().table('Department');
+
+  var emp = db.schema().table('Employee');
+  query = db.select(emp.name.as('ename'), dept.name)
+            .from(dept, emp)
+            .where(dept.id.eq(emp.deptId).and(
+                   emp.id.eq(db.bind(0))));
+}
+
+function updateModel(employeeId) {
+  query.bind(employeeId).commit().then(function(rows) {
+    console.log(rows[0]['ename'], rows[0]['Department.name']);
+  });
+}
+
   </pre>
 </section>
 
