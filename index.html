@@ -205,8 +205,8 @@ insertData().then(function() {
     <li>A name MUST pass the following check:
         <code>/^[A-Za-z_][A-Za-z0-9_]*$/.test(name)</code>
     </li>
-    <li>A name MUST NOT conflict with fields defined in
-        <code>Object.prototype</code>
+    <li>A name MUST NOT conflict with properties and methods defined in
+        <code>Object.prototype</code> and <a>ITable</a>.
     </li>
   </ul>
 </section>
@@ -1139,7 +1139,7 @@ if (version < 2) {
     <p>An <a>IExecutionContext</a> can be obtained from <a>ITransaction</a>, or
     other classes such as <a>IQuery</a> or <a>ITableBuilder</a>. The execution
     context from <a>ITransaction</a> is a <em>bound context</em>, which means
-    that it has an associated transaction. An execution contexta from sources
+    that it has an associated transaction. An execution context from sources
     other than <a>ITransaction</a> is an <em>unbound context</em>, which means
     that it does not have an associated transaction.</p>
 
