@@ -13,12 +13,6 @@
     };
   </pre>
   <pre class="idl">
-    interface IInsertQuery : IQuery {
-      IInsertQuery into(ITable table);
-      IInsertQuery values((object or object[] or IBindableValue or IBindableValue[]) rows);
-    };
-  </pre>
-  <pre class="idl">
     interface IUpdateQuery : IQuery {
       IUpdateQuery set(IColumn column, ValueType value);
       IUpdateQuery where(IPredicate searchCondition);
