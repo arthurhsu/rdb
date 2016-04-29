@@ -1383,7 +1383,9 @@ if (version < 2) {
     as an individual row.</dd>
   </dl>
   <p>All methods of <a>IInsertQuery</a> returns the calling
-  <code>IInsertQuery</code> object for cascade builder pattern.</p>
+  <code>IInsertQuery</code> object for cascade builder pattern. The methods can
+  only be called once per query, otherwise <a>SyntaxError</a> MUST be raised.
+  </p>
 
   <p>If an <a>IInsertQuery</a> object is created from <code>insert</code>,
   and a row with duplicated primary key is given, <a>ConstraintError</a>
@@ -1392,13 +1394,45 @@ if (version < 2) {
   the offended row MUST be silently replaced by the new row provided,
   effectively as removing the offended row and insert the offending row.</p>
 
+  <p>If any of the inserted row causes integrity violation other than primary
+  key, a <a>ConstraintError</a> MUST be thrown regardless.</p>
+
   <p>If any of the given rows does not exactly match the table schema of the
-  table specified, <a>DataError</a> will be raised. Exact match means that each
+  table specified, <a>DataError</a> MUST be raised. Exact match means that each
   column specified in the table schema MUST appear as a property of any
   object provided as row.</a>
 
   <p class="note"><a>IBindableValue</a> can also resolve as an array of
   objects to provide multiple rows in one call.</p>
+</section>
+
+<section>
+  <h2>Delete Query</h2>
+  <p>Delete queries are used to delete rows in a table. The rows to be deleted
+  are specified via <a href="#search-condition">Search Condition</a>. The delete
+  query implements the following interface:</p>
+
+  <pre class="idl">
+    interface IDeleteQuery : IQuery {
+      IDeleteQuery from(ITable table);
+      IDeleteQuery where(IPredicate searchCondition);
+    };
+  </pre>
+  <dl class="methods">
+    <dt><code>IDeleteQuery from(ITable table);</code></dt>
+    <dd>Specifies the target table to delete rows from.</dd>
+    <dt><code>IDeleteQuery where(IPredicate searchCondition);</code></dt>
+    <dd>Specifies the search condition for filtering rows.</dd>
+  </dl>
+  <p>All methods of <a>IDeleteQuery</a> returns the calling
+  <code>IDeleteQuery</code> object for cascade builder pattern. The methods can
+  only be called once per query, otherwise <a>SyntaxError</a> MUST be raised.
+  </p>
+
+  <p>If the table is empty, or the search condition returns no matching rows,
+  the delete query will finish successfully without doing anything. If deleting
+  rows cause data integrity violation (for example, deleting a row that is
+  referred in a foreign key), a <a>ConstraintError</a> MUST be raised.</p>
 </section>
 
 <section>
@@ -1419,12 +1453,6 @@ if (version < 2) {
     interface IUpdateQuery : IQuery {
       IUpdateQuery set(IColumn column, ValueType value);
       IUpdateQuery where(IPredicate searchCondition);
-    };
-  </pre>
-  <pre class="idl">
-    interface IDeleteQuery : IQuery {
-      IDeleteQuery from(ITable table);
-      IDeleteQuery where(IPredicate searchCondition);
     };
   </pre>
   <pre class="idl">
@@ -1534,6 +1562,9 @@ function updateModel(employeeId) {
     <tr><td><dfn><code>InvalidSchemaError</code></dfn></td>
         <td>Provided schema is invalid.</td>
     </tr>
+    <tr><td><dfn><code>SyntaxError</code></dfn></td>
+      <td>Illegal use of query builder objects, for example, calling
+      <code>into()</code> twice for <a>IInsertQuery</a>.</td>
     <tr><td><dfn><code>TransactionStateError</code></dfn></td>
       <td>Attempts to commit/rollback/attach query to a finished/pending finish
       transaction.</td></tr>
