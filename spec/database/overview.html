@@ -36,5 +36,6 @@
   <p>Users can create observers associated with a given database. Each
   observer consists a select query. When the results of that select query
   change, the observer will be triggered. The change MAY come from other
-  connections.</p>
+  connections. When the connection associated with a registered observer is
+  marked as close pending, the observer MUST be unregistered automatically.</p>
 </section>
