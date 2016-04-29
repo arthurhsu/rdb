@@ -1359,6 +1359,49 @@ if (version < 2) {
 </section>
 
 <section>
+  <h2>Insert Query</h2>
+  <p>Insert queries are used to insert rows into tables. There are two
+  variations of insert queries: <code>insert</code> and
+  <code>insertOrReplace</code>. Both variations support the following
+  interface:</p>
+
+  <pre class="idl">
+    interface IInsertQuery : IQuery {
+      IInsertQuery into(ITable table);
+      IInsertQuery values((object or object[] or IBindableValue or IBindableValue[]) rows);
+    };
+  </pre>
+  <dl class="methods">
+    <dt><code>IInsertQuery into(ITable table);</code></dt>
+    <dd>Specifies the target table to insert rows into. For
+    <code>insertOrReplace</code>, the <code>table</code> MUST have a primary
+    key, otherwise <a>IntegrityError</a> will be thrown.</dd>
+    <dt><code>IInsertQuery values((object or object[] or IBindableValue or IBindableValue[]) rows);</code></dt>
+    <dd>Supplies the row(s) to be inserted. When given an <code>object</code>
+    as parameter, or the bindable value resolved as an object, the object will
+    act as a single row; otherwise, each element in the given array is treated
+    as an individual row.</dd>
+  </dl>
+  <p>All methods of <a>IInsertQuery</a> returns the calling
+  <code>IInsertQuery</code> object for cascade builder pattern.</p>
+
+  <p>If an <a>IInsertQuery</a> object is created from <code>insert</code>,
+  and a row with duplicated primary key is given, <a>ConstraintError</a>
+  MUST be thrown if query engine detected integrity violation. On the other
+  hand, if the <a>IInsertQuery</a> object is from <code>insertOrReplace</code>,
+  the offended row MUST be silently replaced by the new row provided,
+  effectively as removing the offended row and insert the offending row.</p>
+
+  <p>If any of the given rows does not exactly match the table schema of the
+  table specified, <a>DataError</a> will be raised. Exact match means that each
+  column specified in the table schema MUST appear as a property of any
+  object provided as row.</a>
+
+  <p class="note"><a>IBindableValue</a> can also resolve as an array of
+  objects to provide multiple rows in one call.</p>
+</section>
+
+<section>
   <h2>Data Query</h2>
   <pre class="idl">
     interface ISelectQuery : IQuery {
@@ -1370,12 +1413,6 @@ if (version < 2) {
       ISelectQuery skip((unsigned long or IBindableValue) numberOfRows);
       ISelectQuery orderBy(IColumn column, optional Order order);
       ISelectQuery groupBy(IColumn... column);
-    };
-  </pre>
-  <pre class="idl">
-    interface IInsertQuery : IQuery {
-      IInsertQuery into(ITable table);
-      IInsertQuery values((object or object[] or IBindableValue or IBindableValue[]) rows);
     };
   </pre>
   <pre class="idl">
