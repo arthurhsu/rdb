@@ -215,15 +215,18 @@ insertData().then(function() {
   <h2>Column Types</h2>
   <p>All columns in a table schema MUST be associated with a given type. Valid
   types of a column are defined in <code>ColumnType</code></p>
-  <dl title="enum ColumnType" class="idl">
-    <dt>blob</dt><dd>JavaScript type <code>ArrayBuffer</code></dd>
-    <dt>boolean</dt><dd>JavaScript type <code>boolean</code></dd>
-    <dt>date</dt><dd>JavaScript type <code>Date</code></dd>
-    <dt>number</dt><dd>JavaScript type <code>number</code></dd>
-    <dt>string</dt><dd>JavaScript type <code>string</code></dd>
-    <dt>object</dt><dd>Generic JavaScript <code>Object</code></dd>
-  </dl>
   <pre class="idl">
+    enum ColumnType {
+      // ArrayBuffer
+      "blob",
+
+      "boolean",
+      "date",
+      "number",
+      "string",
+      "object"
+    };
+
     typedef (ArrayBuffer or boolean or Date or number or DOMString or object) ValueType;
     typedef (boolean or Date or number or DOMString) IndexableValueType;
   </pre>
@@ -238,12 +241,15 @@ insertData().then(function() {
 <section>
   <h2>Orders</h2>
   <p>There are two sorting orders defined in the following enum:</p>
-  <dl title="enum Order" class="idl">
-    <dt>asc</dt>
-    <dd>Represents ascending sort order (Default)</dd>
-    <dt>desc</dt>
-    <dd>Represents descending sort order</dd>
-  </dl>
+  <pre class="idl">
+    enum Order {
+      // Represents ascending sort order (Default).
+      "asc",
+
+      // Represents descending sort order.
+      "desc"
+    };
+  </pre>
   <p>Ascending sort order is the natural sort order, which means that if two
   fields are ordered as <code>a, b</code>, then <code>(a <= b) === true</code>.
   <code>blob</code> and <code>object</code> types are not <a>indexable</a>,
@@ -434,10 +440,15 @@ navigator.db.open('hr').then(function(connection) {
     construct a different index.</p>
 
     <p>The index type is an enum:</p>
-    <dl title="enum IndexType" class="idl">
-      <dt>btree</dt><dd>B+ Tree index</dd>
-      <dt>hash</dt><dd>Hash index</dd>
-    </dl>
+    <pre class="idl">
+      enum IndexType {
+        // B+ Tree index.
+        "btree",
+
+        // Hash index.
+        "hash"
+      };
+    </pre>
 
     <p>An index can be keyed by one or more columns. A <dfn>unique key</dfn>
     means that the value or combination of values used as index key is unique
@@ -578,24 +589,30 @@ navigator.db.open('hr').then(function(connection) {
     engine MAY support referred column to be within the containing table.</p>
 
     <p>Foreign key actions are enum values as defined in the following:</p>
-    <dl title="enum ForeignKeyAction" class="idl">
-      <dt>restrict</dt>
-      <dd>Any constraint violation results in cancelling the operation that
-      violated the constraint.</dd>
-      <dt>cascade</dt>
-      <dd>Constraint violation results in modifying related tables as necessary
-      to maintain data integrity.</dd>
-    </dl>
+    <pre class="idl">
+      enum ForeignKeyAction {
+        // Any constraint violation results in cancelling the operation that
+        // violated the constraint.
+        "restrict",
+
+        // Constraint violation results in modifying related tables as
+        // necessary to maintain data integrity.
+        "cascade"
+      };
+    </pre>
     <p>Foreign key timings are enum values as defined below:</p>
-    <dl title="enum ForeignKeyTiming" class="idl">
-      <dt>deferrable</dt>
-      <dd>The constraint is enforced right before a transaction is committed.
-      The constraint can be violated by individual queries during the lifetime
-      of the enclosing transaction, without any error being thrown.</dd>
-      <dt>immediate</dt>
-      <dd>The constraint is enforced during execution of each individual query.
-      </dd>
-    </dl>
+    <pre class="idl">
+      enum ForeignKeyTiming {
+        // The constraint is enforced right before a transaction is committed.
+        // The constraint can be violated by individual queries during the
+        // lifetime of the enclosing transaction, without any error being
+        // thrown.
+        "deferrable",
+
+        // The constraint is enforced during execution of each individual query.
+        "immediate"
+      };
+    </pre>
   </section>
 
 </section>
@@ -966,10 +983,15 @@ if (version < 2) {
 
   
   The <code>RDBStorageType</code> is an enum:
-  <dl title="enum RDBStorageType" class="idl">
-    <dt>persistent</dt><dd>Data will be persisted in permanent storage.</dd>
-    <dt>temporary</dt><dd>Data will be persisted in memory only.</dd>
-  </dl>
+  <pre class="idl">
+    enum RDBStorageType {
+      // Data will be persisted in permanent storage.
+      "persistent",
+
+      // Data will be persisted in memory only.
+      "temporary"
+    };
+  </pre>
 
   <p>When <code>storageType</code> is set to <code>temporary</code>, the
   relational database acts as in-memory cache of data and offers only the
@@ -1075,12 +1097,15 @@ if (version < 2) {
   asking for. The mode is set when the transaction is created and remains fixed
   for the life of the transaction. There are two transaction modes:</p>
 
-  <dl title="enum TransactionMode" class="idl">
-    <dt>readonly</dt>
-    <dd>Transaction intends to read data/schema only.</dd>
-    <dt>readwrite</dt>
-    <dd>Transaction intends to read/write data and/or read/change schema.</dd>
-  </dl>
+  <pre class="idl">
+    enum TransactionMode {
+      // Transaction intends to read data/schema only.
+      "readonly",
+
+      // Transaction intends to read/write data and/or read/change schema.
+      "readwrite"
+    };
+  </pre>
 
   <p>A transaction has a <dfn>scope</dfn> that determines the rows affected by
   this transaction. The scope is automatically calculated. The scope of a
