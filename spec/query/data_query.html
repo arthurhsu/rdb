@@ -19,12 +19,6 @@
     };
   </pre>
   <pre class="idl">
-    interface IDeleteQuery : IQuery {
-      IDeleteQuery from(ITable table);
-      IDeleteQuery where(IPredicate searchCondition);
-    };
-  </pre>
-  <pre class="idl">
     typedef (boolean or Date or number or DOMString) IndexableValueType;
     typedef (IndexableValueType or IBindableValue) ComparableValueType;
 

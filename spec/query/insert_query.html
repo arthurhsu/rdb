@@ -23,7 +23,9 @@
     as an individual row.</dd>
   </dl>
   <p>All methods of <a>IInsertQuery</a> returns the calling
-  <code>IInsertQuery</code> object for cascade builder pattern.</p>
+  <code>IInsertQuery</code> object for cascade builder pattern. The methods can
+  only be called once per query, otherwise <a>SyntaxError</a> MUST be raised.
+  </p>
 
   <p>If an <a>IInsertQuery</a> object is created from <code>insert</code>,
   and a row with duplicated primary key is given, <a>ConstraintError</a>
@@ -32,8 +34,11 @@
   the offended row MUST be silently replaced by the new row provided,
   effectively as removing the offended row and insert the offending row.</p>
 
+  <p>If any of the inserted row causes integrity violation other than primary
+  key, a <a>ConstraintError</a> MUST be thrown regardless.</p>
+
   <p>If any of the given rows does not exactly match the table schema of the
-  table specified, <a>DataError</a> will be raised. Exact match means that each
+  table specified, <a>DataError</a> MUST be raised. Exact match means that each
   column specified in the table schema MUST appear as a property of any
   object provided as row.</a>
 

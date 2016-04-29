@@ -1,0 +1,28 @@
+<section>
+  <h2>Delete Query</h2>
+  <p>Delete queries are used to delete rows in a table. The rows to be deleted
+  are specified via <a href="#search-condition">Search Condition</a>. The delete
+  query implements the following interface:</p>
+
+  <pre class="idl">
+    interface IDeleteQuery : IQuery {
+      IDeleteQuery from(ITable table);
+      IDeleteQuery where(IPredicate searchCondition);
+    };
+  </pre>
+  <dl class="methods">
+    <dt><code>IDeleteQuery from(ITable table);</code></dt>
+    <dd>Specifies the target table to delete rows from.</dd>
+    <dt><code>IDeleteQuery where(IPredicate searchCondition);</code></dt>
+    <dd>Specifies the search condition for filtering rows.</dd>
+  </dl>
+  <p>All methods of <a>IDeleteQuery</a> returns the calling
+  <code>IDeleteQuery</code> object for cascade builder pattern. The methods can
+  only be called once per query, otherwise <a>SyntaxError</a> MUST be raised.
+  </p>
+
+  <p>If the table is empty, or the search condition returns no matching rows,
+  the delete query will finish successfully without doing anything. If deleting
+  rows cause data integrity violation (for example, deleting a row that is
+  referred in a foreign key), a <a>ConstraintError</a> MUST be raised.</p>
+</section>

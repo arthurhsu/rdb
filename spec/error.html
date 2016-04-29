@@ -22,6 +22,9 @@
     <tr><td><dfn><code>InvalidSchemaError</code></dfn></td>
         <td>Provided schema is invalid.</td>
     </tr>
+    <tr><td><dfn><code>SyntaxError</code></dfn></td>
+      <td>Illegal use of query builder objects, for example, calling
+      <code>into()</code> twice for <a>IInsertQuery</a>.</td>
     <tr><td><dfn><code>TransactionStateError</code></dfn></td>
       <td>Attempts to commit/rollback/attach query to a finished/pending finish
       transaction.</td></tr>
