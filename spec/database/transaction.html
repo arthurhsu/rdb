@@ -31,12 +31,15 @@
   asking for. The mode is set when the transaction is created and remains fixed
   for the life of the transaction. There are two transaction modes:</p>
 
-  <dl title="enum TransactionMode" class="idl">
-    <dt>readonly</dt>
-    <dd>Transaction intends to read data/schema only.</dd>
-    <dt>readwrite</dt>
-    <dd>Transaction intends to read/write data and/or read/change schema.</dd>
-  </dl>
+  <pre class="idl">
+    enum TransactionMode {
+      // Transaction intends to read data/schema only.
+      "readonly",
+
+      // Transaction intends to read/write data and/or read/change schema.
+      "readwrite"
+    };
+  </pre>
 
   <p>A transaction has a <dfn>scope</dfn> that determines the rows affected by
   this transaction. The scope is automatically calculated. The scope of a

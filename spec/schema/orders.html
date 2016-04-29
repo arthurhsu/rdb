@@ -1,12 +1,15 @@
 <section>
   <h2>Orders</h2>
   <p>There are two sorting orders defined in the following enum:</p>
-  <dl title="enum Order" class="idl">
-    <dt>asc</dt>
-    <dd>Represents ascending sort order (Default)</dd>
-    <dt>desc</dt>
-    <dd>Represents descending sort order</dd>
-  </dl>
+  <pre class="idl">
+    enum Order {
+      // Represents ascending sort order (Default).
+      "asc",
+
+      // Represents descending sort order.
+      "desc"
+    };
+  </pre>
   <p>Ascending sort order is the natural sort order, which means that if two
   fields are ordered as <code>a, b</code>, then <code>(a <= b) === true</code>.
   <code>blob</code> and <code>object</code> types are not <a>indexable</a>,

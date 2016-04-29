@@ -122,10 +122,15 @@
     construct a different index.</p>
 
     <p>The index type is an enum:</p>
-    <dl title="enum IndexType" class="idl">
-      <dt>btree</dt><dd>B+ Tree index</dd>
-      <dt>hash</dt><dd>Hash index</dd>
-    </dl>
+    <pre class="idl">
+      enum IndexType {
+        // B+ Tree index.
+        "btree",
+
+        // Hash index.
+        "hash"
+      };
+    </pre>
 
     <p>An index can be keyed by one or more columns. A <dfn>unique key</dfn>
     means that the value or combination of values used as index key is unique
@@ -266,24 +271,30 @@
     engine MAY support referred column to be within the containing table.</p>
 
     <p>Foreign key actions are enum values as defined in the following:</p>
-    <dl title="enum ForeignKeyAction" class="idl">
-      <dt>restrict</dt>
-      <dd>Any constraint violation results in cancelling the operation that
-      violated the constraint.</dd>
-      <dt>cascade</dt>
-      <dd>Constraint violation results in modifying related tables as necessary
-      to maintain data integrity.</dd>
-    </dl>
+    <pre class="idl">
+      enum ForeignKeyAction {
+        // Any constraint violation results in cancelling the operation that
+        // violated the constraint.
+        "restrict",
+
+        // Constraint violation results in modifying related tables as
+        // necessary to maintain data integrity.
+        "cascade"
+      };
+    </pre>
     <p>Foreign key timings are enum values as defined below:</p>
-    <dl title="enum ForeignKeyTiming" class="idl">
-      <dt>deferrable</dt>
-      <dd>The constraint is enforced right before a transaction is committed.
-      The constraint can be violated by individual queries during the lifetime
-      of the enclosing transaction, without any error being thrown.</dd>
-      <dt>immediate</dt>
-      <dd>The constraint is enforced during execution of each individual query.
-      </dd>
-    </dl>
+    <pre class="idl">
+      enum ForeignKeyTiming {
+        // The constraint is enforced right before a transaction is committed.
+        // The constraint can be violated by individual queries during the
+        // lifetime of the enclosing transaction, without any error being
+        // thrown.
+        "deferrable",
+
+        // The constraint is enforced during execution of each individual query.
+        "immediate"
+      };
+    </pre>
   </section>
 
 </section>

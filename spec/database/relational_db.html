@@ -50,10 +50,15 @@
 
   
   The <code>RDBStorageType</code> is an enum:
-  <dl title="enum RDBStorageType" class="idl">
-    <dt>persistent</dt><dd>Data will be persisted in permanent storage.</dd>
-    <dt>temporary</dt><dd>Data will be persisted in memory only.</dd>
-  </dl>
+  <pre class="idl">
+    enum RDBStorageType {
+      // Data will be persisted in permanent storage.
+      "persistent",
+
+      // Data will be persisted in memory only.
+      "temporary"
+    };
+  </pre>
 
   <p>When <code>storageType</code> is set to <code>temporary</code>, the
   relational database acts as in-memory cache of data and offers only the
