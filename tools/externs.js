@@ -474,7 +474,8 @@ ITable.prototype.as;
 
 /**
  * @constructor
- * @implements {IPredicate}
+ * @implements {IComparisonPredicate}
+ * @implements {ITruthPredicate}
  */
 function IColumn() {}
 
@@ -613,7 +614,7 @@ ISelectQuery.prototype.from;
 
 
 /**
- * @param {!IPredicate} searchCondition
+ * @param {!rdb.IPredicate} searchCondition
  * @return {!ISelectQuery}
  */
 ISelectQuery.prototype.where;
@@ -621,7 +622,7 @@ ISelectQuery.prototype.where;
 
 /**
  * @param {!ITable} table
- * @param {!IPredicate} onCondition
+ * @param {!rdb.IPredicate} onCondition
  * @return {!ISelectQuery}
  */
 ISelectQuery.prototype.innerJoin;
@@ -629,7 +630,7 @@ ISelectQuery.prototype.innerJoin;
 
 /**
  * @param {!ITable} table
- * @param {!IPredicate} onCondition
+ * @param {!rdb.IPredicate} onCondition
  * @return {!ISelectQuery}
  */
 ISelectQuery.prototype.leftOuterJoin;
@@ -703,7 +704,7 @@ IUpdateQuery.prototype.set;
 
 
 /**
- * @param {!IPredicate} searchCondition
+ * @param {!rdb.IPredicate} searchCondition
  * @return {!IUpdateQuery}
  */
 IUpdateQuery.prototype.where;
@@ -725,7 +726,7 @@ IDeleteQuery.prototype.from;
 
 
 /**
- * @param {!IPredicate} searchCondition
+ * @param {!rdb.IPredicate} searchCondition
  * @return {!IDeleteQuery}
  */
 IDeleteQuery.prototype.where;
@@ -742,101 +743,109 @@ rdb.ComparableValueType;
 
 
 /** @interface */
-function IPredicate() {}
+function IComparisonPredicate() {}
 
 
 /**
  * @param {!rdb.ComparableValueType} value
- * @return {!IPredicate}
+ * @return {!ILogicalPredicate}
  */
-IPredicate.prototype.eq;
+IComparisonPredicate.prototype.eq;
 
 
 /**
  * @param {!rdb.ComparableValueType} value
- * @return {!IPredicate}
+ * @return {!ILogicalPredicate}
  */
-IPredicate.prototype.neq;
+IComparisonPredicate.prototype.neq;
 
 
 /**
  * @param {!rdb.ComparableValueType} value
- * @return {!IPredicate}
+ * @return {!ILogicalPredicate}
  */
-IPredicate.prototype.lt;
+IComparisonPredicate.prototype.lt;
 
 
 /**
  * @param {!rdb.ComparableValueType} value
- * @return {!IPredicate}
+ * @return {!ILogicalPredicate}
  */
-IPredicate.prototype.lte;
+IComparisonPredicate.prototype.lte;
 
 
 /**
  * @param {!rdb.ComparableValueType} value
- * @return {!IPredicate}
+ * @return {!ILogicalPredicate}
  */
-IPredicate.prototype.gt;
+IComparisonPredicate.prototype.gt;
 
 
 /**
  * @param {!rdb.ComparableValueType} value
- * @return {!IPredicate}
+ * @return {!ILogicalPredicate}
  */
-IPredicate.prototype.gte;
+IComparisonPredicate.prototype.gte;
+
+
+
+/** @interface */
+function ITruthPredicate() {}
 
 
 /**
  * @param {!IBindableValue|!RegExp} value
- * @return {!IPredicate}
+ * @return {!ILogicalPredicate}
  */
-IPredicate.prototype.match;
+ITruthPredicate.prototype.match;
 
 
 /**
  * @param {!rdb.ComparableValueType} v1
  * @param {!rdb.ComparableValueType} v2
- * @return {!IPredicate}
+ * @return {!ILogicalPredicate}
  */
-IPredicate.prototype.between;
+ITruthPredicate.prototype.between;
 
 
 /**
  * @param {!Array<!rdb.ComparableValueType>|!IBindableValue} values
- * @return {!IPredicate}
+ * @return {!ILogicalPredicate}
  */
-IPredicate.prototype.in;
+ITruthPredicate.prototype.in;
 
 
-/** @return {!IPredicate} */
-IPredicate.prototype.isNull;
+/** @return {!ILogicalPredicate} */
+ITruthPredicate.prototype.isNull;
 
 
-/** @return {!IPredicate} */
-IPredicate.prototype.isNotNull;
+/** @return {!ILogicalPredicate} */
+ITruthPredicate.prototype.isNotNull;
+
+
+
+/** @interface */
+function ILogicalPredicate() {}
 
 
 /**
- * @param {!IPredicate} child
- * @return {!IPredicate}
+ * @param {...(IComparisonPredicate|ITruthPredicate|ILogicalPredicate)}
+ *     children
+ * @return {!ILogicalPredicate}
  */
-IPredicate.prototype.not;
+ILogicalPredicate.prototype.and;
 
 
 /**
- * @param {...IPredicate} children
- * @return {!IPredicate}
+ * @param {...(IComparisonPredicate|ITruthPredicate|ILogicalPredicate)}
+ *     children
+ * @return {!ILogicalPredicate}
  */
-IPredicate.prototype.and;
+ILogicalPredicate.prototype.or;
 
 
-/**
- * @param {...IPredicate} child
- * @return {!IPredicate}
- */
-IPredicate.prototype.or;
-
+/** @typedef {IComparisonPredicate|ITruthPredicate|ILogicalPredicate} */
+rdb.IPredicate;
 
 
 /** @interface */
@@ -907,12 +916,18 @@ IAggregateFunction.prototype.var;
 function IDatabaseFunctionProvider() {}
 
 
-// TODO(arthurhsu): check if this needs to be in its own interface.
 /**
  * @param {...IColumn} col
  * @return {!IColumn}
  */
 IDatabaseFunctionProvider.prototype.distinct;
+
+
+/**
+ * @param {ILogicalPredicate|IComparisonPredicate|ITruthPredicate} predicate
+ * @return {!ILogicalPredicate}
+ */
+IDatabaseFunctionProvider.prototype.not;
 
 
 ///////////////////////////////////////////////////////////////////////////////
