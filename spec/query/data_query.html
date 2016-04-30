@@ -18,28 +18,6 @@
       IUpdateQuery where(IPredicate searchCondition);
     };
   </pre>
-  <pre class="idl">
-    typedef (boolean or Date or number or DOMString) IndexableValueType;
-    typedef (IndexableValueType or IBindableValue) ComparableValueType;
-
-    interface IPredicate {
-      IPredicate eq(ComparableValueType value);
-      IPredicate neq(ComparableValueType value);
-      IPredicate lt(ComparableValueType value);
-      IPredicate lte(ComparableValueType value);
-      IPredicate gt(ComparableValueType value);
-      IPredicate gte(ComparableValueType value);
-      IPredicate match((IBindableValue or RegExp) value);
-      IPredicate between(ComparableValueType value, ComparableValueType value);
-      IPredicate in((ComparableValueType[] or IBindableValue) values);
-      IPredicate isNull();
-      IPredicate isNotNull();
-
-      IPredicate not(IPredicate childPredicate);
-      IPredicate and(IPredicate... childPredicate);
-      IPredicate or(IPredicate... childPredicate);
-    };
-  </pre>
   <section>
     <h2>Aggregation Functions</h2>
     <pre class="idl">

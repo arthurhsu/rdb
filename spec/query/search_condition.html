@@ -1,0 +1,49 @@
+<section>
+  <h2>Search Condition</h2>
+  <p>Search condition specifies how the query engine should search the rows for
+  query. The condition will be evaluated for rows in the database, and returns
+  <code>true</code> if the target row is a match or <code>false</code>
+  otherwise. The query engine MAY apply speed up techniques to accelerate the
+  evaluation, for example, using indices.</p>
+  <p>Search conditions are constructed via <dfn>predicate</dfn>s, which will
+  be evaluated to either <code>true</code> or <code>false</code>. Predicates
+  are obtained from <a>IColumn</a> objects, or other predicates.</p>
+  <p>All predicates MUST implement the <a>IPredicate</a> interface, as described
+  below.</p>
+  <pre class="idl">
+    typedef (boolean or Date or number or DOMString) IndexableValueType;
+    typedef (IndexableValueType or IBindableValue) ComparableValueType;
+
+    interface IPredicate {
+      // Comparison operators
+      IPredicate eq(ComparableValueType value);
+      IPredicate neq(ComparableValueType value);
+      IPredicate lt(ComparableValueType value);
+      IPredicate lte(ComparableValueType value);
+      IPredicate gt(ComparableValueType value);
+      IPredicate gte(ComparableValueType value);
+
+      // Truth operators
+      IPredicate match((IBindableValue or RegExp) value);
+      IPredicate between(ComparableValueType value, ComparableValueType value);
+      IPredicate in((ComparableValueType[] or IBindableValue) values);
+      IPredicate isNull();
+      IPredicate isNotNull();
+
+      // Logical operators
+      IPredicate not(IPredicate childPredicate);
+      IPredicate and(IPredicate... childPredicate);
+      IPredicate or(IPredicate... childPredicate);
+    };
+  </pre>
+  <dl class="methods">
+    <dt><code>IPredicate eq(ComparableValueType value);</code></dt>
+    <dd>The associated column equals to value. Equality is evaluated using
+    JavaScript <code>==</code> operator.</dd>
+  </dl>
+
+  <p class="note">
+  All predicates are associated with a column in this spec, which is different
+  from SQL. This spec does not support constant expressions.
+  </p>
+</section>
