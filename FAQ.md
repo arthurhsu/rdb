@@ -161,6 +161,17 @@ it is not from zero. At least one does not really need to write B+-Tree from
 scratch as I did for Lovefield.
 
 
+## Q: Why not from(...).where(...).select(...)? SQL made a mistake ...
+
+First of all, I disagree that SQL made a mistake. It's extremely important to
+make things readable. Secondly, this syntax makes sense only when free-form
+parsing are involved. The builder pattern of this spec will build a query syntax
+tree, which can be augmented or modified from a pre-stored subtree.
+
+More discussions about syntax design can be found from [Lovefield's design
+document](https://github.com/google/lovefield/blob/master/docs/dd/00_intro.md#07-api-design).
+
+
 ## Q: Why not just make the original thread more readable?
 
 I cannot help with people derailing the discussion. I do have the control to
