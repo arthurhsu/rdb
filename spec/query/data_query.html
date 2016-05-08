@@ -36,6 +36,7 @@
   <pre class="idl">
     interface IDatabaseFunctionProvider : IAggregateFunction {
       IColumn distinct(IColumn... col);
+      ILogicalPredicate not(IPredicate predicate);
     };
   </pre>
 </section>
