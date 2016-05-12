@@ -1337,6 +1337,7 @@ if (version < 2) {
     interface IQuery : IExecutionContext {
       Promise< DOMString > explain();
       IQuery bind(any... values);
+      IQuery clone();
       DOMString toSql();
     };
   </pre>
@@ -1350,6 +1351,11 @@ if (version < 2) {
     <dt><code>IQuery bind(any... values);</code></dt>
     <dd>Creates a clone of this query, assigns values to <a>IBindableValue</a>
     inside the cloned query, and returns the cloned query for execution.</a>
+    <dt><code>IQuery clone();</code></dt>
+    <dd>Creates a clone of this query with a new execution context. The
+    returned query type will be the same as the original, for example,
+    cloning an <a>ISelectQuery</a> will effectively return an
+    <a>ISelectQuery</a>.</dd>
     <dt><code>DOMString toSql();</code></dt>
     <dd>Converts the query to equivalent SQL statements. The returned SQL
     string will also be implementation-dependent, or <code>null</code> if the
@@ -1415,13 +1421,13 @@ if (version < 2) {
   <pre class="idl">
     interface IDeleteQuery : IQuery {
       IDeleteQuery from(ITable table);
-      IDeleteQuery where(IPredicate searchCondition);
+      IDeleteQuery where(ILogicalPredicate searchCondition);
     };
   </pre>
   <dl class="methods">
     <dt><code>IDeleteQuery from(ITable table);</code></dt>
     <dd>Specifies the target table to delete rows from.</dd>
-    <dt><code>IDeleteQuery where(IPredicate searchCondition);</code></dt>
+    <dt><code>IDeleteQuery where(ILogicalPredicate searchCondition);</code></dt>
     <dd>Specifies the search condition for filtering rows.</dd>
   </dl>
   <p>All methods of <a>IDeleteQuery</a> returns the calling
@@ -1436,11 +1442,137 @@ if (version < 2) {
 </section>
 
 <section>
+  <h2>Search Condition</h2>
+  <p>Search condition specifies how the query engine should search the rows for
+  query. The condition will be evaluated for rows in the database, and returns
+  <code>true</code> if the target row is a match or <code>false</code>
+  otherwise. The query engine MAY apply speed up techniques to accelerate the
+  evaluation, for example, using indices.</p>
+  <p>Search conditions are constructed via <dfn>predicate</dfn>s, which will
+  be evaluated to either <code>true</code> or <code>false</code>. There are
+  three types of predicates defined in this document: comparison, truth, and
+  logical. Comparison and truth predicates are obtained from <a>IColumn</a>
+  objects, and logical predicates are obtained from the comparison and truth
+  predicates. Complement of predicate is provided by the <code>not</code>
+  function in <a>IDatabaseFunctionProvider</a>.</p>
+  <p>The comparison or truth predicates can only compare the column type of
+  the column associated. If the provided value type is not the same as the
+  column type, a <a>TypeError</a> will be thrown.</p>
+  <p class="note">
+  This spec does not provide implicit type conversion. All types MUST be
+  explicit.
+  </p>
+
+  <section>
+    <h2>Comparison Predicate</h2>
+    <p>The comparison predicates evaluates the relation between a column's value
+    and the given target. They are defined by the following interface:</p>
+    <pre class="idl">
+      typedef (boolean or Date or number or DOMString) IndexableValueType;
+      typedef (IndexableValueType or IBindableValue) ComparableValueType;
+
+      interface IComparisonPredicate {
+        ILogicalPredicate eq(ComparableValueType value);
+        ILogicalPredicate neq(ComparableValueType value);
+        ILogicalPredicate lt(ComparableValueType value);
+        ILogicalPredicate lte(ComparableValueType value);
+        ILogicalPredicate gt(ComparableValueType value);
+        ILogicalPredicate gte(ComparableValueType value);
+      };
+    </pre>
+    <dl class="methods">
+      <dt><code>ILogicalPredicate eq(ComparableValueType value);</code></dt>
+      <dd>The associated column equals to value. Equality is evaluated using
+      the rule of JavaScript <code>==</code> operator.</dd>
+      <dt><code>ILogicalPredicate neq(ComparableValueType value);</code></dt>
+      <dd>The associated column does not equal to value. Inequality is evaluated
+      using the rule of JavaScript <code>!=</code> operator.</dd>
+      <dt><code>ILogicalPredicate lt(ComparableValueType value);</code></dt>
+      <dd>The associated column is smaller than value. Relation is evaluated
+      using the rule of JavaScript <code>&lt;</code> operator.</dd>
+      <dt><code>ILogicalPredicate lte(ComparableValueType value);</code></dt>
+      <dd>The associated column is smaller than or equals to value. Relation is
+      evaluated using the rule of JavaScript <code>&lt;=</code> operator.</dd>
+      <dt><code>ILogicalPredicate gt(ComparableValueType value);</code></dt>
+      <dd>The associated column is greater than value. Relation is evaluated
+      using the rule of JavaScript <code>&gt;</code> operator.</dd>
+      <dt><code>ILogicalPredicate lt(ComparableValueType value);</code></dt>
+      <dd>The associated column is greater than or equals to value. Relation is
+      evaluated using the rule of JavaScript <code>&gt;=</code> operator.</dd>
+    </dl>
+  </section>
+
+  <section>
+    <h2>Truth Predicate</h2>
+    <p>The truth predicates evaluate whether the given condition is true for the
+    associated column or not. They are defined by the following interface:</p>
+    <pre class="idl">
+      interface ITruthPredicate {
+        ILogicalPredicate match((IBindableValue or RegExp) value);
+        ILogicalPredicate between(ComparableValueType lhs, ComparableValueType rhs);
+        ILogicalPredicate in((ComparableValueType[] or IBindableValue) values);
+        ILogicalPredicate isNull();
+        ILogicalPredicate isNotNull();
+      };
+    </pre>
+    <dl class="methods">
+      <dt><code>ILogicalPredicate match((IBindableValue or RegExp) value);</code></dt>
+      <dd>The associated column matches the regular expression provided.</dd>
+      <dt><code>ILogicalPredicate between(ComparableValueType lhs, ComparableValueType rhs);</code></dt>
+      <dd>The associated column is within the range between lhs and rhs. The
+      relation is evaluated using the rule of JavaScript <code>&lt;=</code> and
+      <code>&gt;=</code>.</dd>
+      <dt><code>ILogicalPredicate in((ComparableValueType[] or IBindableValue) values);</code></dt>
+      <dd>The associated column equals to one of the value inside
+      <code>values</code>. Equality is evaluated using the rule of JavaScript
+      <code>==</code> operator.</dd>
+      <dt><code>ILogicalPredicate isNull();</code></dt>
+      <dd>The associated column is <code>null</code> or <code>undefined</code>.</dd>
+      <dt><code>ILogicalPredicate isNotNull();</code></dt>
+      <dd>The associated column is neither <code>null</code> nor
+      <code>undefined</code>.</dd>
+    </dl>
+
+    <p class="note">Like SQL, empty string is not null.</p>
+    <p class="note">
+    This spec does not support constant expressions and therefore
+    <a>IComparisonPredicate</a> and <a>ITruthPredicate</a> MUST be associated
+    with an <a>IColumn</a> object.
+    </p>
+  </section>
+
+  <section>
+    <h2>Logical Predicate</h2>
+    <p>Logical predicate is the representation of search condition. Logical
+    predicates implement the following interface:</p>
+    <pre class="idl">
+      interface ILogicalPredicate {
+        ILogicalPredicate and(ILogicalPredicate... childPredicate);
+        ILogicalPredicate or(ILogicalPredicate... childPredicate);
+      };
+    </pre>
+    <dl class="methods">
+      <dt><code>ILogicalPredicate and(ILogicalPredicate... childPredicate);</code></dt>
+      <dd>Logical <code>AND</code> of logical predicates. The returning logical
+      predicate will evaluate to true if and only if all predicates in its
+      parameter are evaluated true.</dd>
+      <dt><code>ILogicalPredicate or(ILogicalPredicate... childPredicate);</code></dt>
+      <dd>Logical <code>OR</code> of logical predicates. The returning logical
+      predicate will evaluate to true if any of the predicates in its parameter
+      is evaluated true.</dd>
+    </dl>
+
+    <p class="note">The <code>NOT</code> operation is provided by
+    <code>IDatabaseFunctionProvider.not().</code></p>
+  </section>
+</section>
+
+<section>
   <h2>Data Query</h2>
   <pre class="idl">
     interface ISelectQuery : IQuery {
       ISelectQuery from(ITable... tables);
-      ISelectQuery where(IPredicate searchCondition);
+      ISelectQuery where(ILogicalPredicate searchCondition);
       ISelectQuery innerJoin(ITable table, Predicate onCondition);
       ISelectQuery leftOuterJoin(ITable table, Predicate onCondition);
       ISelectQuery limit((unsigned long or IBindableValue) numberOfRows);
@@ -1452,29 +1584,7 @@ if (version < 2) {
   <pre class="idl">
     interface IUpdateQuery : IQuery {
       IUpdateQuery set(IColumn column, ValueType value);
-      IUpdateQuery where(IPredicate searchCondition);
-    };
-  </pre>
-  <pre class="idl">
-    typedef (boolean or Date or number or DOMString) IndexableValueType;
-    typedef (IndexableValueType or IBindableValue) ComparableValueType;
-
-    interface IPredicate {
-      IPredicate eq(ComparableValueType value);
-      IPredicate neq(ComparableValueType value);
-      IPredicate lt(ComparableValueType value);
-      IPredicate lte(ComparableValueType value);
-      IPredicate gt(ComparableValueType value);
-      IPredicate gte(ComparableValueType value);
-      IPredicate match((IBindableValue or RegExp) value);
-      IPredicate between(ComparableValueType value, ComparableValueType value);
-      IPredicate in((ComparableValueType[] or IBindableValue) values);
-      IPredicate isNull();
-      IPredicate isNotNull();
-
-      IPredicate not(IPredicate childPredicate);
-      IPredicate and(IPredicate... childPredicate);
-      IPredicate or(IPredicate... childPredicate);
+      IUpdateQuery where(ILogicalPredicate searchCondition);
     };
   </pre>
   <section>
@@ -1495,6 +1605,7 @@ if (version < 2) {
   <pre class="idl">
     interface IDatabaseFunctionProvider : IAggregateFunction {
       IColumn distinct(IColumn... col);
+      ILogicalPredicate not(IPredicate predicate);
     };
   </pre>
 </section>
@@ -1567,7 +1678,9 @@ function updateModel(employeeId) {
       <code>into()</code> twice for <a>IInsertQuery</a>.</td>
     <tr><td><dfn><code>TransactionStateError</code></dfn></td>
       <td>Attempts to commit/rollback/attach query to a finished/pending finish
-      transaction.</td></tr>
+        transaction.</td></tr>
+    <tr><td><dfn><code>TypeError</code></dfn></td>
+      <td>Attempts to compare two different data types.</td></tr>
     <tr><td><dfn><code>UnsupportedError</code></dfn></td>
       <td>Attempts to use MAY support features that are not supported yet.
       </td></tr>
