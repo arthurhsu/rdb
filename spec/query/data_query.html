@@ -3,7 +3,7 @@
   <pre class="idl">
     interface ISelectQuery : IQuery {
       ISelectQuery from(ITable... tables);
-      ISelectQuery where(IPredicate searchCondition);
+      ISelectQuery where(ILogicalPredicate searchCondition);
       ISelectQuery innerJoin(ITable table, Predicate onCondition);
       ISelectQuery leftOuterJoin(ITable table, Predicate onCondition);
       ISelectQuery limit((unsigned long or IBindableValue) numberOfRows);
@@ -15,7 +15,7 @@
   <pre class="idl">
     interface IUpdateQuery : IQuery {
       IUpdateQuery set(IColumn column, ValueType value);
-      IUpdateQuery where(IPredicate searchCondition);
+      IUpdateQuery where(ILogicalPredicate searchCondition);
     };
   </pre>
   <section>
@@ -36,7 +36,7 @@
   <pre class="idl">
     interface IDatabaseFunctionProvider : IAggregateFunction {
       IColumn distinct(IColumn... col);
-      ILogicalPredicate not(IPredicate predicate);
+      ILogicalPredicate not(ILogicalPredicate predicate);
     };
   </pre>
 </section>

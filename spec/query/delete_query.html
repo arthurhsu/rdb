@@ -7,13 +7,13 @@
   <pre class="idl">
     interface IDeleteQuery : IQuery {
       IDeleteQuery from(ITable table);
-      IDeleteQuery where(IPredicate searchCondition);
+      IDeleteQuery where(ILogicalPredicate searchCondition);
     };
   </pre>
   <dl class="methods">
     <dt><code>IDeleteQuery from(ITable table);</code></dt>
     <dd>Specifies the target table to delete rows from.</dd>
-    <dt><code>IDeleteQuery where(IPredicate searchCondition);</code></dt>
+    <dt><code>IDeleteQuery where(ILogicalPredicate searchCondition);</code></dt>
     <dd>Specifies the search condition for filtering rows.</dd>
   </dl>
   <p>All methods of <a>IDeleteQuery</a> returns the calling

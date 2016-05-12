@@ -19,85 +19,107 @@
   This spec does not provide implicit type conversion. All types MUST be
   explicit.
   </p>
-  <p>The comparison predicates evaluates the relation between a column's value
-  and the given target. They are defined by the following interface:</p>
-  <pre class="idl">
-    typedef (boolean or Date or number or DOMString) IndexableValueType;
-    typedef (IndexableValueType or IBindableValue) ComparableValueType;
 
-    interface IComparisonPredicate {
-      ILogicalPredicate eq(ComparableValueType value);
-      ILogicalPredicate neq(ComparableValueType value);
-      ILogicalPredicate lt(ComparableValueType value);
-      ILogicalPredicate lte(ComparableValueType value);
-      ILogicalPredicate gt(ComparableValueType value);
-      ILogicalPredicate gte(ComparableValueType value);
-    };
-  </pre>
-  <dl class="methods">
-    <dt><code>ILogicalPredicate eq(ComparableValueType value);</code></dt>
-    <dd>The associated column equals to value. Equality is evaluated using
-    the rule of JavaScript <code>==</code> operator.</dd>
-    <dt><code>ILogicalPredicate neq(ComparableValueType value);</code></dt>
-    <dd>The associated column does not equal to value. Inequality is evaluated
-    using the rule of JavaScript <code>!=</code> operator.</dd>
-    <dt><code>ILogicalPredicate lt(ComparableValueType value);</code></dt>
-    <dd>The associated column is smaller than value. Relation is evaluated
-    using the rule of JavaScript <code>&lt;</code> operator.</dd>
-    <dt><code>ILogicalPredicate lte(ComparableValueType value);</code></dt>
-    <dd>The associated column is smaller than or equals to value. Relation is
-    evaluated using the rule of JavaScript <code>&lt;=</code> operator.</dd>
-    <dt><code>ILogicalPredicate gt(ComparableValueType value);</code></dt>
-    <dd>The associated column is greater than value. Relation is evaluated
-    using the rule of JavaScript <code>&gt;</code> operator.</dd>
-    <dt><code>ILogicalPredicate lt(ComparableValueType value);</code></dt>
-    <dd>The associated column is greater than or equals to value. Relation is
-    evaluated using the rule of JavaScript <code>&gt;=</code> operator.</dd>
-  </dl>
+  <section>
+    <h2>Comparison Predicate</h2>
+    <p>The comparison predicates evaluates the relation between a column's value
+    and the given target. They are defined by the following interface:</p>
+    <pre class="idl">
+      typedef (boolean or Date or number or DOMString) IndexableValueType;
+      typedef (IndexableValueType or IBindableValue) ComparableValueType;
 
-  <p>The truth predicates evaluate whether the given condition is true for the
-  associated column or not. They are defined by the following interface:</p>
-  <pre class="idl">
-    interface ITruthPredicate {
-      ILogicalPredicate match((IBindableValue or RegExp) value);
-      ILogicalPredicate between(ComparableValueType lhs, ComparableValueType rhs);
-      ILogicalPredicate in((ComparableValueType[] or IBindableValue) values);
-      ILogicalPredicate isNull();
-      ILogicalPredicate isNotNull();
-    };
-  </pre>
-  <dl class="methods">
-    <dt><code>ILogicalPredicate match((IBindableValue or RegExp) value);</code></dt>
-    <dd>The associated column matches the regular expression provided.</dd>
-    <dt><code>ILogicalPredicate between(ComparableValueType lhs, ComparableValueType rhs);</code></dt>
-    <dd>The associated column is within the range between lhs and rhs. The
-    relation is evaluated using the rule of JavaScript <code>&lt;=</code> and
-    <code>&gt;=</code>.</dd>
-    <dt><code>ILogicalPredicate in((ComparableValueType[] or IBindableValue) values);</code></dt>
-    <dd>The associated column equals to one of the value inside
-    <code>values</code>. Equality is evaluated using the rule of JavaScript
-    <code>==</code> operator.</dd>
-    <dt><code>ILogicalPredicate isNull();</code></dt>
-    <dd>The associated column is <code>null</code> or <code>undefined</code>.</dd>
-    <dt><code>ILogicalPredicate isNotNull();</code></dt>
-    <dd>The associated column is neither <code>null</code> nor
-    <code>undefined</code>.</dd>
-  </dl>
+      interface IComparisonPredicate {
+        ILogicalPredicate eq(ComparableValueType value);
+        ILogicalPredicate neq(ComparableValueType value);
+        ILogicalPredicate lt(ComparableValueType value);
+        ILogicalPredicate lte(ComparableValueType value);
+        ILogicalPredicate gt(ComparableValueType value);
+        ILogicalPredicate gte(ComparableValueType value);
+      };
+    </pre>
+    <dl class="methods">
+      <dt><code>ILogicalPredicate eq(ComparableValueType value);</code></dt>
+      <dd>The associated column equals to value. Equality is evaluated using
+      the rule of JavaScript <code>==</code> operator.</dd>
+      <dt><code>ILogicalPredicate neq(ComparableValueType value);</code></dt>
+      <dd>The associated column does not equal to value. Inequality is evaluated
+      using the rule of JavaScript <code>!=</code> operator.</dd>
+      <dt><code>ILogicalPredicate lt(ComparableValueType value);</code></dt>
+      <dd>The associated column is smaller than value. Relation is evaluated
+      using the rule of JavaScript <code>&lt;</code> operator.</dd>
+      <dt><code>ILogicalPredicate lte(ComparableValueType value);</code></dt>
+      <dd>The associated column is smaller than or equals to value. Relation is
+      evaluated using the rule of JavaScript <code>&lt;=</code> operator.</dd>
+      <dt><code>ILogicalPredicate gt(ComparableValueType value);</code></dt>
+      <dd>The associated column is greater than value. Relation is evaluated
+      using the rule of JavaScript <code>&gt;</code> operator.</dd>
+      <dt><code>ILogicalPredicate lt(ComparableValueType value);</code></dt>
+      <dd>The associated column is greater than or equals to value. Relation is
+      evaluated using the rule of JavaScript <code>&gt;=</code> operator.</dd>
+    </dl>
+  </section>
 
-  <p class="note">Like SQL, empty string is not null.</p>
-  <p class="note">
-  This spec does not support constant expressions and therefore
-  <a>IComparisonPredicate</a> and <a>ITruthPredicate</a> MUST be associated
-  with an <a>IColumn</a> object.
-  </p>
+  <section>
+    <h2>Truth Predicate</h2>
+    <p>The truth predicates evaluate whether the given condition is true for the
+    associated column or not. They are defined by the following interface:</p>
+    <pre class="idl">
+      interface ITruthPredicate {
+        ILogicalPredicate match((IBindableValue or RegExp) value);
+        ILogicalPredicate between(ComparableValueType lhs, ComparableValueType rhs);
+        ILogicalPredicate in((ComparableValueType[] or IBindableValue) values);
+        ILogicalPredicate isNull();
+        ILogicalPredicate isNotNull();
+      };
+    </pre>
+    <dl class="methods">
+      <dt><code>ILogicalPredicate match((IBindableValue or RegExp) value);</code></dt>
+      <dd>The associated column matches the regular expression provided.</dd>
+      <dt><code>ILogicalPredicate between(ComparableValueType lhs, ComparableValueType rhs);</code></dt>
+      <dd>The associated column is within the range between lhs and rhs. The
+      relation is evaluated using the rule of JavaScript <code>&lt;=</code> and
+      <code>&gt;=</code>.</dd>
+      <dt><code>ILogicalPredicate in((ComparableValueType[] or IBindableValue) values);</code></dt>
+      <dd>The associated column equals to one of the value inside
+      <code>values</code>. Equality is evaluated using the rule of JavaScript
+      <code>==</code> operator.</dd>
+      <dt><code>ILogicalPredicate isNull();</code></dt>
+      <dd>The associated column is <code>null</code> or <code>undefined</code>.</dd>
+      <dt><code>ILogicalPredicate isNotNull();</code></dt>
+      <dd>The associated column is neither <code>null</code> nor
+      <code>undefined</code>.</dd>
+    </dl>
 
-  <pre class="idl">
-    interface ILogicalPredicate {
-      ILogicalPredicate and(IPredicate... childPredicate);
-      ILogicalPredicate or(IPredicate... childPredicate);
-    };
+    <p class="note">Like SQL, empty string is not null.</p>
+    <p class="note">
+    This spec does not support constant expressions and therefore
+    <a>IComparisonPredicate</a> and <a>ITruthPredicate</a> MUST be associated
+    with an <a>IColumn</a> object.
+    </p>
+  </section>
 
-    typedef (IComparisonPredicate or ITruthPredicate or ILogicalPredicate) IPredicate;
-  </pre>
- 
+  <section>
+    <h2>Logical Predicate</h2>
+    <p>Logical predicate is the representation of search condition. Logical
+    predicates implement the following interface:</p>
+    <pre class="idl">
+      interface ILogicalPredicate {
+        ILogicalPredicate and(ILogicalPredicate... childPredicate);
+        ILogicalPredicate or(ILogicalPredicate... childPredicate);
+      };
+    </pre>
+    <dl class="methods">
+      <dt><code>ILogicalPredicate and(ILogicalPredicate... childPredicate);</code></dt>
+      <dd>Logical <code>AND</code> of logical predicates. The returning logical
+      predicate will evaluate to true if and only if all predicates in its
+      parameter are evaluated true.</dd>
+      <dt><code>ILogicalPredicate or(ILogicalPredicate... childPredicate);</code></dt>
+      <dd>Logical <code>OR</code> of logical predicates. The returning logical
+      predicate will evaluate to true if any of the predicates in its parameter
+      is evaluated true.</dd>
+    </dl>
+
+    <p class="note">The <code>NOT</code> operation is provided by
+    <code>IDatabaseFunctionProvider.not().</code></p>
+  </section>
 </section>

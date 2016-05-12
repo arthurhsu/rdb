@@ -517,6 +517,19 @@ IExecutionContext.prototype.rollback;
 
 
 
+/** @interface */
+function ICloneable() {}
+
+
+/**
+ * @template T
+ * @this {T}
+ * @return {T}
+ */
+ICloneable.prototype.clone;
+
+
+
 /**
  * @constructor
  * @implements {IExecutionContext}
@@ -601,6 +614,7 @@ IDataQueryProvider.prototype.delete;
 
 /**
  * @constructor
+ * @implements {ICloneable}
  * @extends {IQuery}
  */
 function ISelectQuery() {}
@@ -614,7 +628,7 @@ ISelectQuery.prototype.from;
 
 
 /**
- * @param {!rdb.IPredicate} searchCondition
+ * @param {!ILogicalPredicate} searchCondition
  * @return {!ISelectQuery}
  */
 ISelectQuery.prototype.where;
@@ -622,7 +636,7 @@ ISelectQuery.prototype.where;
 
 /**
  * @param {!ITable} table
- * @param {!rdb.IPredicate} onCondition
+ * @param {!ILogicalPredicate} onCondition
  * @return {!ISelectQuery}
  */
 ISelectQuery.prototype.innerJoin;
@@ -630,7 +644,7 @@ ISelectQuery.prototype.innerJoin;
 
 /**
  * @param {!ITable} table
- * @param {!rdb.IPredicate} onCondition
+ * @param {!ILogicalPredicate} onCondition
  * @return {!ISelectQuery}
  */
 ISelectQuery.prototype.leftOuterJoin;
@@ -667,6 +681,7 @@ ISelectQuery.prototype.groupBy;
 
 /**
  * @constructor
+ * @implements {ICloneable}
  * @extends {IQuery}
  */
 function IInsertQuery() {}
@@ -690,6 +705,7 @@ IInsertQuery.prototype.values;
 
 /**
  * @constructor
+ * @implements {ICloneable}
  * @extends {IQuery}
  */
 function IUpdateQuery() {}
@@ -704,7 +720,7 @@ IUpdateQuery.prototype.set;
 
 
 /**
- * @param {!rdb.IPredicate} searchCondition
+ * @param {!ILogicalPredicate} searchCondition
  * @return {!IUpdateQuery}
  */
 IUpdateQuery.prototype.where;
@@ -713,6 +729,7 @@ IUpdateQuery.prototype.where;
 
 /**
  * @constructor
+ * @implements {ICloneable}
  * @extends {IQuery}
  */
 function IDeleteQuery() {}
@@ -726,7 +743,7 @@ IDeleteQuery.prototype.from;
 
 
 /**
- * @param {!rdb.IPredicate} searchCondition
+ * @param {!ILogicalPredicate} searchCondition
  * @return {!IDeleteQuery}
  */
 IDeleteQuery.prototype.where;
@@ -829,23 +846,18 @@ function ILogicalPredicate() {}
 
 
 /**
- * @param {...(IComparisonPredicate|ITruthPredicate|ILogicalPredicate)}
- *     children
+ * @param {...ILogicalPredicate} children
  * @return {!ILogicalPredicate}
  */
 ILogicalPredicate.prototype.and;
 
 
 /**
- * @param {...(IComparisonPredicate|ITruthPredicate|ILogicalPredicate)}
- *     children
+ * @param {...ILogicalPredicate} children
  * @return {!ILogicalPredicate}
  */
 ILogicalPredicate.prototype.or;
 
-
-/** @typedef {IComparisonPredicate|ITruthPredicate|ILogicalPredicate} */
-rdb.IPredicate;
 
 
 /** @interface */
@@ -974,3 +986,8 @@ IDatabaseFunctionProvider.prototype.not;
 /** @override */ IColumn.prototype.neq;
 /** @override */ IColumn.prototype.not;
 /** @override */ IColumn.prototype.or;
+
+/** @override */ IDeleteQuery.prototype.clone;
+/** @override */ IInsertQuery.prototype.clone;
+/** @override */ ISelectQuery.prototype.clone;
+/** @override */ IUpdateQuery.prototype.clone;

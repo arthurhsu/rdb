@@ -21,7 +21,7 @@
   of that table, and the attributes are <a>IColumn</a> objects.</a>
 
   <pre class="idl">
-    interface IColumn : IPredicate {
+    interface IColumn : IComparisonPredicate, ITruthPredicate {
       readonly attribute DOMString name;
       readonly attribute ColumnType type;
       readonly attribute boolean nullable;
