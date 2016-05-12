@@ -23,9 +23,9 @@
     as an individual row.</dd>
   </dl>
   <p>All methods of <a>IInsertQuery</a> returns the calling
-  <code>IInsertQuery</code> object for cascade builder pattern. The methods can
-  only be called once per query, otherwise <a>SyntaxError</a> MUST be raised.
-  </p>
+  <code>IInsertQuery</code> object for cascade builder pattern. The methods MUST
+  be called once and only once per query before its execution, otherwise
+  <a>SyntaxError</a> MUST be raised.</p>
 
   <p>If an <a>IInsertQuery</a> object is created from <code>insert</code>,
   and a row with duplicated primary key is given, <a>ConstraintError</a>

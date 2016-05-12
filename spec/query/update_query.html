@@ -1,0 +1,24 @@
+<section>
+  <h2>Update Query</h2>
+  <p>Update queries updates the value of a column in all rows that matches the
+  search condition. If the search condition is not provided, then the update
+  will be applied to all rows of the table.</p>
+  <pre class="idl">
+    interface IUpdateQuery : IQuery {
+      IUpdateQuery set(IColumn column, ValueType value);
+      IUpdateQuery where(ILogicalPredicate searchCondition);
+    };
+  </pre>
+  <dl class="methods">
+    <dt><code>IUpdateQuery set(IColumn column, ValueType value);</code></dt>
+    <dd>Set the column to specified value. If the value type is not the same
+    as the column type, a <a>TypeError</a> will be thrown. If the updated value
+    will result in integrity check failure, a <a>ConstraintError</a> will be
+    thrown. This function can be called multiple times per query, but each
+    column can only be used once, otherwise a <a>SyntaxError</a> will be
+    thrown.</dd>
+    <dt><code>IUpdateQuery where(ILogicalPredicate searchCondition);</code></dt>
+    <dd>Specify the search condition of update. This function can only be called
+    once per query, otherwise <a>SyntaxError</a> will be thrown.</dd>
+  </dl>
+</section>

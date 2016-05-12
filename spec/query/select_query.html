@@ -1,5 +1,5 @@
 <section>
-  <h2>Data Query</h2>
+  <h2>Select Query</h2>
   <pre class="idl">
     interface ISelectQuery : IQuery {
       ISelectQuery from(ITable... tables);
@@ -10,12 +10,6 @@
       ISelectQuery skip((unsigned long or IBindableValue) numberOfRows);
       ISelectQuery orderBy(IColumn column, optional Order order);
       ISelectQuery groupBy(IColumn... column);
-    };
-  </pre>
-  <pre class="idl">
-    interface IUpdateQuery : IQuery {
-      IUpdateQuery set(IColumn column, ValueType value);
-      IUpdateQuery where(ILogicalPredicate searchCondition);
     };
   </pre>
   <section>
