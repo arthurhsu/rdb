@@ -30,35 +30,40 @@
       typedef (IndexableValueType or IBindableValue) ComparableValueType;
 
       interface IComparisonPredicate {
-        ILogicalPredicate eq(ComparableValueType value);
-        ILogicalPredicate neq(ComparableValueType value);
-        ILogicalPredicate lt(ComparableValueType value);
-        ILogicalPredicate lte(ComparableValueType value);
-        ILogicalPredicate gt(ComparableValueType value);
-        ILogicalPredicate gte(ComparableValueType value);
+        ILogicalPredicate eq((ComparableValueType or IColumn) value);
+        ILogicalPredicate neq((ComparableValueType or IColumn) value);
+        ILogicalPredicate lt((ComparableValueType or IColumn) value);
+        ILogicalPredicate lte((ComparableValueType or IColumn) value);
+        ILogicalPredicate gt((ComparableValueType or IColumn) value);
+        ILogicalPredicate gte((ComparableValueType or IColumn) value);
       };
-
     </pre>
     <dl class="methods">
-      <dt><code>ILogicalPredicate eq(ComparableValueType value);</code></dt>
+      <dt><code>ILogicalPredicate eq:((ComparableValueType or IColumn) value);</code></dt>
       <dd>The associated column equals to value. Equality is evaluated using
       the rule of JavaScript <code>==</code> operator.</dd>
-      <dt><code>ILogicalPredicate neq(ComparableValueType value);</code></dt>
+      <dt><code>ILogicalPredicate neq((ComparableValueType or IColumn) value);</code></dt>
       <dd>The associated column does not equal to value. Inequality is evaluated
       using the rule of JavaScript <code>!=</code> operator.</dd>
-      <dt><code>ILogicalPredicate lt(ComparableValueType value);</code></dt>
+      <dt><code>ILogicalPredicate lt((ComparableValueType or IColumn) value);</code></dt>
       <dd>The associated column is smaller than value. Relation is evaluated
       using the rule of JavaScript <code>&lt;</code> operator.</dd>
-      <dt><code>ILogicalPredicate lte(ComparableValueType value);</code></dt>
+      <dt><code>ILogicalPredicate lte((ComparableValueType or IColumn) value);</code></dt>
       <dd>The associated column is smaller than or equals to value. Relation is
       evaluated using the rule of JavaScript <code>&lt;=</code> operator.</dd>
-      <dt><code>ILogicalPredicate gt(ComparableValueType value);</code></dt>
+      <dt><code>ILogicalPredicate gt((ComparableValueType or IColumn) value);</code></dt>
       <dd>The associated column is greater than value. Relation is evaluated
       using the rule of JavaScript <code>&gt;</code> operator.</dd>
-      <dt><code>ILogicalPredicate lt(ComparableValueType value);</code></dt>
+      <dt><code>ILogicalPredicate lt((ComparableValueType or IColumn) value);</code></dt>
       <dd>The associated column is greater than or equals to value. Relation is
       evaluated using the rule of JavaScript <code>&gt;=</code> operator.</dd>
     </dl>
+    <p>Giving <code>IColumn</code> as the parameter of
+    <a>IComparisonPredicate</a> creates implicit <a href="#inner-join">inner
+    join</a> syntax. The search condition given by this predicate MUST be
+    evaluated as if given in the form of <code>innerJoin</code>. If the given
+    <a>IColumn</a> is of different type other than the associated column of
+    <a>IComparisonPredicate</a>, a <a>TypeError</a> MUST be thrown.</p>
   </section>
 
   <section>

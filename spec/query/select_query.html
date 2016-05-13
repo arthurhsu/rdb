@@ -113,9 +113,17 @@
   </section>
   <section>
     <h2>Inner Join</h2>
+    <p>Inner joins, also known as equi-joins, create a new result table by
+    combining column values of two tables involved in the join based upon the
+    predicate given as join condition. Inner joins MAY be specified either
+    implicitly through search conditions, or explicitly via
+    <code>innerJoin()</code>.</p>
   </section>
   <section>
     <h2>Left Outer Join</h2>
+    <p>This specification supports only left outer join, which preserves the
+    unmatched rows from the first (left) table, joining them with a
+    <code>NULL</code> row in the shape of the second (right) table.</p>
   </section>
   <section>
     <h2>Aggregation</h2>
