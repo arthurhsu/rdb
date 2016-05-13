@@ -472,11 +472,7 @@ ITable.prototype.as;
 
 
 
-/**
- * @constructor
- * @implements {IComparisonPredicate}
- * @implements {ITruthPredicate}
- */
+/** @constructor */
 function IColumn() {}
 
 
@@ -497,6 +493,17 @@ IColumn.prototype.nullable;
  * @return {!IColumn}
  */
 IColumn.prototype.as;
+
+
+
+/**
+ * @constructor
+ * @extends {IColumn}
+ * @implements {IComparisonPredicate}
+ * @implements {ITruthPredicate}
+ */
+function Column() {}
+
 
 
 /** @typedef {void|!Array<!Object>} */

@@ -5,43 +5,60 @@
   schema. The schema objects for data manipulation are acquired through
   <a>IDatabaseSchema</a> objects obtained from
   <a>ISchemaQueryProvider</a><code>.schema()</code> offered by
-  <a>DatabaseConnection</a>. The schema table is modeled as following:</p>
+  <a>DatabaseConnection</a>.</p>
 
-  <pre class="idl">
-    interface ITable {
-      ITable as(DOMString alias);
-    };
-  </pre>
-  <dl class="methods">
-    <dt><code>ITable as(DOMString alias)</code><dt>
-    <dd>Creates an alias for the table, this is useful for self-join.</dd>
-  </dl>
+  <section>
+    <h2>Table Representation</h2>
+    <p>The table objects returned by <a>IDatabaseSchema</a><code>.table()</code>
+    implements the <a>ITable</a> interface. These table objects MUST have
+    properties with same names as columns of that table, and the properties are
+    <a>Column</a> objects, see <a href="#column-representation">column
+    representation</a> for more details.</p>
 
-  <p>The <a>ITable</a> objects MUST have attributes that are named as columns
-  of that table, and the attributes are <a>IColumn</a> objects.</a>
+    <pre class="idl">
+      interface ITable {
+        ITable as(DOMString alias);
+      };
+    </pre>
+    <dl class="methods">
+      <dt><code>ITable as(DOMString alias)</code><dt>
+      <dd>Creates an alias for the table, this is useful for self-join.</dd>
+    </dl>
+  </section>
 
-  <pre class="idl">
-    interface IColumn {
-      readonly attribute DOMString name;
-      readonly attribute ColumnType type;
-      readonly attribute boolean nullable;
-      IColumn as(DOMString alias);
-    };
+  <section>
+    <h2>Column Representation</h2>
+    <p>Column representation objects have a base interface as defined in the
+    following:</p>
+    <pre class="idl">
+      interface IColumn {
+        readonly attribute DOMString name;
+        readonly attribute ColumnType type;
+        readonly attribute boolean nullable;
+        IColumn as(DOMString alias);
+      };
+    </pre>
+    <dl class="attributes">
+      <dt><code>name</code></dt>
+      <dd>The <a>canonical name</a> of the column.</dd>
+      <dt><code>type</code></dt>
+      <dd>Data type of the column.</dd>
+      <dt><code>nullable</code></dt>
+      <dd>When <code>false</code>, the column is <a>NOT NULL</a></dd>
+    </dl>
+    <dl class="methods">
+      <dt><code>IColumn as(DOMString alias);</code></dt>
+      <dd>Creates an alias for the column. The alias will be honored in select
+      queries only.</dd>
+    </dl>
 
-    IColumn implements IComparisonPredicate;
-    IColumn implements ITruthPredicate;
-  </pre>
-  <dl class="attributes">
-    <dt><code>name</code></dt>
-    <dd>The <a>canonical name</a> of the column.</dd>
-    <dt><code>type</code></dt>
-    <dd>Data type of the column.</dd>
-    <dt><code>nullable</code></dt>
-    <dd>When <code>false</code>, the column is <a>NOT NULL</a></dd>
-  </dl>
-  <dl class="methods">
-    <dt><code>IColumn as(DOMString alias);</code></dt>
-    <dd>Creates an alias for the column. The alias will be honored in select
-    queries only.</dd>
-  </dl>
+    <p>The objects also provide interfaces for creating predicates, therefore
+    they are defined by the <a>Column</a> interface.</p>
+    <pre class="idl">
+      interface Column : IColumn {
+      };
+      Column implements IComparisonPredicate;
+      Column implements ITruthPredicate;
+    </pre>
+  </section>
 </section>
