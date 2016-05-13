@@ -1278,12 +1278,15 @@ if (version < 2) {
   of that table, and the attributes are <a>IColumn</a> objects.</a>
 
   <pre class="idl">
-    interface IColumn : IPredicate {
+    interface IColumn {
       readonly attribute DOMString name;
       readonly attribute ColumnType type;
       readonly attribute boolean nullable;
       IColumn as(DOMString alias);
     };
+
+    IColumn implements IComparisonPredicate;
+    IColumn implements ITruthPredicate;
   </pre>
   <dl class="attributes">
     <dt><code>name</code></dt>
@@ -1389,9 +1392,9 @@ if (version < 2) {
     as an individual row.</dd>
   </dl>
   <p>All methods of <a>IInsertQuery</a> returns the calling
-  <code>IInsertQuery</code> object for cascade builder pattern. The methods can
-  only be called once per query, otherwise <a>SyntaxError</a> MUST be raised.
-  </p>
+  <code>IInsertQuery</code> object for cascade builder pattern. The methods MUST
+  be called once and only once per query before its execution, otherwise
+  <a>SyntaxError</a> MUST be raised.</p>
 
   <p>If an <a>IInsertQuery</a> object is created from <code>insert</code>,
   and a row with duplicated primary key is given, <a>ConstraintError</a>
@@ -1415,8 +1418,10 @@ if (version < 2) {
 <section>
   <h2>Delete Query</h2>
   <p>Delete queries are used to delete rows in a table. The rows to be deleted
-  are specified via <a href="#search-condition">Search Condition</a>. The delete
-  query implements the following interface:</p>
+  are specified via <a href="#search-condition">Search Condition</a>. If the
+  search condition is not provided, all rows in the table specified by
+  <code>from()</code> will be deleted. The delete query implements the following
+  interface:</p>
 
   <pre class="idl">
     interface IDeleteQuery : IQuery {
@@ -1426,7 +1431,8 @@ if (version < 2) {
   </pre>
   <dl class="methods">
     <dt><code>IDeleteQuery from(ITable table);</code></dt>
-    <dd>Specifies the target table to delete rows from.</dd>
+    <dd>Specifies the target table to delete rows from. This method MUST be
+    called before execution, or <a>SyntaxError</a> will be thrown.</dd>
     <dt><code>IDeleteQuery where(ILogicalPredicate searchCondition);</code></dt>
     <dd>Specifies the search condition for filtering rows.</dd>
   </dl>
@@ -1444,20 +1450,21 @@ if (version < 2) {
 <section>
   <h2>Search Condition</h2>
   <p>Search condition specifies how the query engine should search the rows for
-  query. The condition will be evaluated for rows in the database, and returns
-  <code>true</code> if the target row is a match or <code>false</code>
-  otherwise. The query engine MAY apply speed up techniques to accelerate the
-  evaluation, for example, using indices.</p>
-  <p>Search conditions are constructed via <dfn>predicate</dfn>s, which will
-  be evaluated to either <code>true</code> or <code>false</code>. There are
-  three types of predicates defined in this document: comparison, truth, and
-  logical. Comparison and truth predicates are obtained from <a>IColumn</a>
-  objects, and logical predicates are obtained from the comparison and truth
-  predicates. Complement of predicate is provided by the <code>not</code>
+  query. They are represented by logical predicates, will be evaluated for
+  rows in the database during query execution, and returns <code>true</code> if
+  the evaluated row is a match or <code>false</code> otherwise. Each
+  logical predicate implicitly carries a <a>scope</a>, which defines the tables
+  that the predicate shall be evaluated against. All rows in these tables will
+  be evaluated. The query engine MAY apply speed up techniques to accelerate
+  the evaluation, for example, using indices.</p>
+  <p>Logical predicates are obtained from either comparison, truth, or logical
+  predicates. Comparison and truth predicates are obtained from <a>IColumn</a>
+  objects. Complement of predicate is provided by the <code>not</code>
   function in <a>IDatabaseFunctionProvider</a>.</p>
   <p>The comparison or truth predicates can only compare the column type of
-  the column associated. If the provided value type is not the same as the
-  column type, a <a>TypeError</a> will be thrown.</p>
+  the column associated. An implicit <code>typeof</code> will be called against
+  the provided value to get the value type. If the provided value type is not
+  the same as the column type, a <a>TypeError</a> will be thrown.</p>
   <p class="note">
   This spec does not provide implicit type conversion. All types MUST be
   explicit.
@@ -1479,6 +1486,7 @@ if (version < 2) {
         ILogicalPredicate gt(ComparableValueType value);
         ILogicalPredicate gte(ComparableValueType value);
       };
+
     </pre>
     <dl class="methods">
       <dt><code>ILogicalPredicate eq(ComparableValueType value);</code></dt>
@@ -1564,29 +1572,161 @@ if (version < 2) {
 
     <p class="note">The <code>NOT</code> operation is provided by
     <code>IDatabaseFunctionProvider.not().</code></p>
+
+    <p>The <dfn>predicate scope</dfn> is the union of all tables involved for
+    creating the predicate. For example, <code>IColumn.eq()</code> creates an
+    <a>ILogicalPredicate</a>, and scope of that predicate is the table
+    associated with the creating <a>IColumn</a> object.</p>
   </section>
 </section>
 
 <section>
-  <h2>Data Query</h2>
-  <pre class="idl">
-    interface ISelectQuery : IQuery {
-      ISelectQuery from(ITable... tables);
-      ISelectQuery where(ILogicalPredicate searchCondition);
-      ISelectQuery innerJoin(ITable table, Predicate onCondition);
-      ISelectQuery leftOuterJoin(ITable table, Predicate onCondition);
-      ISelectQuery limit((unsigned long or IBindableValue) numberOfRows);
-      ISelectQuery skip((unsigned long or IBindableValue) numberOfRows);
-      ISelectQuery orderBy(IColumn column, optional Order order);
-      ISelectQuery groupBy(IColumn... column);
-    };
-  </pre>
+  <h2>Update Query</h2>
+  <p>Update queries updates the value of a column in all rows that matches the
+  search condition. If the search condition is not provided, then the update
+  will be applied to all rows of the table.</p>
   <pre class="idl">
     interface IUpdateQuery : IQuery {
       IUpdateQuery set(IColumn column, ValueType value);
       IUpdateQuery where(ILogicalPredicate searchCondition);
     };
   </pre>
+  <dl class="methods">
+    <dt><code>IUpdateQuery set(IColumn column, ValueType value);</code></dt>
+    <dd>Set the column to specified value. If the value type is not the same
+    as the column type, a <a>TypeError</a> will be thrown. If the updated value
+    will result in integrity check failure, a <a>ConstraintError</a> will be
+    thrown. This function can be called multiple times per query, but each
+    column can only be used once, otherwise a <a>SyntaxError</a> will be
+    thrown.</dd>
+    <dt><code>IUpdateQuery where(ILogicalPredicate searchCondition);</code></dt>
+    <dd>Specify the search condition of update. This function can only be called
+    once per query, otherwise <a>SyntaxError</a> will be thrown.</dd>
+  </dl>
+</section>
+
+<section>
+  <h2>Select Query</h2>
+  <p>Select queries are used to select rows matching search conditions or join
+  conditions from database. If the search conditions are not specified,
+  Cartesian product of all rows from the tables specified by
+  <code>from()</code> will be returned.</p>
+  <p>Scope of select queries MUST be evaluated using
+  <a href="#select-scope-algorithm">select scope algorithm</a> before
+  execution. The select queries implement the following interface:</p>
+  <pre class="idl">
+    interface ISelectQuery : IQuery {
+      ISelectQuery from(ITable... tables);
+      ISelectQuery where(ILogicalPredicate searchCondition);
+      ISelectQuery innerJoin(ITable table, ILogicalPredicate joinCondition);
+      ISelectQuery leftOuterJoin(ITable table, ILogicalPredicate joinCondition);
+      ISelectQuery limit((unsigned long or IBindableValue) numberOfRows);
+      ISelectQuery skip((unsigned long or IBindableValue) numberOfRows);
+      ISelectQuery orderBy(IColumn column, optional Order order);
+      ISelectQuery groupBy(IColumn... column);
+    };
+  </pre>
+  <dl class="member">
+    <dt><code>ISelectQuery from(ITable... tables);</code></dt>
+    <dd>Specifies the scope of the select query. This function can only be
+    called once per query, otherwise <a>SyntaxError</a> will be thrown.</dd>
+    <dt><code>ISelectQuery where(ILogicalPredicate searchCondition);</code></dt>
+    <dd>Specifies search condition. This function can only be
+    called once per query, otherwise <a>SyntaxError</a> will be thrown.</dd>
+    <dt><code>ISelectQuery innerJoin(ITable table, ILogicalPredicate joinCondition);</code></dt>
+    <dd>Specifies explicit <a href="#inner-join">inner join</a>. This function
+    can be called multiple times per query.</dd>
+    <dt><code>ISelectQuery leftOuterJoin(ITable table, ILogicalPredicate joinCondition);</code></dt>
+    <dd>Specifies <a href="#left-outer-join">left outer join</a>. This function
+    can be called multiple times per query.</dd>
+    <dt><code>ISelectQuery limit((unsigned long or IBindableValue) numberOfRows);</code></dt>
+    <dd>Specifies maximum number of rows to return. If the number is
+    <code>0</code>, the query is effectively an no-op. This function can only
+    be called once per query, otherwise <a>SyntaxError</a> will be thrown.</dd>
+    <dt><code>ISelectQuery skip((unsigned long or IBindableValue) numberOfRows);</code></dt>
+    <dd>Specifies maximum number of rows to skip from returning. If the
+    number is greater than total number of rows filtered, an empty array will
+    be returned. This function can only be called once per query, otherwise 
+    <a>SyntaxError</a> will be thrown.</dd>
+    <dt><code>ISelectQuery orderBy(IColumn column, optional Order order);</code></dt>
+    <dd>Specify how to sort the returning row. This function can be called
+    multiple times per query. The invocation order of this function will affect
+    the results of sorting, , see
+    <a href="#sorting-algorithm">sorting algorithm</a>.</dd>
+    <dt><code>ISelectQuery groupBy(IColumn... column);</code></dt>
+    <dd>Specify how to group returning rows using
+    <a href="#grouping-algorithm">grouping algorithm</a>. This function can
+    only be called once per query, otherwise <a>SyntaxError</a> will be
+    thrown.</dd>
+  </dl>
+  <p class="note">
+    There is not a hard rule regarding the invocation order of
+    <a>ISelectQuery</a> member functions. However, it is recommended that the
+    functions are invoked in the order of their appearance order in the
+    interface for better readability.
+  </p>
+  <section>
+    <h2>Select Scope Algorithm</h2>
+    <p>The scope of a select query is determined by the following algorithm.</p>
+    <ol>
+      <li>Let T1 denote the set of tables specified by <code>from()</code></li>
+      <li>If <code>innerJoin()</code></li>
+        <ol>
+          <li>Let T2 denote the table specified by inner join</li>
+          <li>Let S2 denote the scope of the join condition</li>
+          <li>If S2 &nsub; (T1 &cup; T2), throws <a>SyntaxError</a></li>
+        </ol>
+      <li>If <code>leftOuterJoin()</code></li>
+        <ol>
+          <li>Let T3 denote the table specified by left outer join</li>
+          <li>Let S3 denote the scope of the join condition</li>
+          <li>If S3 &nsub; (T1 &cup; T3), throws <a>SyntaxError</a></li>
+        </ol>
+      <li>Let T4 denote <dfn>valid projection scope</dfn>:
+      T1 &cup; T2 &cup; T3</li>
+      <li>If <code>where()</code></li>
+        <ol>
+          <li>Let S4 denote the scope of search condition</li>
+          <li>If S4 &nsub; T4, throws <a>SyntaxError</a></li>
+        </ol>
+      <li>If any column in <code>orderBy()</code>, <code>groupBy()</code>,
+      or the projection list passed in the constructor of <a>ISelectQuery</a>
+      object is not in the valid projection scope, throw <a>SyntaxError</a>.</li>
+    </ol>
+  </section>
+  <section>
+    <h2>Sorting Algorithm</h2>
+    <p>The sorting algorithm is represented in the pseudo JavaScript code
+    below.</p>
+    <pre><code class="highlight">
+      var orderBySpecs;  // Array of orderBy() specs given in this query.
+      filteredRows.sort(function(lhs, rhs) {
+        for (var i = 0; i < orderBySpecs.length; ++i) {
+          var spec = orderBySpecs[i];
+          var col = spec.column;
+          if (lhs[col] == rhs[col]) {
+            continue;
+          }
+          if ((spec.order == 'asc' && lhs[col] < rhs[col]) ||
+              (spec.order == 'desc' && lhs[col] > rhs[col])) {
+            return -1;
+          } else {
+            return 1;
+          }
+        }
+        return 0;
+      });
+    </code></pre>
+  </section>
+  <section>
+    <h2>Grouping Algorithm</h2>
+  </section>
+  <section>
+    <h2>Inner Join</h2>
+  </section>
+  <section>
+    <h2>Left Outer Join</h2>
+  </section>
   <section>
     <h2>Aggregation Functions</h2>
     <pre class="idl">
@@ -1602,12 +1742,15 @@ if (version < 2) {
       };
     </pre>
   </section>
-  <pre class="idl">
-    interface IDatabaseFunctionProvider : IAggregateFunction {
-      IColumn distinct(IColumn... col);
-      ILogicalPredicate not(IPredicate predicate);
-    };
-  </pre>
+  <section>
+    <h2>Global Functions</h2>
+    <pre class="idl">
+      interface IDatabaseFunctionProvider : IAggregateFunction {
+        IColumn distinct(IColumn... col);
+        ILogicalPredicate not(ILogicalPredicate predicate);
+      };
+    </pre>
+  </section>
 </section>
 
 <section>
@@ -1644,6 +1787,12 @@ function updateModel(employeeId) {
 }
 
   </pre>
+</section>
+
+<section>
+  <h2>Transaction Snapshots</h2>
+  <p>Define the behavior of transaction snapshots. Simple transaction snapshots
+  will be used: last writer wins.</p>
 </section>
 
 
