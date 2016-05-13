@@ -1,17 +1,125 @@
 <section>
   <h2>Select Query</h2>
+  <p>Select queries are used to select rows matching search conditions or join
+  conditions from database. If the search conditions are not specified,
+  Cartesian product of all rows from the tables specified by
+  <code>from()</code> will be returned.</p>
+  <p>Scope of select queries MUST be evaluated using
+  <a href="#select-scope-algorithm">select scope algorithm</a> before
+  execution. The select queries implement the following interface:</p>
   <pre class="idl">
     interface ISelectQuery : IQuery {
       ISelectQuery from(ITable... tables);
       ISelectQuery where(ILogicalPredicate searchCondition);
-      ISelectQuery innerJoin(ITable table, Predicate onCondition);
-      ISelectQuery leftOuterJoin(ITable table, Predicate onCondition);
+      ISelectQuery innerJoin(ITable table, ILogicalPredicate joinCondition);
+      ISelectQuery leftOuterJoin(ITable table, ILogicalPredicate joinCondition);
       ISelectQuery limit((unsigned long or IBindableValue) numberOfRows);
       ISelectQuery skip((unsigned long or IBindableValue) numberOfRows);
       ISelectQuery orderBy(IColumn column, optional Order order);
       ISelectQuery groupBy(IColumn... column);
     };
   </pre>
+  <dl class="member">
+    <dt><code>ISelectQuery from(ITable... tables);</code></dt>
+    <dd>Specifies the scope of the select query. This function can only be
+    called once per query, otherwise <a>SyntaxError</a> will be thrown.</dd>
+    <dt><code>ISelectQuery where(ILogicalPredicate searchCondition);</code></dt>
+    <dd>Specifies search condition. This function can only be
+    called once per query, otherwise <a>SyntaxError</a> will be thrown.</dd>
+    <dt><code>ISelectQuery innerJoin(ITable table, ILogicalPredicate joinCondition);</code></dt>
+    <dd>Specifies explicit <a href="#inner-join">inner join</a>. This function
+    can be called multiple times per query.</dd>
+    <dt><code>ISelectQuery leftOuterJoin(ITable table, ILogicalPredicate joinCondition);</code></dt>
+    <dd>Specifies <a href="#left-outer-join">left outer join</a>. This function
+    can be called multiple times per query.</dd>
+    <dt><code>ISelectQuery limit((unsigned long or IBindableValue) numberOfRows);</code></dt>
+    <dd>Specifies maximum number of rows to return. If the number is
+    <code>0</code>, the query is effectively an no-op. This function can only
+    be called once per query, otherwise <a>SyntaxError</a> will be thrown.</dd>
+    <dt><code>ISelectQuery skip((unsigned long or IBindableValue) numberOfRows);</code></dt>
+    <dd>Specifies maximum number of rows to skip from returning. If the
+    number is greater than total number of rows filtered, an empty array will
+    be returned. This function can only be called once per query, otherwise 
+    <a>SyntaxError</a> will be thrown.</dd>
+    <dt><code>ISelectQuery orderBy(IColumn column, optional Order order);</code></dt>
+    <dd>Specify how to sort the returning row. This function can be called
+    multiple times per query. The invocation order of this function will affect
+    the results of sorting, , see
+    <a href="#sorting-algorithm">sorting algorithm</a>.</dd>
+    <dt><code>ISelectQuery groupBy(IColumn... column);</code></dt>
+    <dd>Specify how to group returning rows using
+    <a href="#grouping-algorithm">grouping algorithm</a>. This function can
+    only be called once per query, otherwise <a>SyntaxError</a> will be
+    thrown.</dd>
+  </dl>
+  <p class="note">
+    There is not a hard rule regarding the invocation order of
+    <a>ISelectQuery</a> member functions. However, it is recommended that the
+    functions are invoked in the order of their appearance order in the
+    interface for better readability.
+  </p>
+  <section>
+    <h2>Select Scope Algorithm</h2>
+    <p>The scope of a select query is determined by the following algorithm.</p>
+    <ol>
+      <li>Let T1 denote the set of tables specified by <code>from()</code></li>
+      <li>If <code>innerJoin()</code></li>
+        <ol>
+          <li>Let T2 denote the table specified by inner join</li>
+          <li>Let S2 denote the scope of the join condition</li>
+          <li>If S2 &nsub; (T1 &cup; T2), throws <a>SyntaxError</a></li>
+        </ol>
+      <li>If <code>leftOuterJoin()</code></li>
+        <ol>
+          <li>Let T3 denote the table specified by left outer join</li>
+          <li>Let S3 denote the scope of the join condition</li>
+          <li>If S3 &nsub; (T1 &cup; T3), throws <a>SyntaxError</a></li>
+        </ol>
+      <li>Let T4 denote <dfn>valid projection scope</dfn>:
+      T1 &cup; T2 &cup; T3</li>
+      <li>If <code>where()</code></li>
+        <ol>
+          <li>Let S4 denote the scope of search condition</li>
+          <li>If S4 &nsub; T4, throws <a>SyntaxError</a></li>
+        </ol>
+      <li>If any column in <code>orderBy()</code>, <code>groupBy()</code>,
+      or the projection list passed in the constructor of <a>ISelectQuery</a>
+      object is not in the valid projection scope, throw <a>SyntaxError</a>.</li>
+    </ol>
+  </section>
+  <section>
+    <h2>Sorting Algorithm</h2>
+    <p>The sorting algorithm is represented in the pseudo JavaScript code
+    below.</p>
+    <pre><code class="highlight">
+      var orderBySpecs;  // Array of orderBy() specs given in this query.
+      filteredRows.sort(function(lhs, rhs) {
+        for (var i = 0; i < orderBySpecs.length; ++i) {
+          var spec = orderBySpecs[i];
+          var col = spec.column;
+          if (lhs[col] == rhs[col]) {
+            continue;
+          }
+          if ((spec.order == 'asc' && lhs[col] < rhs[col]) ||
+              (spec.order == 'desc' && lhs[col] > rhs[col])) {
+            return -1;
+          } else {
+            return 1;
+          }
+        }
+        return 0;
+      });
+    </code></pre>
+  </section>
+  <section>
+    <h2>Grouping Algorithm</h2>
+  </section>
+  <section>
+    <h2>Inner Join</h2>
+  </section>
+  <section>
+    <h2>Left Outer Join</h2>
+  </section>
   <section>
     <h2>Aggregation Functions</h2>
     <pre class="idl">
@@ -27,10 +135,13 @@
       };
     </pre>
   </section>
-  <pre class="idl">
-    interface IDatabaseFunctionProvider : IAggregateFunction {
-      IColumn distinct(IColumn... col);
-      ILogicalPredicate not(ILogicalPredicate predicate);
-    };
-  </pre>
+  <section>
+    <h2>Global Functions</h2>
+    <pre class="idl">
+      interface IDatabaseFunctionProvider : IAggregateFunction {
+        IColumn distinct(IColumn... col);
+        ILogicalPredicate not(ILogicalPredicate predicate);
+      };
+    </pre>
+  </section>
 </section>

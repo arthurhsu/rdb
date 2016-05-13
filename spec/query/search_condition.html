@@ -123,5 +123,10 @@
 
     <p class="note">The <code>NOT</code> operation is provided by
     <code>IDatabaseFunctionProvider.not().</code></p>
+
+    <p>The <dfn>predicate scope</dfn> is the union of all tables involved for
+    creating the predicate. For example, <code>IColumn.eq()</code> creates an
+    <a>ILogicalPredicate</a>, and scope of that predicate is the table
+    associated with the creating <a>IColumn</a> object.</p>
   </section>
 </section>

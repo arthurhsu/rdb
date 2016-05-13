@@ -21,12 +21,15 @@
   of that table, and the attributes are <a>IColumn</a> objects.</a>
 
   <pre class="idl">
-    interface IColumn : IComparisonPredicate, ITruthPredicate {
+    interface IColumn {
       readonly attribute DOMString name;
       readonly attribute ColumnType type;
       readonly attribute boolean nullable;
       IColumn as(DOMString alias);
     };
+
+    IColumn implements IComparisonPredicate;
+    IColumn implements ITruthPredicate;
   </pre>
   <dl class="attributes">
     <dt><code>name</code></dt>
