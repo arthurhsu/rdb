@@ -1262,45 +1262,62 @@ if (version < 2) {
   schema. The schema objects for data manipulation are acquired through
   <a>IDatabaseSchema</a> objects obtained from
   <a>ISchemaQueryProvider</a><code>.schema()</code> offered by
-  <a>DatabaseConnection</a>. The schema table is modeled as following:</p>
+  <a>DatabaseConnection</a>.</p>
 
-  <pre class="idl">
-    interface ITable {
-      ITable as(DOMString alias);
-    };
-  </pre>
-  <dl class="methods">
-    <dt><code>ITable as(DOMString alias)</code><dt>
-    <dd>Creates an alias for the table, this is useful for self-join.</dd>
-  </dl>
+  <section>
+    <h2>Table Representation</h2>
+    <p>The table objects returned by <a>IDatabaseSchema</a><code>.table()</code>
+    implements the <a>ITable</a> interface. These table objects MUST have
+    properties with same names as columns of that table, and the properties are
+    <a>Column</a> objects, see <a href="#column-representation">column
+    representation</a> for more details.</p>
 
-  <p>The <a>ITable</a> objects MUST have attributes that are named as columns
-  of that table, and the attributes are <a>IColumn</a> objects.</a>
+    <pre class="idl">
+      interface ITable {
+        ITable as(DOMString alias);
+      };
+    </pre>
+    <dl class="methods">
+      <dt><code>ITable as(DOMString alias)</code><dt>
+      <dd>Creates an alias for the table, this is useful for self-join.</dd>
+    </dl>
+  </section>
 
-  <pre class="idl">
-    interface IColumn {
-      readonly attribute DOMString name;
-      readonly attribute ColumnType type;
-      readonly attribute boolean nullable;
-      IColumn as(DOMString alias);
-    };
+  <section>
+    <h2>Column Representation</h2>
+    <p>Column representation objects have a base interface as defined in the
+    following:</p>
+    <pre class="idl">
+      interface IColumn {
+        readonly attribute DOMString name;
+        readonly attribute ColumnType type;
+        readonly attribute boolean nullable;
+        IColumn as(DOMString alias);
+      };
+    </pre>
+    <dl class="attributes">
+      <dt><code>name</code></dt>
+      <dd>The <a>canonical name</a> of the column.</dd>
+      <dt><code>type</code></dt>
+      <dd>Data type of the column.</dd>
+      <dt><code>nullable</code></dt>
+      <dd>When <code>false</code>, the column is <a>NOT NULL</a></dd>
+    </dl>
+    <dl class="methods">
+      <dt><code>IColumn as(DOMString alias);</code></dt>
+      <dd>Creates an alias for the column. The alias will be honored in select
+      queries only.</dd>
+    </dl>
 
-    IColumn implements IComparisonPredicate;
-    IColumn implements ITruthPredicate;
-  </pre>
-  <dl class="attributes">
-    <dt><code>name</code></dt>
-    <dd>The <a>canonical name</a> of the column.</dd>
-    <dt><code>type</code></dt>
-    <dd>Data type of the column.</dd>
-    <dt><code>nullable</code></dt>
-    <dd>When <code>false</code>, the column is <a>NOT NULL</a></dd>
-  </dl>
-  <dl class="methods">
-    <dt><code>IColumn as(DOMString alias);</code></dt>
-    <dd>Creates an alias for the column. The alias will be honored in select
-    queries only.</dd>
-  </dl>
+    <p>The objects also provide interfaces for creating predicates, therefore
+    they are defined by the <a>Column</a> interface.</p>
+    <pre class="idl">
+      interface Column : IColumn {
+      };
+      Column implements IComparisonPredicate;
+      Column implements ITruthPredicate;
+    </pre>
+  </section>
 </section>
 
 <section>
@@ -1479,35 +1496,40 @@ if (version < 2) {
       typedef (IndexableValueType or IBindableValue) ComparableValueType;
 
       interface IComparisonPredicate {
-        ILogicalPredicate eq(ComparableValueType value);
-        ILogicalPredicate neq(ComparableValueType value);
-        ILogicalPredicate lt(ComparableValueType value);
-        ILogicalPredicate lte(ComparableValueType value);
-        ILogicalPredicate gt(ComparableValueType value);
-        ILogicalPredicate gte(ComparableValueType value);
+        ILogicalPredicate eq((ComparableValueType or IColumn) value);
+        ILogicalPredicate neq((ComparableValueType or IColumn) value);
+        ILogicalPredicate lt((ComparableValueType or IColumn) value);
+        ILogicalPredicate lte((ComparableValueType or IColumn) value);
+        ILogicalPredicate gt((ComparableValueType or IColumn) value);
+        ILogicalPredicate gte((ComparableValueType or IColumn) value);
       };
-
     </pre>
     <dl class="methods">
-      <dt><code>ILogicalPredicate eq(ComparableValueType value);</code></dt>
+      <dt><code>ILogicalPredicate eq:((ComparableValueType or IColumn) value);</code></dt>
       <dd>The associated column equals to value. Equality is evaluated using
       the rule of JavaScript <code>==</code> operator.</dd>
-      <dt><code>ILogicalPredicate neq(ComparableValueType value);</code></dt>
+      <dt><code>ILogicalPredicate neq((ComparableValueType or IColumn) value);</code></dt>
       <dd>The associated column does not equal to value. Inequality is evaluated
       using the rule of JavaScript <code>!=</code> operator.</dd>
-      <dt><code>ILogicalPredicate lt(ComparableValueType value);</code></dt>
+      <dt><code>ILogicalPredicate lt((ComparableValueType or IColumn) value);</code></dt>
       <dd>The associated column is smaller than value. Relation is evaluated
       using the rule of JavaScript <code>&lt;</code> operator.</dd>
-      <dt><code>ILogicalPredicate lte(ComparableValueType value);</code></dt>
+      <dt><code>ILogicalPredicate lte((ComparableValueType or IColumn) value);</code></dt>
       <dd>The associated column is smaller than or equals to value. Relation is
       evaluated using the rule of JavaScript <code>&lt;=</code> operator.</dd>
-      <dt><code>ILogicalPredicate gt(ComparableValueType value);</code></dt>
+      <dt><code>ILogicalPredicate gt((ComparableValueType or IColumn) value);</code></dt>
       <dd>The associated column is greater than value. Relation is evaluated
       using the rule of JavaScript <code>&gt;</code> operator.</dd>
-      <dt><code>ILogicalPredicate lt(ComparableValueType value);</code></dt>
+      <dt><code>ILogicalPredicate lt((ComparableValueType or IColumn) value);</code></dt>
       <dd>The associated column is greater than or equals to value. Relation is
       evaluated using the rule of JavaScript <code>&gt;=</code> operator.</dd>
     </dl>
+    <p>Giving <code>IColumn</code> as the parameter of
+    <a>IComparisonPredicate</a> creates implicit <a href="#inner-join">inner
+    join</a> syntax. The search condition given by this predicate MUST be
+    evaluated as if given in the form of <code>innerJoin</code>. If the given
+    <a>IColumn</a> is of different type other than the associated column of
+    <a>IComparisonPredicate</a>, a <a>TypeError</a> MUST be thrown.</p>
   </section>
 
   <section>
@@ -1609,8 +1631,8 @@ if (version < 2) {
   <h2>Select Query</h2>
   <p>Select queries are used to select rows matching search conditions or join
   conditions from database. If the search conditions are not specified,
-  Cartesian product of all rows from the tables specified by
-  <code>from()</code> will be returned.</p>
+  <a href="#cartesian-product">Cartesian product</a> of all rows from the tables
+  specified by <code>from()</code> will be returned.</p>
   <p>Scope of select queries MUST be evaluated using
   <a href="#select-scope-algorithm">select scope algorithm</a> before
   execution. The select queries implement the following interface:</p>
@@ -1666,6 +1688,24 @@ if (version < 2) {
     interface for better readability.
   </p>
   <section>
+    <h2>Cartesian Product</h2>
+    <p>The Cartesian product of two tables are defined as following algorithm.</p>
+    <ol>
+      <li>Let T1 and T2 denote the tables involved in the Cartesian product,
+      and the target is to have T1 &times T2.</li>
+      <li>Let R1 = [R_11, R_12, R_13, ..., R_1M] denote the rows of T1.</li>
+      <li>Let R2 = [R_21, R_22, R_23, ..., R_2N] denote the rows of T2.</li>
+      <li>Cartesian product of T1 and T2 are performed in two steps.</li>
+      <ol>
+        <li>Let R = R1 &times; R2. This makes R looks like
+          [[R_11, R_21], [R_11, R_22], ..., [R_11, R_2N], [R_12, R_21], ..., [R_1M, R_1N]].</li>
+        <li>Flatten all pairs in R as a row, where T1's columns are expanded
+        before T2's columns. T1's columns appear in the order of schema
+        declaration, and the same rule applies to T2's column.</li>
+      </ol>
+    </ol>
+  </section>
+  <section>
     <h2>Select Scope Algorithm</h2>
     <p>The scope of a select query is determined by the following algorithm.</p>
     <ol>
@@ -1720,9 +1760,50 @@ if (version < 2) {
   </section>
   <section>
     <h2>Inner Join</h2>
+    <p>Inner joins create a new result table by combining column values of two
+    tables involved in the join based upon the predicate given as join
+    condition. Inner joins MAY be specified either implicitly through search
+    conditions, or explicitly via <code>innerJoin()</code>. The following
+    example demonstrates two equivalent inner join syntaxes:</p>
+    <pre class="example highlight">
+var db;
+
+var tableA;
+
+var tableB;
+
+// Implicit inner join.
+var q1 =
+  db.select(tableA['key'], tableA['value'], tableB['timestamp'])
+    .from(tableA, tableB)
+    .where(tableA['key'].eq(tableB['key']));
+
+// Explicit inner join.
+var q2 =
+  db.select(tableA['key'], tableA['value'], tableB['timestamp'])
+    .from(tableA)
+    .innerJoin(tableB, tableA['key'].eq(tableB['key']));
+
+    </pre>
+
+    <p>The results of inner join MUST be equivalent to the outcome of the
+    following algorithm:</p>
+    <ol>
+      <li>Let T1 and T2 denote tables involved in the inner join.</li>
+      <li>Let C denotes the <a href="#cartesian-product">Cartesian product</a>
+      of T1 and T2.</li>
+      <li>For each row in C, evaluate the predicate provided as join
+      condition. Return the rows whose evaluation is true.</li>
+    </ol>
+    <p class="note">Conceptually the inner join will create a new table.
+    Implementation MAY NOT create actual table as long as the returned results
+    are correct.</p>
   </section>
   <section>
     <h2>Left Outer Join</h2>
+    <p>This specification supports only left outer join, which preserves the
+    unmatched rows from the first (left) table, joining them with a
+    <code>NULL</code> row in the shape of the second (right) table.</p>
   </section>
   <section>
     <h2>Aggregation</h2>
@@ -1738,6 +1819,9 @@ if (version < 2) {
         IColumn var(IColumn col);
       };
     </pre>
+    <p>The <a>IColumn</a> objects returned by
+    <a>IAggregateFunction</a> MUST NOT be convertible to <a>Column</a> objects.
+    </p>
   </section>
   <section>
     <h2>Global Functions</h2>
