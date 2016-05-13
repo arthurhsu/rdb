@@ -47,8 +47,8 @@
     the results of sorting, , see
     <a href="#sorting-algorithm">sorting algorithm</a>.</dd>
     <dt><code>ISelectQuery groupBy(IColumn... column);</code></dt>
-    <dd>Specify how to group returning rows using
-    <a href="#grouping-algorithm">grouping algorithm</a>. This function can
+    <dd>Specify how to group returning rows in aggregation, see
+    <a href="#aggregation">aggregation</a> for more details. This function can
     only be called once per query, otherwise <a>SyntaxError</a> will be
     thrown.</dd>
   </dl>
@@ -112,16 +112,13 @@
     </code></pre>
   </section>
   <section>
-    <h2>Grouping Algorithm</h2>
-  </section>
-  <section>
     <h2>Inner Join</h2>
   </section>
   <section>
     <h2>Left Outer Join</h2>
   </section>
   <section>
-    <h2>Aggregation Functions</h2>
+    <h2>Aggregation</h2>
     <pre class="idl">
       interface IAggregateFunction {
         IColumn avg(IColumn col);
