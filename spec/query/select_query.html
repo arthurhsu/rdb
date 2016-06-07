@@ -60,19 +60,26 @@
   </p>
   <section>
     <h2>Cartesian Product</h2>
-    <p>The Cartesian product of two tables are defined as following algorithm.</p>
+    <p>The Cartesian product of two tables are defined in the following.</p>
     <ol>
-      <li>Let T1 and T2 denote the tables involved in the Cartesian product,
-      and the target is to have T1 &times T2.</li>
-      <li>Let R1 = [R_11, R_12, R_13, ..., R_1M] denote the rows of T1.</li>
-      <li>Let R2 = [R_21, R_22, R_23, ..., R_2N] denote the rows of T2.</li>
-      <li>Cartesian product of T1 and T2 are performed in two steps.</li>
+      <li>Let T<sub>1</sub> and T<sub>2</sub> denote the tables involved in the
+        Cartesian product, and the target is to have
+        T<sub>1</sub> &times T<sub>2</sub>.</li>
+      <li>Let R<sub>1</sub> = [R<sub>11</sub>, R<sub>12</sub>, R<sub>13</sub>,
+        ..., R<sub>1M</sub>] denote the rows of T<sub>1</sub>.</li>
+      <li>Let R<sub>2</sub> = [R<sub>21</sub>, R<sub>22</sub>, R<sub>23</sub>,
+        ..., R<sub>2N</sub>] denote the rows of T<sub>2</sub>.</li>
+      <li>Cartesian product of T<sub>1</sub> and T<sub>2</sub> are performed in
+        two steps.</li>
       <ol>
-        <li>Let R = R1 &times; R2. This makes R looks like
-          [[R_11, R_21], [R_11, R_22], ..., [R_11, R_2N], [R_12, R_21], ..., [R_1M, R_1N]].</li>
-        <li>Flatten all pairs in R as a row, where T1's columns are expanded
-        before T2's columns. T1's columns appear in the order of schema
-        declaration, and the same rule applies to T2's column.</li>
+        <li>Let R = R<sub>1</sub> &times; R<sub>2</sub>. This makes R looks like
+          [[R<sub>11</sub>, R<sub>21</sub>], [R<sub>11</sub>, R<sub>22</sub>],
+          ..., [R<sub>11</sub>, R<sub>2N</sub>], [R<sub>12</sub>,
+          R<sub>21</sub>], ..., [R<sub>1M</sub>, R_1N]].</li>
+        <li>Flatten all pairs in R as a row, where T<sub>1</sub>'s columns are
+          expanded before T<sub>2</sub>'s columns. T<sub>1</sub>'s columns
+          appear in the order of schema declaration, and the same rule applies
+          to T<sub>2</sub>'s column.</li>
       </ol>
     </ol>
   </section>
@@ -80,25 +87,25 @@
     <h2>Select Scope Algorithm</h2>
     <p>The scope of a select query is determined by the following algorithm.</p>
     <ol>
-      <li>Let T1 denote the set of tables specified by <code>from()</code></li>
+      <li>Let T<sub>1</sub> denote the set of tables specified by <code>from()</code></li>
       <li>If <code>innerJoin()</code></li>
         <ol>
-          <li>Let T2 denote the table specified by inner join</li>
-          <li>Let S2 denote the scope of the join condition</li>
-          <li>If S2 &nsub; (T1 &cup; T2), throws <a>SyntaxError</a></li>
+          <li>Let T<sub>2</sub> denote the table specified by inner join</li>
+          <li>Let S<sub>2</sub> denote the scope of the join condition</li>
+          <li>If S<sub>2</sub> &nsub; (T<sub>1</sub> &cup; T<sub>2</sub>), throws <a>SyntaxError</a></li>
         </ol>
       <li>If <code>leftOuterJoin()</code></li>
         <ol>
-          <li>Let T3 denote the table specified by left outer join</li>
-          <li>Let S3 denote the scope of the join condition</li>
-          <li>If S3 &nsub; (T1 &cup; T3), throws <a>SyntaxError</a></li>
+          <li>Let T<sub>3</sub> denote the table specified by left outer join</li>
+          <li>Let S<sub>3</sub> denote the scope of the join condition</li>
+          <li>If S<sub>3</sub> &nsub; (T<sub>1</sub> &cup; T<sub>3</sub>), throws <a>SyntaxError</a></li>
         </ol>
-      <li>Let T4 denote <dfn>valid projection scope</dfn>:
-      T1 &cup; T2 &cup; T3</li>
+      <li>Let T<sub>4</sub> denote <dfn>valid projection scope</dfn>:
+      T<sub>1</sub> &cup; T<sub>2</sub> &cup; T<sub>3</sub></li>
       <li>If <code>where()</code></li>
         <ol>
-          <li>Let S4 denote the scope of search condition</li>
-          <li>If S4 &nsub; T4, throws <a>SyntaxError</a></li>
+          <li>Let S<sub>4</sub> denote the scope of search condition</li>
+          <li>If S<sub>4</sub> &nsub; T<sub>4</sub>, throws <a>SyntaxError</a></li>
         </ol>
       <li>If any column in <code>orderBy()</code>, <code>groupBy()</code>,
       or the projection list passed in the constructor of <a>ISelectQuery</a>
@@ -143,9 +150,10 @@
     <p>The results of inner join MUST be equivalent to the outcome of the
     following algorithm:</p>
     <ol>
-      <li>Let T1 and T2 denote tables involved in the inner join.</li>
+      <li>Let T<sub>1</sub> and T<sub>2</sub> denote tables involved in the
+        inner join.</li>
       <li>Let C denotes the <a href="#cartesian-product">Cartesian product</a>
-      of T1 and T2.</li>
+      of T<sub>1</sub> and T<sub>2</sub>.</li>
       <li>For each row in C, evaluate the predicate provided as join
       condition. Return the rows whose evaluation is true.</li>
     </ol>
@@ -157,7 +165,27 @@
     <h2>Left Outer Join</h2>
     <p>This specification supports only left outer join, which preserves the
     unmatched rows from the first (left) table, joining them with a
-    <code>NULL</code> row in the shape of the second (right) table.</p>
+    <code>NULL</code> row in the shape of the second (right) table.
+    The algorithm is described below:</p>
+    <ol>
+      <li>Let T<sub>l</sub> and T<sub>r</sub> denote the left and right table
+        involved in the left-outer join. Let c<sub>l</sub> denote columns of
+        T<sub>l</sub>, and c<sub>r</sub> for T<sub>r</sub>.</li>
+      <li>Create an empty result row array R.</li>
+      <li>For each row r in T<sub>l</sub></li>
+        <ol>
+          <li>Find matching rows set R<sub>m</sub> within T<sub>r</sub> so that
+            for each r<sub>m</sub> in R the join condition is satisfied by the
+            pair (r, r<sub>m</sub>).</li>
+          <li>If R<sub>m</sub> is empty, push a row with columns T<sub>r</sub>
+            and fill every column with <code>null</code>.</li>
+          <li>For each r<sub>m</sub> in R<sub>m</sub>, push a new row with
+            columns c<sub>l</sub> from r, followed by columns c<sub>r</sub> from
+            r<sub>m</sub>.</li>
+        </ol>
+      </li>
+      <li>Return result array R.</li>
+    </ol>
   </section>
   <section>
     <h2>Aggregation</h2>
