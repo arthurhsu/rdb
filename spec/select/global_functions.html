@@ -1,0 +1,10 @@
+<section>
+  <h2>Global Functions</h2>
+  <pre class="idl">
+    interface IDatabaseFunctionProvider : IAggregateFunction {
+      IColumn distinct(IColumn... col);
+      ILogicalPredicate not(ILogicalPredicate predicate);
+    };
+  </pre>
+</section>
+

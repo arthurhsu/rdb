@@ -1,0 +1,69 @@
+<section>
+  <h2>Select Query</h2>
+  <p>Select queries are used to select rows matching search conditions or join
+  conditions from database. If the search conditions are not specified,
+  <a href="#cartesian-product">Cartesian product</a> of all rows from the tables
+  specified by <code>from()</code> will be returned.</p>
+  <p>Scope of select queries MUST be evaluated using
+  <a href="#select-scope-algorithm">select scope algorithm</a> before
+  execution. The select queries implement the following interface:</p>
+  <pre class="idl">
+    interface ISelectQuery : IQuery {
+      ISelectQuery from(ITable... tables);
+      ISelectQuery where(ILogicalPredicate searchCondition);
+      ISelectQuery innerJoin(ITable table, ILogicalPredicate joinCondition);
+      ISelectQuery leftOuterJoin(ITable table, ILogicalPredicate joinCondition);
+      ISelectQuery limit((unsigned long or IBindableValue) numberOfRows);
+      ISelectQuery skip((unsigned long or IBindableValue) numberOfRows);
+      ISelectQuery orderBy(IColumn column, optional Order order);
+      ISelectQuery groupBy(IColumn... column);
+    };
+  </pre>
+  <dl class="member">
+    <dt><code>ISelectQuery from(ITable... tables);</code></dt>
+    <dd>Specifies the scope of the select query. This function can only be
+    called once per query, otherwise <a>SyntaxError</a> will be thrown.</dd>
+    <dt><code>ISelectQuery where(ILogicalPredicate searchCondition);</code></dt>
+    <dd>Specifies search condition. This function can only be
+    called once per query, otherwise <a>SyntaxError</a> will be thrown.</dd>
+    <dt><code>ISelectQuery innerJoin(ITable table, ILogicalPredicate joinCondition);</code></dt>
+    <dd>Specifies explicit <a href="#inner-join">inner join</a>. This function
+    can be called multiple times per query.</dd>
+    <dt><code>ISelectQuery leftOuterJoin(ITable table, ILogicalPredicate joinCondition);</code></dt>
+    <dd>Specifies <a href="#left-outer-join">left outer join</a>. This function
+    can be called multiple times per query.</dd>
+    <dt><code>ISelectQuery limit((unsigned long or IBindableValue) numberOfRows);</code></dt>
+    <dd>Specifies maximum number of rows to return. If the number is
+    <code>0</code>, the query is effectively an no-op. This function can only
+    be called once per query, otherwise <a>SyntaxError</a> will be thrown.</dd>
+    <dt><code>ISelectQuery skip((unsigned long or IBindableValue) numberOfRows);</code></dt>
+    <dd>Specifies maximum number of rows to skip from returning. If the
+    number is greater than total number of rows filtered, an empty array will
+    be returned. This function can only be called once per query, otherwise 
+    <a>SyntaxError</a> will be thrown.</dd>
+    <dt><code>ISelectQuery orderBy(IColumn column, optional Order order);</code></dt>
+    <dd>Specify how to sort the returning row. This function can be called
+    multiple times per query. The invocation order of this function will affect
+    the results of sorting, , see
+    <a href="#sorting-algorithm">sorting algorithm</a>.</dd>
+    <dt><code>ISelectQuery groupBy(IColumn... column);</code></dt>
+    <dd>Specify how to group returning rows in aggregation, see
+    <a href="#aggregation">aggregation</a> for more details. This function can
+    only be called once per query, otherwise <a>SyntaxError</a> will be
+    thrown.</dd>
+  </dl>
+  <p class="note">
+    There is not a hard rule regarding the invocation order of
+    <a>ISelectQuery</a> member functions. However, it is recommended that the
+    functions are invoked in the order of their appearance order in the
+    interface for better readability.
+  </p>
+
+  {{include: cartesian_product.html}}
+  {{include: select_scope.html}}
+  {{include: sorting_algorithm.html}}
+  {{include: inner_join.html}}
+  {{include: left_outer_join.html}}
+  {{include: aggregation.html}}
+  {{include: global_functions.html}}
+</section>

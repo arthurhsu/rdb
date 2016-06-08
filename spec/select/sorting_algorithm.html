@@ -1,0 +1,24 @@
+<section>
+  <h2>Sorting Algorithm</h2>
+  <p>The sorting algorithm is represented in the pseudo JavaScript code
+  below.</p>
+  <pre><code class="highlight">
+    var orderBySpecs;  // Array of orderBy() specs given in this query.
+    filteredRows.sort(function(lhs, rhs) {
+      for (var i = 0; i < orderBySpecs.length; ++i) {
+        var spec = orderBySpecs[i];
+        var col = spec.column;
+        if (lhs[col] == rhs[col]) {
+          continue;
+        }
+        if ((spec.order == 'asc' && lhs[col] < rhs[col]) ||
+            (spec.order == 'desc' && lhs[col] > rhs[col])) {
+          return -1;
+        } else {
+          return 1;
+        }
+      }
+      return 0;
+    });
+  </code></pre>
+</section>

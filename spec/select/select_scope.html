@@ -1,0 +1,29 @@
+<section>
+  <h2>Select Scope Algorithm</h2>
+  <p>The scope of a select query is determined by the following algorithm.</p>
+  <ol>
+    <li>Let T<sub>1</sub> denote the set of tables specified by <code>from()</code></li>
+    <li>If <code>innerJoin()</code></li>
+      <ol>
+        <li>Let T<sub>2</sub> denote the table specified by inner join</li>
+        <li>Let S<sub>2</sub> denote the scope of the join condition</li>
+        <li>If S<sub>2</sub> &nsub; (T<sub>1</sub> &cup; T<sub>2</sub>), throws <a>SyntaxError</a></li>
+      </ol>
+    <li>If <code>leftOuterJoin()</code></li>
+      <ol>
+        <li>Let T<sub>3</sub> denote the table specified by left outer join</li>
+        <li>Let S<sub>3</sub> denote the scope of the join condition</li>
+        <li>If S<sub>3</sub> &nsub; (T<sub>1</sub> &cup; T<sub>3</sub>), throws <a>SyntaxError</a></li>
+      </ol>
+    <li>Let T<sub>4</sub> denote <dfn>valid projection scope</dfn>:
+    T<sub>1</sub> &cup; T<sub>2</sub> &cup; T<sub>3</sub></li>
+    <li>If <code>where()</code></li>
+      <ol>
+        <li>Let S<sub>4</sub> denote the scope of search condition</li>
+        <li>If S<sub>4</sub> &nsub; T<sub>4</sub>, throws <a>SyntaxError</a></li>
+      </ol>
+    <li>If any column in <code>orderBy()</code>, <code>groupBy()</code>,
+    or the projection list passed in the constructor of <a>ISelectQuery</a>
+    object is not in the valid projection scope, throw <a>SyntaxError</a>.</li>
+  </ol>
+</section>

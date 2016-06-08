@@ -1,0 +1,26 @@
+<section>
+  <h2>Left Outer Join</h2>
+  <p>This specification supports only left outer join, which preserves the
+  unmatched rows from the first (left) table, joining them with a
+  <code>NULL</code> row in the shape of the second (right) table.
+  The algorithm is described below:</p>
+  <ol>
+    <li>Let T<sub>l</sub> and T<sub>r</sub> denote the left and right table
+      involved in the left-outer join. Let c<sub>l</sub> denote columns of
+      T<sub>l</sub>, and c<sub>r</sub> for T<sub>r</sub>.</li>
+    <li>Create an empty result row array R.</li>
+    <li>For each row r in T<sub>l</sub></li>
+      <ol>
+        <li>Find matching rows set R<sub>m</sub> within T<sub>r</sub> so that
+          for each r<sub>m</sub> in R the join condition is satisfied by the
+          pair (r, r<sub>m</sub>).</li>
+        <li>If R<sub>m</sub> is empty, push a row with columns T<sub>r</sub>
+          and fill every column with <code>null</code>.</li>
+        <li>For each r<sub>m</sub> in R<sub>m</sub>, push a new row with
+          columns c<sub>l</sub> from r, followed by columns c<sub>r</sub> from
+          r<sub>m</sub>.</li>
+      </ol>
+    </li>
+    <li>Return result array R.</li>
+  </ol>
+</section>

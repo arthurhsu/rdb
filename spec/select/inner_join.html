@@ -1,0 +1,25 @@
+<section>
+  <h2>Inner Join</h2>
+  <p>Inner joins create a new result table by combining column values of two
+  tables involved in the join based upon the predicate given as join
+  condition. Inner joins MAY be specified either implicitly through search
+  conditions, or explicitly via <code>innerJoin()</code>. The following
+  example demonstrates two equivalent inner join syntaxes:</p>
+  <pre class="example highlight">
+  {{include: inner_join.js}}
+  </pre>
+
+  <p>The results of inner join MUST be equivalent to the outcome of the
+  following algorithm:</p>
+  <ol>
+    <li>Let T<sub>1</sub> and T<sub>2</sub> denote tables involved in the
+      inner join.</li>
+    <li>Let C denotes the <a href="#cartesian-product">Cartesian product</a>
+    of T<sub>1</sub> and T<sub>2</sub>.</li>
+    <li>For each row in C, evaluate the predicate provided as join
+    condition. Return the rows whose evaluation is true.</li>
+  </ol>
+  <p class="note">Conceptually the inner join will create a new table.
+  Implementation MAY NOT create actual table as long as the returned results
+  are correct.</p>
+</section>
