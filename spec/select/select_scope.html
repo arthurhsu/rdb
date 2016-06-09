@@ -3,13 +3,13 @@
   <p>The scope of a select query is determined by the following algorithm.</p>
   <ol>
     <li>Let T<sub>1</sub> denote the set of tables specified by <code>from()</code></li>
-    <li>If <code>innerJoin()</code></li>
+    <li>If <code>innerJoin()</code> existed in query:</li>
       <ol>
         <li>Let T<sub>2</sub> denote the table specified by inner join</li>
         <li>Let S<sub>2</sub> denote the scope of the join condition</li>
         <li>If S<sub>2</sub> &nsub; (T<sub>1</sub> &cup; T<sub>2</sub>), throws <a>SyntaxError</a></li>
       </ol>
-    <li>If <code>leftOuterJoin()</code></li>
+    <li>If <code>leftOuterJoin()</code> existed in query:</li>
       <ol>
         <li>Let T<sub>3</sub> denote the table specified by left outer join</li>
         <li>Let S<sub>3</sub> denote the scope of the join condition</li>
@@ -17,7 +17,7 @@
       </ol>
     <li>Let T<sub>4</sub> denote <dfn>valid projection scope</dfn>:
     T<sub>1</sub> &cup; T<sub>2</sub> &cup; T<sub>3</sub></li>
-    <li>If <code>where()</code></li>
+    <li>If <code>where()</code> existed in query:</li>
       <ol>
         <li>Let S<sub>4</sub> denote the scope of search condition</li>
         <li>If S<sub>4</sub> &nsub; T<sub>4</sub>, throws <a>SyntaxError</a></li>
