@@ -1254,7 +1254,8 @@ if (version < 2) {
   <h2>Data Manipulation</h2>
   <p>Data manipulation of a database is carried out through transactions and
   the queries within. In this section, the APIs for constructing queries will
-  be detailed.</p>
+  be detailed. Due to the complexity, <a href="#data-selection">
+  data selection</a> will be discussed in its own section.</p>
 
 <section>
   <h2>Schema Representation</h2>
@@ -1628,57 +1629,15 @@ if (version < 2) {
   </dl>
 </section>
 
-<section>
-  <h2>Bindable Values</h2>
-  <pre class="idl">
-    interface IBindableValue {
-      readonly attribute any value;
-    };
-  </pre>
-  <p>Type check of bound value is performed by query engine before executing
-  the query.</p>
-
-  <p>The following example demonstrate how to perform parameterized query using
-  data binding:</p>
-  <pre class="example highlight">
-var db;
-
-var query;
-
-function init() {
-  var dept = db.schema().table('Department');
-
-  var emp = db.schema().table('Employee');
-  query = db.select(emp.name.as('ename'), dept.name)
-            .from(dept, emp)
-            .where(dept.id.eq(emp.deptId).and(
-                   emp.id.eq(db.bind(0))));
-}
-
-function updateModel(employeeId) {
-  query.bind(employeeId).commit().then(function(rows) {
-    console.log(rows[0]['ename'], rows[0]['Department.name']);
-  });
-}
-
-  </pre>
-</section>
-
-<section>
-  <h2>Transaction Snapshots</h2>
-  <p>Define the behavior of transaction snapshots. Simple transaction snapshots
-  will be used: last writer wins.</p>
-</section>
-
 
 </section>
 
 <section>
-  <h2>Select Query</h2>
-  <p>Select queries are used to select rows matching search conditions or join
-  conditions from database. If the search conditions are not specified,
-  <a href="#cartesian-product">Cartesian product</a> of all rows from the tables
-  specified by <code>from()</code> will be returned.</p>
+  <h2>Data Selection</h2>
+  <p>Data selection is done via select queries, which select rows matching
+  search conditions or join conditions from database. If the search conditions
+  are not specified, <a href="#cartesian-product">Cartesian product</a> of all
+  rows from the tables specified by <code>from()</code> will be returned.</p>
   <p>Scope of select queries MUST be evaluated using
   <a href="#select-scope-algorithm">select scope algorithm</a> before
   execution. The select queries implement the following interface:</p>
@@ -1916,6 +1875,52 @@ var q2 =
   </pre>
 </section>
 
+
+</section>
+
+<section>
+  <h2>Bindable Values</h2>
+  <pre class="idl">
+    interface IBindableValue {
+      readonly attribute any value;
+    };
+  </pre>
+  <p>Type check of bound value is performed by query engine before executing
+  the query.</p>
+
+  <p>The following example demonstrate how to perform parameterized query using
+  data binding:</p>
+  <pre class="example highlight">
+var db;
+
+var query;
+
+function init() {
+  var dept = db.schema().table('Department');
+
+  var emp = db.schema().table('Employee');
+  query = db.select(emp.name.as('ename'), dept.name)
+            .from(dept, emp)
+            .where(dept.id.eq(emp.deptId).and(
+                   emp.id.eq(db.bind(0))));
+}
+
+function updateModel(employeeId) {
+  query.bind(employeeId).commit().then(function(rows) {
+    console.log(rows[0]['ename'], rows[0]['Department.name']);
+  });
+}
+
+  </pre>
+</section>
+
+<section>
+  <h2>Transaction</h2>
+<section>
+  <h2>Transaction Snapshots</h2>
+  <p>Define the behavior of transaction snapshots. Simple transaction snapshots
+  will be used: last writer wins.</p>
+</section>
 
 </section>
 
