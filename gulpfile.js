@@ -56,6 +56,9 @@ function generateIndex() {
       path.resolve(path.join(__dirname, 'out/index.html')),
       contents.join('\n'),
       'utf8');
+  fs.copySync(
+      path.resolve(path.join(__dirname, 'spec/style.css')),
+      path.resolve(path.join(__dirname, 'out/style.css')));
 }
 
 gulp.task('watch', function() {
