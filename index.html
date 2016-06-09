@@ -25,6 +25,7 @@
         edDraftURI: 'https://www.github.com/arthurhsu/rdb'
       };
     </script>
+    <link rel="stylesheet" href="style.css" />
   </head>
   <body>
     <section id="abstract">
@@ -1735,7 +1736,8 @@ function updateModel(employeeId) {
 
 <section>
   <h2>Cartesian Product</h2>
-  <p>The Cartesian product of two tables are defined in the following.</p>
+  <p>The Cartesian product of two tables is calculated using the following
+  algorithm.</p>
   <ol>
     <li>Let T<sub>1</sub> and T<sub>2</sub> denote the tables involved in the
       Cartesian product, and the target is to have
@@ -1750,7 +1752,7 @@ function updateModel(employeeId) {
       <li>Let R = R<sub>1</sub> &times; R<sub>2</sub>. This makes R looks like
         [[R<sub>11</sub>, R<sub>21</sub>], [R<sub>11</sub>, R<sub>22</sub>],
         ..., [R<sub>11</sub>, R<sub>2N</sub>], [R<sub>12</sub>,
-        R<sub>21</sub>], ..., [R<sub>1M</sub>, R_1N]].</li>
+        R<sub>21</sub>], ..., [R<sub>1M</sub>, R<sub>1N</sub>]].</li>
       <li>Flatten all pairs in R as a row, where T<sub>1</sub>'s columns are
         expanded before T<sub>2</sub>'s columns. T<sub>1</sub>'s columns
         appear in the order of schema declaration, and the same rule applies
@@ -1764,13 +1766,13 @@ function updateModel(employeeId) {
   <p>The scope of a select query is determined by the following algorithm.</p>
   <ol>
     <li>Let T<sub>1</sub> denote the set of tables specified by <code>from()</code></li>
-    <li>If <code>innerJoin()</code></li>
+    <li>If <code>innerJoin()</code> existed in query:</li>
       <ol>
         <li>Let T<sub>2</sub> denote the table specified by inner join</li>
         <li>Let S<sub>2</sub> denote the scope of the join condition</li>
         <li>If S<sub>2</sub> &nsub; (T<sub>1</sub> &cup; T<sub>2</sub>), throws <a>SyntaxError</a></li>
       </ol>
-    <li>If <code>leftOuterJoin()</code></li>
+    <li>If <code>leftOuterJoin()</code> existed in query:</li>
       <ol>
         <li>Let T<sub>3</sub> denote the table specified by left outer join</li>
         <li>Let S<sub>3</sub> denote the scope of the join condition</li>
@@ -1778,7 +1780,7 @@ function updateModel(employeeId) {
       </ol>
     <li>Let T<sub>4</sub> denote <dfn>valid projection scope</dfn>:
     T<sub>1</sub> &cup; T<sub>2</sub> &cup; T<sub>3</sub></li>
-    <li>If <code>where()</code></li>
+    <li>If <code>where()</code> existed in query:</li>
       <ol>
         <li>Let S<sub>4</sub> denote the scope of search condition</li>
         <li>If S<sub>4</sub> &nsub; T<sub>4</sub>, throws <a>SyntaxError</a></li>
