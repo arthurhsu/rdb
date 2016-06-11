@@ -1206,6 +1206,29 @@ if (version < 2) {
       otherwise, reject promise with <a>IntegrityError</a>.</li>
     </ol>
   </section>
+
+  <section>
+    <h2>Transaction Snapshots</h2>
+    <p>A <dfn>snapshot</dfn> of the database is the contents of all rows in the 
+    database at the time when the snapshot is taken. Conceptually, each
+    transaction operates on its own snapshot of database, and the snapshot is
+    taken at the beginning of transaction. The beginning of transaction is
+    determined by either calling <a>ITransaction.begin</a> or
+    <a>ITransaction.exec</a> for explicit transactions, or
+    <a>IExecutionContext.commit</a> for implicit transactions.</p>
+    <p>All changes performed by queries inside the transaction will only be
+    effective on that snapshot. The end of transaction is determined by
+    resolution or rejection of the <code>Promise</code> returned from
+    <a>ITransaction.exec</a> or <a>IQuery.commit</a>. If the transaction is
+    committed, i.e. resolution of <code>Promise</code>, the database MUST
+    be updated to that snapshot. If the transaction is rolled back, i.e.
+    rejection of <code>Promise</code>, the snapshot is discarded.</p>
+    <p>The final data persisted on database is determined by the last
+    transaction snapshot committed by the query engine. The transaction
+    snapshots MAY come from other sessions other than current session.
+    The query engine MUST guarantee only one snapshot can be persisted at a
+    given time.</p>
+  </section>
 </section>
 
 <section>
@@ -1987,16 +2010,6 @@ var q2 =
   rows.</p>
   <p class="note">Aggregation by expression is not supported.</p>
   </section>
-</section>
-
-</section>
-
-<section>
-  <h2>Transaction</h2>
-<section>
-  <h2>Transaction Snapshots</h2>
-  <p>Define the behavior of transaction snapshots. Simple transaction snapshots
-  will be used: last writer wins.</p>
 </section>
 
 </section>
