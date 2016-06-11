@@ -6,7 +6,10 @@
     <tr><th>Field</th><th>Description</th></tr>
     <tr><td><dfn><code>BlockingError</code></dfn></td>
       <td>Attempts to open a delete pending database, or to create a
-      transaction in a close pending connection.</td></tr>
+        transaction in a close pending connection.</td></tr>
+    <tr><td><dfn><code>BindingError</code></dfn></td>
+      <td>The values given in <a>IQuery.bind</a> have type match, or the
+        executing query has unprovided bindable values.</td></tr>
     <tr><td><dfn><code>ConstraintError</code></dfn></td>
         <td>Constraints are violated.</td>
     </tr>

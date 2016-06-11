@@ -51,7 +51,12 @@
     queries.</dd>
     <dt><code>IQuery bind(any... values);</code></dt>
     <dd>Creates a clone of this query, assigns values to <a>IBindableValue</a>
-    inside the cloned query, and returns the cloned query for execution.</a>
+    inside the cloned query, and returns the cloned query for execution.
+    The order of values provided in the parameter of this function corresponds
+    to the binding index provided in <a>IDatabaseConnection.bind</a>, i.e.
+    the first parameter will be assigned to index 0, the second parameter to
+    index 1, and so on. If the values provided cannot be assigned (e.g.
+    obvious type mismatch), a <a>BindingError</a> MAY be thrown.</dd>
     <dt><code>IQuery clone();</code></dt>
     <dd>Creates a clone of this query with a new execution context. The
     returned query type will be the same as the original, for example,

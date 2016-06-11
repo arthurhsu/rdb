@@ -1,0 +1,22 @@
+<section>
+  <h2>Bindable Values</h2>
+  <p>Bindable values provides flexibilities for determining the actual values
+  to be used in queries at run-time. They serve as placeholders of values.
+  Bindable values are typed as following:</p>
+  <pre class="idl">
+    interface IBindableValue {
+      readonly attribute any value;
+    };
+  </pre>
+  <p>Type check of bound value is performed by query engine before executing
+  the query. To assign value to <a>IBindableValue</a>, caller MUST use
+  <a>IQuery.bind</a> prior to query execution. A query with any unassigned
+  <a>IBindableValue</a>, or any assigned <a>IBindableValue</a> with mismatched
+  type, MUST be rejected with <a>BindingError</a> during its execution.</p>
+
+  <p>The following example demonstrate how to perform parameterized query using
+  data binding:</p>
+  <pre class="example highlight">
+  {{include: binding.js}}
+  </pre>
+</section>
