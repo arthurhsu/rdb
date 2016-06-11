@@ -886,6 +886,13 @@ IAggregateFunction.prototype.count;
 
 
 /**
+ * @param {...IColumn} col
+ * @return {!IColumn}
+ */
+IAggregateFunction.prototype.distinct;
+
+
+/**
  * @param {!IColumn} col
  * @return {!IColumn}
  */
@@ -933,13 +940,6 @@ IAggregateFunction.prototype.var;
  * @extends {IAggregateFunction}
  */
 function IDatabaseFunctionProvider() {}
-
-
-/**
- * @param {...IColumn} col
- * @return {!IColumn}
- */
-IDatabaseFunctionProvider.prototype.distinct;
 
 
 /**

@@ -134,4 +134,21 @@
     <a>ILogicalPredicate</a>, and scope of that predicate is the table
     associated with the creating <a>IColumn</a> object.</p>
   </section>
+
+  <section>
+    <h2>Complementing Predicates</h2>
+    <p>The predicates can be complemented using a global function
+    <code>not()</code>. The function is provided as following:</p>
+    <pre class="idl">
+      interface IDatabaseFunctionProvider : IAggregateFunction {
+        ILogicalPredicate not(ILogicalPredicate predicate);
+      };
+    </pre>
+    <dl class="methods">
+      <dt><code>ILogicalPredicate not(ILogicalPredicate predicate);</code></dt>
+      <dd>Complement the evaluation result of passed in predicate, i.e. returns
+      <code>false</code> if the predicate evaluated true, and vice versa.</dd>
+    </dl>
+  </section>
+
 </section>

@@ -50,7 +50,9 @@
     <dd>Specify how to group returning rows in aggregation, see
     <a href="#aggregation">aggregation</a> for more details. This function can
     only be called once per query, otherwise <a>SyntaxError</a> will be
-    thrown.</dd>
+    thrown. Caller MUST provide one or more columns in the parameter, otherwise
+    <a>SyntaxError</a> will be thrown. If the same column is provided twice
+    in the parameters, it will be treated as provided only once.</dd>
   </dl>
   <p class="note">
     There is not a hard rule regarding the invocation order of
@@ -65,5 +67,4 @@
   {{include: inner_join.html}}
   {{include: left_outer_join.html}}
   {{include: aggregation.html}}
-  {{include: global_functions.html}}
 </section>

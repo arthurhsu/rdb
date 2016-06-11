@@ -14,8 +14,11 @@
   </pre>
   <dl class="methods">
     <dt><code>ISelectQuery select(IColumn... columns);</code></dt>
-    <dd>Creates a <a href="#select-query">select query</a> to retrieve data
-    from database.</dd>
+    <dd>Creates a <a href="#data-selection">select query</a> to retrieve data
+    from database. The parameters of this function forms the
+    <dfn>projection list</dfn> of the generated select query. If no column
+    is given, then the projection list will contain all columns in the
+    <a href="#select-scope-algorithm">select scope</a>.</dd>
     <dt><code>IInsertQuery insert();</code></dt>
     <dd>Creates an <a href="#insert-query">insert query</a> to insert data into
     database.</dd>
