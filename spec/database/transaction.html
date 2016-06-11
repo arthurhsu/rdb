@@ -7,7 +7,7 @@
   The operations inside a transaction are referred as queries. A
   <dfn>query</dfn> means an interaction with the database: data retrieval,
   data persistence, or change of schema.</p>
-  
+
   <p>Transaction execution behavior is modeled as the following:</p>
 
   <pre class="idl">
@@ -154,10 +154,10 @@
     <p>All changes performed by queries inside the transaction will only be
     effective on that snapshot. The end of transaction is determined by
     resolution or rejection of the <code>Promise</code> returned from
-    <a>ITransaction.exec</a> or <a>IQuery.commit</a>. If the transaction is
-    committed, i.e. resolution of <code>Promise</code>, the database MUST
-    be updated to that snapshot. If the transaction is rolled back, i.e.
-    rejection of <code>Promise</code>, the snapshot is discarded.</p>
+    <a>ITransaction.exec</a> or <a>IExecutionContext.commit</a>. If the
+    transaction is committed, i.e. resolution of <code>Promise</code>, the
+    database MUST be updated to that snapshot. If the transaction is rolled
+    back, i.e. rejection of <code>Promise</code>, the snapshot is discarded.</p>
     <p>The final data persisted on database is determined by the last
     transaction snapshot committed by the query engine. The transaction
     snapshots MAY come from other sessions other than current session.
