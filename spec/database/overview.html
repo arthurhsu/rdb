@@ -1,19 +1,19 @@
 <section>
   <h2>Overview</h2>
   <p>A database's origin is the same as the origin of the document or worker.
-  Each origin has an associated set of database.</p>
+  Each origin has an associated set of databases.</p>
 
   <p class="note">The database origin is not affected by changes to
   <code>document.domain</code>.</p>
 
   <p>Every database has a predefined layout of the data structures persisted,
-  which is referred as <a href="#schema">schema</a>. The <em>database name</em>
+  which is called a <a href="#schema">schema</a>. The <em>database name</em>
   specified in schema identifies the database within a specific origin.
   The name MUST satisfy the <a href="#naming-rules">Naming Rules</a>, and stay
   constant for the lifetime of the database. Each database also has a version
   number for reference only.</p>
 
-  <p>Databases has a <em>delete pending</em> flag which is used during
+  <p>Databases have a <em>delete pending</em> flag which is used during
   deletion. When a database is requested to be deleted the flag is set to true
   and all attempts at opening the database are stalled until database is
   deleted.</p>
@@ -26,15 +26,14 @@
 
   <p>When a connection is initially created it is in opened state. The
   connection can be closed through several means. If the connection is garbage
-  collected or execution context where the connection is created is destroyed
+  collected or the execution context where the connection was created is destroyed
   (for example due to the user navigating away from that page), the connection
-  is closed. The connection can also be closed explicitly via API. When the
-  connection is closed the closePending flag is always set to true if it
-  hasn't already been. All uncommitted transactions will be canceled if their
-  associated connections are marked close pending.</p>
+  is closed. The connection can also be closed explicitly via the API. When the
+  connection is closed the closePending flag is always set to true regardless of its previous state.
+  All uncommitted transactions associated with a connection that is marked close pending will be canceled.</p>
 
   <p>Users can create observers associated with a given database. Each
-  observer consists a select query. When the results of that select query
+  observer consists of a select query. When the results of that select query
   change, the observer will be triggered. The change MAY come from other
   connections. When the connection associated with a registered observer is
   marked as close pending, the observer MUST be unregistered automatically.</p>
