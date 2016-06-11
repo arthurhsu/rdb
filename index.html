@@ -971,9 +971,6 @@ if (version < 2) {
     the database does not exist, the returned promise will resolve immediately.
     If the database is marked delete pending, the promise will resolve
     immediately.</dd>
-    <dt><code>IBindableValue bind(unsigned short index);</code></dt>
-    <dd>Provides a bind-able value that can be used to construct parameterized
-    queries.</dd>
   </dl>
 
   <p>Open database options are specified as a dictionary object.</p>
@@ -1323,6 +1320,48 @@ if (version < 2) {
 </section>
 
 <section>
+  <h2>Bindable Values</h2>
+  <p>Bindable values provides flexibilities for determining the actual values
+  to be used in queries at run-time. They serve as placeholders of values.
+  Bindable values are typed as following:</p>
+  <pre class="idl">
+    interface IBindableValue {
+      readonly attribute any value;
+    };
+  </pre>
+  <p>Type check of bound value is performed by query engine before executing
+  the query. To assign value to <a>IBindableValue</a>, caller MUST use
+  <a>IQuery.bind</a> prior to query execution. A query with any unassigned
+  <a>IBindableValue</a>, or any assigned <a>IBindableValue</a> with mismatched
+  type, MUST be rejected with <a>BindingError</a> during its execution.</p>
+
+  <p>The following example demonstrate how to perform parameterized query using
+  data binding:</p>
+  <pre class="example highlight">
+var db;
+
+var query;
+
+function init() {
+  var dept = db.schema().table('Department');
+
+  var emp = db.schema().table('Employee');
+  query = db.select(emp.name.as('ename'), dept.name)
+            .from(dept, emp)
+            .where(dept.id.eq(emp.deptId).and(
+                   emp.id.eq(db.bind(0))));
+}
+
+function updateModel(employeeId) {
+  query.bind(employeeId).commit().then(function(rows) {
+    console.log(rows[0]['ename'], rows[0]['Department.name']);
+  });
+}
+
+  </pre>
+</section>
+
+<section>
   <h2>Common Query Behaviors</h2>
   <p>Data manipulation queries are created from the <a>IDataQueryProvider</a>
   interface, which is implemented by the <a>DatabaseConnection</a> object.</p>
@@ -1375,7 +1414,12 @@ if (version < 2) {
     queries.</dd>
     <dt><code>IQuery bind(any... values);</code></dt>
     <dd>Creates a clone of this query, assigns values to <a>IBindableValue</a>
-    inside the cloned query, and returns the cloned query for execution.</a>
+    inside the cloned query, and returns the cloned query for execution.
+    The order of values provided in the parameter of this function corresponds
+    to the binding index provided in <a>IDatabaseConnection.bind</a>, i.e.
+    the first parameter will be assigned to index 0, the second parameter to
+    index 1, and so on. If the values provided cannot be assigned (e.g.
+    obvious type mismatch), a <a>BindingError</a> MAY be thrown.</dd>
     <dt><code>IQuery clone();</code></dt>
     <dd>Creates a clone of this query with a new execution context. The
     returned query type will be the same as the original, for example,
@@ -1948,42 +1992,6 @@ var q2 =
 </section>
 
 <section>
-  <h2>Bindable Values</h2>
-  <pre class="idl">
-    interface IBindableValue {
-      readonly attribute any value;
-    };
-  </pre>
-  <p>Type check of bound value is performed by query engine before executing
-  the query.</p>
-
-  <p>The following example demonstrate how to perform parameterized query using
-  data binding:</p>
-  <pre class="example highlight">
-var db;
-
-var query;
-
-function init() {
-  var dept = db.schema().table('Department');
-
-  var emp = db.schema().table('Employee');
-  query = db.select(emp.name.as('ename'), dept.name)
-            .from(dept, emp)
-            .where(dept.id.eq(emp.deptId).and(
-                   emp.id.eq(db.bind(0))));
-}
-
-function updateModel(employeeId) {
-  query.bind(employeeId).commit().then(function(rows) {
-    console.log(rows[0]['ename'], rows[0]['Department.name']);
-  });
-}
-
-  </pre>
-</section>
-
-<section>
   <h2>Transaction</h2>
 <section>
   <h2>Transaction Snapshots</h2>
@@ -2001,7 +2009,10 @@ function updateModel(employeeId) {
     <tr><th>Field</th><th>Description</th></tr>
     <tr><td><dfn><code>BlockingError</code></dfn></td>
       <td>Attempts to open a delete pending database, or to create a
-      transaction in a close pending connection.</td></tr>
+        transaction in a close pending connection.</td></tr>
+    <tr><td><dfn><code>BindingError</code></dfn></td>
+      <td>The values given in <a>IQuery.bind</a> have type match, or the
+        executing query has unprovided bindable values.</td></tr>
     <tr><td><dfn><code>ConstraintError</code></dfn></td>
         <td>Constraints are violated.</td>
     </tr>
