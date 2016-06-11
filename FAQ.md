@@ -84,7 +84,7 @@ you can also profile the process memory usage and JS heap usage. You shall see
 that WebSQL uses way less memory.
 
 
-## Q: Why not fixing IndexedDB and JavaScript (aka keep extensible web)?
+## Q: Why not fix IndexedDB and JavaScript (aka keep extensible web)?
 
 Because it is simply non-sense.
 
@@ -94,7 +94,7 @@ low-level blocks to improve IndexedDB so that relational usage can be
 shoehorned on top of it, when there is already something in the C++ layer,
 simply makes no sense.
 
-Moreover, making IndexedDB more bloated with the features that object DB
+Moreover, making IndexedDB more bloated with features that an object DB
 does not need also makes no sense.
 
 IndexedDB and relational DB are different from algorithms. Relational DB is
