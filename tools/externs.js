@@ -252,17 +252,6 @@ rdb.ForeignKeyTiming = {
 function ISchemaQueryProvider() {}
 
 
-/** @return {!IExecutionContext} */
-ISchemaQueryProvider.prototype.exportSchema;
-
-
-/**
- * @param {!rdb.Schema} schema
- * @return {!IExecutionContext}
- */
-ISchemaQueryProvider.prototype.create;
-
-
 /**
  * @param {number} version
  * @return {!IExecutionContext}

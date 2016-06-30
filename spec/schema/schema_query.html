@@ -4,6 +4,8 @@
   of the database can also be altered using schema queries. Schema queries are
   run in the context of <a>transaction</a> and can be executed any time during
   the life time of the database.</p>
+  <p>Any name used inside the schema not obeying Naming Rules will result in
+  <a>InvalidSchemaError</a> exception.</p>
 
   <section>
     <h2>Database-Level Schema Query</h2>
@@ -11,8 +13,6 @@
     database-level schema:</p>
     <pre class="idl">
       interface ISchemaQueryProvider {
-        IExecutionContext exportSchema();
-        IExecutionContext create(Object schema);
         IExecutionContext setVersion(unsigned short version);
         IExecutionContext setForeignKeyCheck(boolean value);
         IDatabaseSchema schema();
@@ -22,15 +22,6 @@
       };
     </pre>
     <dl class="methods">
-      <dt><code>IExecutionContext exportSchema();</code></dt>
-      <dd>Export schema object, MUST be run in the context of a
-      <a>transaction</a>.</dd>
-      <dt><code>IExecutionContext create(Object schema);</code></dt>
-      <dd>Create database schema from provided schema object, MUST be run in
-      the context of a <a>transaction</a>. The schema object MUST conform to
-      the format defined in <a href="#schema-definition-json-format">
-      Schema Definition JSON Format</a>. Any error in the schema will result in
-      transaction failure with <a>InvalidSchemaError</a>.</dd>
       <dt><code>IExecutionContext setVersion(unsigned short version);</code>
       </dt>
       <dd>Sets the version number of the schema, MUST be run in the context of
@@ -104,7 +95,10 @@
     <dl class="methods">
       <dt><code>ITableBuilder column(DOMString name, ColumnType type, optional boolean notNull = false);</code></dt>
       <dd>Adds a column to table. <code>name</code> MUST be unique within the
-      containing table.</dd>
+      containing table. <dfn>NOT NULL</dfn> means the column MUST NOT have a
+      value of <code>undefined</code> or <code>null</code>. When
+      <code>notNull</code> is set to <code>true</code>, the column is treated as
+      <a>NOT NULL</a>.</dd>
       <dt><code>ITableBuilder primaryKey(PrimaryKeyDefinition primaryKey);</code></dt>
       <dd>Adds a primary key to table. This method MUST NOT be called multiple
       times.</dd>
@@ -119,6 +113,167 @@
       <dd>Adds an index to table. The <code>name</code> is the name of the
       index, and it MUST be unique within the containing table.</dd>
     </dl>
+  </section>
+
+  <section>
+    <h2>Index Specifications</h2>
+    <p>The following WebIDL defines index specification dictionary type:</p>
+    <pre class="idl">
+      typedef (DOMString or DOMString[] or IndexedColumnSpec[]) IndexedColumnDefinition;
+      dictionary IndexSpec {
+        DOMString name;
+        IndexedColumnDefinition column;
+        IndexType type = "btree";
+        boolean unique = false;
+      };
+    </pre>
+    <dl class="dictionary-members">
+      <dt><code>name</code></dt>
+      <dd>Name of the index, MUST be unique within the containing table.</dd>
+      <dt><code>column</code></dt>
+      <dd>Indexed column definitions. If provided as
+          <code>DOMString</code>, the string MUST <a>refer</a> to an
+          <a>indexable</a> column of the containing table; if provided as
+          <code>DOMString[]</code>, it MUST NOT be empty, and the strings MUST
+          <a>refer</a> to different <a>indexable</a> columns of the containing
+          table. In these two cases, default sort order of <code>asc</code> is
+          used. If provided as <code>IndexedColumnSpec[]</code>, it MUST NOT
+          be empty, and each <code>IndexedColumnSpec</code> MUST <a>refer</a>
+          to different column.</dd>
+      <dt><code>type</code></dt>
+      <dd>(Optional) Type of index, default to <code>btree</code></dd>
+      <dt><code>unique</code></dt>
+      <dd>(Optional) Keys in index shall be unique or not,
+          default to <code>false</code>.</dd>
+    </dl>
+    <p>Index type allows user to hint the query engine to create an index on
+    specified columns in given sorting orders. The query engine MAY construct
+    the index, MAY follow the given sorting orders, and MAY use the specified
+    type. The query engine can refuse to construct the index as specified, or
+    construct a different index.</p>
+
+    <p>The index type is an enum:</p>
+    <pre class="idl">
+      enum IndexType {
+        // B+ Tree index.
+        "btree",
+
+        // Hash index.
+        "hash"
+      };
+    </pre>
+
+    <p>An index can be keyed by one or more columns. A <dfn>unique key</dfn>
+    means that the value or combination of values used as index key is unique
+    within the index. By default, all indices allow duplicate keys unless the
+    <code>unique</code> is set to true. A <a>ConstraintError</a> will be thrown
+    if user tried to insert/update a row with duplicated key when a unique
+    index is specified.</p>
+
+    <p>The WebIDL below defines indexed column specification.</p>
+    <pre class="idl">
+      dictionary IndexedColumnSpec {
+        DOMString name;
+        Order order = "asc";
+      };
+    </pre>
+    <dl class="dictionary-members">
+      <dt><code>name</code></dt>
+      <dd>Name of the indexed column, MUST <a>refer</a> to an <a>indexable</a>
+      column of the containing table.</dd>
+      <dt><code>order</code></dt>
+      <dd>(Optional) Sorting order of the column, default to
+          <code>asc</code>.</dd>
+    </dl>
+    <p>If an index definition overlapped with implicit indices created by
+    constraints (for example, create an index on the same column of the primary
+    key), it will be up to the query engine to determine whether or not to
+    create this index.</p>
+  </section>
+
+  <section>
+    <h2>Primary Key Specification</h2>
+    <p>Primary key is a specialized unique index. Each table can have only one
+    primary key. A primary key can be specified using unique index
+    specification, or use the following WebIDL:</p>
+    <pre class="idl">
+      dictionary PrimaryKeySpec {
+        DOMString name;
+        boolean autoIncrement;
+      };
+    </pre>
+    <dl class="dictionary-members">
+      <dt><code>name</code></dt><dd>Column name of the primary key, MUST
+      <a>refer</a> to <a>indexable</a> column of the containing table.</dd>
+      <dt><code>autoIncrement</code></dt><dd>Create auto-increment
+      primary key.</dd>
+    </dl>
+    <p>When the autoIncrement field is specified, the specified column MUST be
+    of type <code>Number</code>. An auto-increment key will start from zero.
+    When a new row is inserted into the table, the key will increase by one and
+    assigned to that row regardless the original key value given to the
+    row.</p>
+    <p class="note">Unlike SQL, primary key does not have name.</p>
+  </section>
+
+  <section>
+    <h2>Foreign Key Specification</h2>
+    <p>The following WebIDL defines foreign key specification.</p>
+    <pre class="idl">
+      dictionary ForeignKeySpec {
+        DOMString name;
+        DOMString local;
+        DOMString remote;
+        ForeignKeyAction action = "restrict";
+        ForeignKeyTiming timing = "immediate";
+      };
+    </pre>
+    <dl class="dictionary-members">
+      <dt><code>name</code></dt>
+      <dd>Name of the foreign key, MUST be unique withing the containing table.
+      </dd>
+      <dt><code>local</code></dt>
+      <dd>Referring column name, MUST <a>refer</a> to an <a>indexable</a>
+      column of the containing table.</dd>
+      <dt><code>remote</code></dt>
+      <dd>Referred column <a>canonical name</a>, MUST <a>refer</a> to an
+      <a>indexable</a> column.</dd>
+      <dt><code>action</code></dt>
+      <dd>(Optional) Foreign key action, default to <code>restrict</code>.</dd>
+      <dt><code>timing</code></dt>
+      <dd>(Optional) Foreign key timing, default to <code>immediate</code>.
+      </dd>
+    </dl>
+    <p>A <dfn>chainned foreign key</dfn> means the <code>remote</code> column
+    is also a <code>local</code> column of another foreign key, which forms a
+    dependency. The query engine MAY support chainned foreign key. The query
+    engine MAY support referred column to be within the containing table.</p>
+
+    <p>Foreign key actions are enum values as defined in the following:</p>
+    <pre class="idl">
+      enum ForeignKeyAction {
+        // Any constraint violation results in cancelling the operation that
+        // violated the constraint.
+        "restrict",
+
+        // Constraint violation results in modifying related tables as
+        // necessary to maintain data integrity.
+        "cascade"
+      };
+    </pre>
+    <p>Foreign key timings are enum values as defined below:</p>
+    <pre class="idl">
+      enum ForeignKeyTiming {
+        // The constraint is enforced right before a transaction is committed.
+        // The constraint can be violated by individual queries during the
+        // lifetime of the enclosing transaction, without any error being
+        // thrown.
+        "deferrable",
+
+        // The constraint is enforced during execution of each individual query.
+        "immediate"
+      };
+    </pre>
   </section>
 
   <section>
