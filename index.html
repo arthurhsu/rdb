@@ -259,148 +259,120 @@ insertData().then(function() {
 </section>
 
 <section>
-  <h2>Schema Definition JSON Format</h2>
-  <p>Database schema can be defined using a single dictionary object. The
-  following example demonstrates how to create a database using such object.</p>
-  <pre class="example highlight">
-// Create a database using predefined JSON schema.
-var hrSchema = {
-  'name': 'hr',
-  'version': 2,
-  'table': [
-    {
-      'name': 'Dept',
-      'column': [
-        {'name': 'id', 'type': 'string'},
-        {'name': 'name', 'type': 'string', 'notNull': true}
-      ],
-      'constraint': {
-        'primaryKey': 'id'
-      }
-    },
-    {
-      'name': 'Emp',
-      'column': [
-        {'name': 'id', 'type': 'number'},
-        {'name': 'name', 'type': 'string'},
-        {'name': 'deptId', 'type': 'string'},
-        {'name': 'title', 'type': 'string'}
-      ],
-      'constraint': {
-        'primaryKey': [{'name': 'id', 'order': 'desc'}],
-        'foreignKey': [{
-          'name': 'fk_DeptId',
-          'local': 'deptId',
-          'remote': 'Dept.id',
-          'action': 'restrict',
-          'timing': 'immediate'
-        }],
-        'unique': [{
-          'name': 'uq_Name',
-          'column': [{'name': 'name', 'order': 'desc'}]
-        }],
-        'notNull': ['id', 'name', 'deptId']
-      },
-      'index': [
-        {
-          'name': 'idx_Title',
-          'column': [{'name': 'title', 'order': 'asc'}]
-        }
-      ]
-    }
-  ]
-};
-
-var db;
-navigator.db.open('hr').then(function(connection) {
-  db = connection;
-  var version = db.schema().version;
-  if (version == 0) {
-    return db.create(hrSchema).commit();
-  }
-  return Promise.resolve();
-}).then(function() {
-  // Database created, do something here.
-});
-
-  </pre>
-
-  <p>Any violation of the rules described in this section will result in
-  <a>InvalidSchemaError</a> exception. Any name not obeying
-  <a href="#naming-rules">Naming Rules</a> will also result in
+  <h2>Schema Query</h2>
+  <p>A database instance is created using schema queries. The associated schema
+  of the database can also be altered using schema queries. Schema queries are
+  run in the context of <a>transaction</a> and can be executed any time during
+  the life time of the database.</p>
+  <p>Any name used inside the schema not obeying Naming Rules will result in
   <a>InvalidSchemaError</a> exception.</p>
 
-  <p>The following WebIDL defines <code>Schema</code> dictionary type.
-  <pre class="idl">
-    dictionary Schema {
-      DOMString name;
-      unsigned short version = 1;
-      TableSpec[] table;
-    };
-  </pre>
-  <dl class="dictionary-members">
-    <dt><code>name</code></dt>
-    <dd>Name of the database.</dd>
-    <dt><code>version</code></dt>
-    <dd>Version of the database, for reference only.</dd>
-    <dt><code>table</code></dt>
-    <dd>Array of <a href="#table-specifications">table specifications</a>, and
-    it MUST NOT be empty.</dd>
-  </dl>
-
   <section>
-    <h2>Table Specifications</h2>
-    <p>The following WebIDL defines table specification dictionary type.</p>
+    <h2>Database-Level Schema Query</h2>
+    <p>The <code>ISchemaQueryProvider</code> is the interface of manipulating
+    database-level schema:</p>
     <pre class="idl">
-      dictionary TableSpec {
-        DOMString name;
-        ColumnSpec[] column;
-        ConstraintSpec? constraint;
-        IndexSpec[]? index;
+      interface ISchemaQueryProvider {
+        IExecutionContext setVersion(unsigned short version);
+        IExecutionContext setForeignKeyCheck(boolean value);
+        IDatabaseSchema schema();
+        ITableBuilder createTable();
+        ITableChanger alterTable();
+        IExecutionContext dropTable(DOMString name);
       };
     </pre>
-    <dl class="dictionary-members">
-      <dt><code>name</code></dt>
-      <dd>Name of the table, MUST be unique within the database.</dd>
-      <dt><code>column</code></dt>
-      <dd>Array of <a href="#column-specifications">column specifications</a>,
-      and it MUST NOT be empty.</dd>
-      <dt><code>constraint</code></dt>
-      <dd>(Optional)
-      <a href="#constraint-specifications">Constraint specifications</a>.</dd>
-      <dt><code>index</code></dt>
-      <dd>(Optional) Array of
-      <a href="#index-specifications">index specifications</a>, and it MUST NOT
-      be empty when specified.</dd>
+    <dl class="methods">
+      <dt><code>IExecutionContext setVersion(unsigned short version);</code>
+      </dt>
+      <dd>Sets the version number of the schema, MUST be run in the context of
+      a <a>transaction</a>.</dd>
+      <dt><code>IExecutionContext setForeignKeyCheck(boolean value);</code></dt>
+      <dd>Enables or disables foreign key constraint enforcement within the
+      transaction that the execution context returned by this function is in.
+      Misuse of this function MAY cause broken data integrity.
+      </dd>
+      <dt><code>IDatabaseSchema schema();</code></dt>
+      <dd>Returns an <code>IDatabaseSchema</code> object for crafting data
+      manipulation queries.</dd>
+      <dt><code>ITableBuilder createTable();</code></dt>
+      <dd>Returns a <a href="#table-builder">table builder</a> for creating a
+      new table.</dd>
+      <dt><code>ITableChanger alterTable(string tableName);</code></dt>
+      <dd>Returns a <a href="#table-changer">table changer</a> for altering an
+      existing table. The table referred by <code>tableName</code> MUST already
+      exist in the database, otherwise a <a>DataError</a> will be raised.</dd>
+      <dt><code>IExecutionContext dropTable(DOMString name);</code></dt>
+      <dd>Removes a table and all its rows from database. The table referred by 
+      <code>name</code> MUST already exist in the database, otherwise a
+      <a>DataError</a> will be raised.</dd>
+    </dl>
+  </section>
+  <section>
+    <h2>Database Schema</h2>
+    <p>Database schema obtained from <code>ISchemaQueryProvider.schema()</code>
+    provides <code>IDatabaseSchema</code> interface.</p>
+    <pre class="idl">
+      interface IDatabaseSchema {
+        readonly attribute DOMString name;
+        readonly attribute unsigned short version;
+        ITable table(DOMString tableName);
+      };
+    </pre>
+    <dl class="attributes">
+      <dt><code>DOMString name</code></dt>
+      <dd>Name of the database.</dd>
+      <dt><code>unsigned short version</code></dt>
+      <dd>Version of the database schema.</dd>
+    </dl>
+    <dl class="methods">
+      <dt><code>ITable table(DOMString tableName);</code></dt>
+      <dd>Returns a read-only object that implements <a>ITable</a> interface,
+      whose members are <a>IColumn</a> objects representing columns in the
+      specified table. The table referred by <code>tableName</code> MUST
+      already exist in the database, otherwise a <a>DataError</a> will be
+      raised.</dd>
     </dl>
   </section>
 
   <section>
-    <h2>Column Specifications</h2>
-    <p>The following WebIDL defines column specification dictionary type:</p>
+    <h2>Table Builder</h2>
+    <p>Table builder is used to describe the new table that will be created,
+    and MUST be used within the context of a <a>transaction</a>.</p>
     <pre class="idl">
-      dictionary ColumnSpec {
-        DOMString name;
-        ColumnType type;
-        boolean notNull = false;
+      interface ITableBuilder : IExecutionContext {
+        ITableBuilder column(DOMString name, ColumnType type, optional boolean notNull = false);
+        ITableBuilder primaryKey(PrimaryKeyDefinition primaryKey);
+        ITableBuilder foreignKey(ForeignKeySpec foreignKey);
+        ITableBuilder unique(DOMString name, IndexedColumnDefinition columns);
+        ITableBuilder index(DOMString name, IndexedColumnDefinition columns);
       };
     </pre>
-    <dl class="dictionary-members">
-      <dt><code>name</code></dt>
-      <dd>Name of the column, MUST be unique within the containing table.</dd>
-      <dt><code>type</code></dt>
-      <dd>Associated column type of the column.</dd>
-      <dt><code>notNull</code></dt>
-      <dd>When specified as <code>true</code>, the column is <a>NOT NULL</a>.
-      </dd>
+    <p>All methods returns the same <code>ITableBuilder</code> object that
+    they were called from to make cascade builder pattern possible. If any of
+    the rule described in the following table were violated, an
+    <a>InvalidSchemaError</a> will be thrown. All methods can be called
+    multiple times except <code>primaryKey</code>.</p>
+    <dl class="methods">
+      <dt><code>ITableBuilder column(DOMString name, ColumnType type, optional boolean notNull = false);</code></dt>
+      <dd>Adds a column to table. <code>name</code> MUST be unique within the
+      containing table. <dfn>NOT NULL</dfn> means the column MUST NOT have a
+      value of <code>undefined</code> or <code>null</code>. When
+      <code>notNull</code> is set to <code>true</code>, the column is treated as
+      <a>NOT NULL</a>.</dd>
+      <dt><code>ITableBuilder primaryKey(PrimaryKeyDefinition primaryKey);</code></dt>
+      <dd>Adds a primary key to table. This method MUST NOT be called multiple
+      times.</dd>
+      <dt><code>ITableBuilder foreignKey(ForeignKeySpec foreignKey);</code></dt>
+      <dd>Adds a foreign key to table.</dd>
+      <dt><code>ITableBuilder unique(DOMString name, IndexedColumnDefinition columns);
+</code></dt>
+      <dd>Adds an unique index to table. The <code>name</code> is the name of
+      the index, and it MUST be unique within the containing table.</dd>
+      <dt><code>ITableBuilder index(DOMString name, IndexedColumnDefinition columns);
+</code></dt>
+      <dd>Adds an index to table. The <code>name</code> is the name of the
+      index, and it MUST be unique within the containing table.</dd>
     </dl>
-    <p><dfn>NOT NULL</dfn> means the column MUST NOT have a value of
-    <code>undefined</code> or <code>null</code>.</p>
-    <p>A column has a <dfn>canonical name</dfn>, which is represented as
-    <code>&lt;containing table name&gt;.&lt;column name&gt;</code>. One can
-    <dfn>refer</dfn> to a column by its name, if the referral is happened
-    within the table scope; or by its <a>canonical name</a> from anywhere
-    within the database.</p>
   </section>
 
   <section>
@@ -477,58 +449,6 @@ navigator.db.open('hr').then(function(connection) {
     constraints (for example, create an index on the same column of the primary
     key), it will be up to the query engine to determine whether or not to
     create this index.</p>
-  </section>
-
-  <section>
-    <h2>Constraint Specifications</h2>
-    <p>The following WebIDL defines constraint specification.</p>
-    <pre class="idl">
-      typedef (DOMString or DOMString[] or IndexedColumnSpec[] or PrimaryKeySpec) PrimaryKeyDefinition;
-      dictionary ConstraintSpec {
-        PrimaryKeyDefinition? primaryKey;
-        ForeignKeySpec? foreignKey;
-        UniqueSpec? unique;
-        (DOMString or DOMString[])? notNull;
-      };
-    </pre>
-    <dl class="dictionary-members">
-      <dt><code>primaryKey</code></dt>
-      <dd>(Optional) <a href="#primary-key-specification">Primary key
-      specification</a>.</dd>
-      <dt><code>foreignKey</code></dt>
-      <dd>(Optional) <a href="#foreign-key-specification">Foreign key
-      specification</a>.</dd>
-      <dt><code>unique</code></dt>
-      <dd>(Optional) <a href="#unique-index-specification">Unique index
-      specification</a>.</dd>
-      <dt><code>notNull</code></dt>
-      <dd>(Optional) Column(s) that are <a>NOT NULL</a>.</dd>
-    </dl>
-    <p>The name(s) specified in the notNull MUST <a>refer</a> to column(s)
-    of the containing table. When provided as <code>DOMString[]</code>, the
-    array MUST NOT be empty, and they MUST <a>refer</a> to different
-    columns.</p>
-  </section>
-
-  <section>
-    <h2>Unique Index Specification</h2>
-    <p>Unique index is a specialized index that disallows duplicated keys.
-    Its definition format is the same as index definition. If two or more
-    columns are defined as keys, the combination of the column values forms the
-    uniqueness.</p>
-    <pre class="idl">
-      dictionary UniqueSpec {
-        DOMString name;
-        IndexedColumnDefinition column;
-      };
-    </pre>
-    <dl class="dictionary-members">
-      <dt><code>name</code></dt>
-      <dd>Name of the index, MUST be unique within the containing table.</dd>
-      <dt><code>column</code></dt>
-      <dd>Same as the <code>column</code> in <a href="#index-specifications">
-      Index Specifications</a>.</dd>
-    </dl>
   </section>
 
   <section>
@@ -614,131 +534,6 @@ navigator.db.open('hr').then(function(connection) {
         "immediate"
       };
     </pre>
-  </section>
-
-</section>
-
-<section>
-  <h2>Schema Query</h2>
-  <p>A database instance is created using schema queries. The associated schema
-  of the database can also be altered using schema queries. Schema queries are
-  run in the context of <a>transaction</a> and can be executed any time during
-  the life time of the database.</p>
-
-  <section>
-    <h2>Database-Level Schema Query</h2>
-    <p>The <code>ISchemaQueryProvider</code> is the interface of manipulating
-    database-level schema:</p>
-    <pre class="idl">
-      interface ISchemaQueryProvider {
-        IExecutionContext exportSchema();
-        IExecutionContext create(Object schema);
-        IExecutionContext setVersion(unsigned short version);
-        IExecutionContext setForeignKeyCheck(boolean value);
-        IDatabaseSchema schema();
-        ITableBuilder createTable();
-        ITableChanger alterTable();
-        IExecutionContext dropTable(DOMString name);
-      };
-    </pre>
-    <dl class="methods">
-      <dt><code>IExecutionContext exportSchema();</code></dt>
-      <dd>Export schema object, MUST be run in the context of a
-      <a>transaction</a>.</dd>
-      <dt><code>IExecutionContext create(Object schema);</code></dt>
-      <dd>Create database schema from provided schema object, MUST be run in
-      the context of a <a>transaction</a>. The schema object MUST conform to
-      the format defined in <a href="#schema-definition-json-format">
-      Schema Definition JSON Format</a>. Any error in the schema will result in
-      transaction failure with <a>InvalidSchemaError</a>.</dd>
-      <dt><code>IExecutionContext setVersion(unsigned short version);</code>
-      </dt>
-      <dd>Sets the version number of the schema, MUST be run in the context of
-      a <a>transaction</a>.</dd>
-      <dt><code>IExecutionContext setForeignKeyCheck(boolean value);</code></dt>
-      <dd>Enables or disables foreign key constraint enforcement within the
-      transaction that the execution context returned by this function is in.
-      Misuse of this function MAY cause broken data integrity.
-      </dd>
-      <dt><code>IDatabaseSchema schema();</code></dt>
-      <dd>Returns an <code>IDatabaseSchema</code> object for crafting data
-      manipulation queries.</dd>
-      <dt><code>ITableBuilder createTable();</code></dt>
-      <dd>Returns a <a href="#table-builder">table builder</a> for creating a
-      new table.</dd>
-      <dt><code>ITableChanger alterTable(string tableName);</code></dt>
-      <dd>Returns a <a href="#table-changer">table changer</a> for altering an
-      existing table. The table referred by <code>tableName</code> MUST already
-      exist in the database, otherwise a <a>DataError</a> will be raised.</dd>
-      <dt><code>IExecutionContext dropTable(DOMString name);</code></dt>
-      <dd>Removes a table and all its rows from database. The table referred by 
-      <code>name</code> MUST already exist in the database, otherwise a
-      <a>DataError</a> will be raised.</dd>
-    </dl>
-  </section>
-  <section>
-    <h2>Database Schema</h2>
-    <p>Database schema obtained from <code>ISchemaQueryProvider.schema()</code>
-    provides <code>IDatabaseSchema</code> interface.</p>
-    <pre class="idl">
-      interface IDatabaseSchema {
-        readonly attribute DOMString name;
-        readonly attribute unsigned short version;
-        ITable table(DOMString tableName);
-      };
-    </pre>
-    <dl class="attributes">
-      <dt><code>DOMString name</code></dt>
-      <dd>Name of the database.</dd>
-      <dt><code>unsigned short version</code></dt>
-      <dd>Version of the database schema.</dd>
-    </dl>
-    <dl class="methods">
-      <dt><code>ITable table(DOMString tableName);</code></dt>
-      <dd>Returns a read-only object that implements <a>ITable</a> interface,
-      whose members are <a>IColumn</a> objects representing columns in the
-      specified table. The table referred by <code>tableName</code> MUST
-      already exist in the database, otherwise a <a>DataError</a> will be
-      raised.</dd>
-    </dl>
-  </section>
-
-  <section>
-    <h2>Table Builder</h2>
-    <p>Table builder is used to describe the new table that will be created,
-    and MUST be used within the context of a <a>transaction</a>.</p>
-    <pre class="idl">
-      interface ITableBuilder : IExecutionContext {
-        ITableBuilder column(DOMString name, ColumnType type, optional boolean notNull = false);
-        ITableBuilder primaryKey(PrimaryKeyDefinition primaryKey);
-        ITableBuilder foreignKey(ForeignKeySpec foreignKey);
-        ITableBuilder unique(DOMString name, IndexedColumnDefinition columns);
-        ITableBuilder index(DOMString name, IndexedColumnDefinition columns);
-      };
-    </pre>
-    <p>All methods returns the same <code>ITableBuilder</code> object that
-    they were called from to make cascade builder pattern possible. If any of
-    the rule described in the following table were violated, an
-    <a>InvalidSchemaError</a> will be thrown. All methods can be called
-    multiple times except <code>primaryKey</code>.</p>
-    <dl class="methods">
-      <dt><code>ITableBuilder column(DOMString name, ColumnType type, optional boolean notNull = false);</code></dt>
-      <dd>Adds a column to table. <code>name</code> MUST be unique within the
-      containing table.</dd>
-      <dt><code>ITableBuilder primaryKey(PrimaryKeyDefinition primaryKey);</code></dt>
-      <dd>Adds a primary key to table. This method MUST NOT be called multiple
-      times.</dd>
-      <dt><code>ITableBuilder foreignKey(ForeignKeySpec foreignKey);</code></dt>
-      <dd>Adds a foreign key to table.</dd>
-      <dt><code>ITableBuilder unique(DOMString name, IndexedColumnDefinition columns);
-</code></dt>
-      <dd>Adds an unique index to table. The <code>name</code> is the name of
-      the index, and it MUST be unique within the containing table.</dd>
-      <dt><code>ITableBuilder index(DOMString name, IndexedColumnDefinition columns);
-</code></dt>
-      <dd>Adds an index to table. The <code>name</code> is the name of the
-      index, and it MUST be unique within the containing table.</dd>
-    </dl>
   </section>
 
   <section>
