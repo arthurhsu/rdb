@@ -1,11 +1,12 @@
 <section>
   <h2>Schema Query</h2>
-  <p>A database instance is created using schema queries. The associated schema
-  of the database can also be altered using schema queries. Schema queries are
+  <p>A database instance is created using schema queries. The schema of a
+  database instance can also be altered via schema queries. Schema queries are
   run in the context of <a>transaction</a> and can be executed any time during
   the life time of the database.</p>
-  <p>Any name used inside the schema not obeying Naming Rules will result in
-  <a>InvalidSchemaError</a> exception.</p>
+  <p>Any name used inside the schema not obeying
+  <a href="#naming-rules">Naming Rules</a> will result in raising
+  <a>InvalidSchemaError</a> during the execution of schema queries.</p>
 
   <section>
     <h2>Database-Level Schema Query</h2>
@@ -25,14 +26,17 @@
       <dt><code>IExecutionContext setVersion(unsigned short version);</code>
       </dt>
       <dd>Sets the version number of the schema, MUST be run in the context of
-      a <a>transaction</a>.</dd>
+      a <a>transaction</a>. The <code>version</code> MUST NOT be set to
+      <code>0</code>, otherwise <a>InvalidSchemaError</a> will be raised.</dd>
       <dt><code>IExecutionContext setForeignKeyCheck(boolean value);</code></dt>
       <dd>Enables or disables foreign key constraint enforcement within the
       transaction that the execution context returned by this function is in.
+      The change will be effective only after this function is called, and will
+      not affect previously executed queries in the containing transaction.
       Misuse of this function MAY cause broken data integrity.
       </dd>
       <dt><code>IDatabaseSchema schema();</code></dt>
-      <dd>Returns an <code>IDatabaseSchema</code> object for crafting data
+      <dd>Returns an <a>IDatabaseSchema</a> object for crafting data
       manipulation queries.</dd>
       <dt><code>ITableBuilder createTable();</code></dt>
       <dd>Returns a <a href="#table-builder">table builder</a> for creating a
@@ -47,10 +51,9 @@
       <a>DataError</a> will be raised.</dd>
     </dl>
   </section>
+
   <section>
     <h2>Database Schema</h2>
-    <p>Database schema obtained from <code>ISchemaQueryProvider.schema()</code>
-    provides <code>IDatabaseSchema</code> interface.</p>
     <pre class="idl">
       interface IDatabaseSchema {
         readonly attribute DOMString name;
