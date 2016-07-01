@@ -190,16 +190,15 @@ insertData().then(function() {
     The constraints define the relations of rows and ensures data integrity,
     and MUST be honored.</p>
 
-    <p>The database schema can be described in JSON format or constructed via
-    builder pattern APIs. Schema can be changed through schema queries within
-    any <code>readwrite</code> transactions. The JSON format and related APIs
-    are described in the following sections.</p>
+    <p>The database schema is constructed via builder pattern APIs. Schema can
+    be changed through schema queries within any <code>readwrite</code>
+    transactions.</p>
   </section>
 
 <section>
   <h2>Naming Rules</h2>
-  <p>Names in schema means identifiers used to identify an entity, such as
-  database, table, column, index, constraint, and so on. All names used in the
+  <p>Names, also known as identifiers, are used to identify entities in schema,
+  i.e. database, table, column, index, and constraint. All names used in the
   database schema MUST abide the following rules:</p>
   <ul>
     <li>Names are case sensitive</li>
@@ -210,12 +209,13 @@ insertData().then(function() {
         <code>Object.prototype</code> and <a>ITable</a>.
     </li>
   </ul>
+  <p class="note">Unlike SQL, names in RDB are case-sensitive.</p>
 </section>
 
 <section>
   <h2>Column Types</h2>
-  <p>All columns in a table schema MUST be associated with a given type. Valid
-  types of a column are defined in <code>ColumnType</code></p>
+  <p>A table column MUST be associated with a given type. Valid types are
+  defined in <a>ColumnType</a> enum:</p>
   <pre class="idl">
     enum ColumnType {
       // ArrayBuffer
@@ -232,7 +232,7 @@ insertData().then(function() {
     typedef (boolean or Date or number or DOMString) IndexableValueType;
   </pre>
 
-  <p>Only some value types are <dfn>indexable</dfn>, which means that they can 
+  <p>Only some value types are <dfn>indexable</dfn>, indicating that they can
   be compared, sorted, and used in indices and predicates. Non-indexable types,
   <code>blob</code> and <code>object</code>, MUST NOT be used to create indices
   and predicates, except the <code>isNull()</code> and <code>isNotNull()</code>
@@ -253,19 +253,20 @@ insertData().then(function() {
   </pre>
   <p>Ascending sort order is the natural sort order, which means that if two
   fields are ordered as <code>a, b</code>, then <code>(a <= b) === true</code>.
-  <code>blob</code> and <code>object</code> types are not <a>indexable</a>,
-  which implied they were not comparable and thus the orders have no effect for
-  these two types.</p>
+  Since <code>blob</code> and <code>object</code> types are not
+  <a>indexable</a>, they cannot be compared and thus the orders have no effect
+  for these two types.</p>
 </section>
 
 <section>
   <h2>Schema Query</h2>
-  <p>A database instance is created using schema queries. The associated schema
-  of the database can also be altered using schema queries. Schema queries are
+  <p>A database instance is created using schema queries. The schema of a
+  database instance can also be altered via schema queries. Schema queries are
   run in the context of <a>transaction</a> and can be executed any time during
   the life time of the database.</p>
-  <p>Any name used inside the schema not obeying Naming Rules will result in
-  <a>InvalidSchemaError</a> exception.</p>
+  <p>Any name used inside the schema not obeying
+  <a href="#naming-rules">Naming Rules</a> will result in raising
+  <a>InvalidSchemaError</a> during the execution of schema queries.</p>
 
   <section>
     <h2>Database-Level Schema Query</h2>
@@ -285,14 +286,17 @@ insertData().then(function() {
       <dt><code>IExecutionContext setVersion(unsigned short version);</code>
       </dt>
       <dd>Sets the version number of the schema, MUST be run in the context of
-      a <a>transaction</a>.</dd>
+      a <a>transaction</a>. The <code>version</code> MUST NOT be set to
+      <code>0</code>, otherwise <a>InvalidSchemaError</a> will be raised.</dd>
       <dt><code>IExecutionContext setForeignKeyCheck(boolean value);</code></dt>
       <dd>Enables or disables foreign key constraint enforcement within the
       transaction that the execution context returned by this function is in.
+      The change will be effective only after this function is called, and will
+      not affect previously executed queries in the containing transaction.
       Misuse of this function MAY cause broken data integrity.
       </dd>
       <dt><code>IDatabaseSchema schema();</code></dt>
-      <dd>Returns an <code>IDatabaseSchema</code> object for crafting data
+      <dd>Returns an <a>IDatabaseSchema</a> object for crafting data
       manipulation queries.</dd>
       <dt><code>ITableBuilder createTable();</code></dt>
       <dd>Returns a <a href="#table-builder">table builder</a> for creating a
@@ -307,10 +311,9 @@ insertData().then(function() {
       <a>DataError</a> will be raised.</dd>
     </dl>
   </section>
+
   <section>
     <h2>Database Schema</h2>
-    <p>Database schema obtained from <code>ISchemaQueryProvider.schema()</code>
-    provides <code>IDatabaseSchema</code> interface.</p>
     <pre class="idl">
       interface IDatabaseSchema {
         readonly attribute DOMString name;
