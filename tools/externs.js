@@ -676,6 +676,13 @@ ISelectQuery.prototype.groupBy;
 
 
 /**
+ * @param {!ISelectQuery} subquery
+ * @return {!ISelectQuery}
+ */
+ISelectQuery.prototype.union;
+
+
+/**
  * @constructor
  * @implements {ICloneable}
  * @extends {IQuery}

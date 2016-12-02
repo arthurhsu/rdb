@@ -17,6 +17,9 @@
       ISelectQuery skip((unsigned long or IBindableValue) numberOfRows);
       ISelectQuery orderBy(IColumn column, optional Order order);
       ISelectQuery groupBy(IColumn... column);
+      ISelectQuery union(ISelectQuery... query);
+      ISelectQuery intersect(ISelectQuery... query);
+      ISelectQuery except(ISelectQuery... query);
     };
   </pre>
   <dl class="member">
@@ -53,6 +56,14 @@
     thrown. Caller MUST provide one or more columns in the parameter, otherwise
     <a>SyntaxError</a> will be thrown. If the same column is provided twice
     in the parameters, it will be treated as provided only once.</dd>
+    <dt><code>ISelectQuery union(ISelectQuery... query);</code></dt>
+    <dd>Combine results of two or more select queries into a single result set
+    that includes all the rows that belong to all queries in the union. See
+    <a href="#union-projection">union projection</a> for details.</dd>
+    <dt><code>ISelectQuery intersect(ISelectQuery... query);</code></dt>
+    <dd>See <a href="intersect-and-except">intersect and except</a>.</dd>
+    <dt><code>ISelectQuery except(ISelectQuery... query);</code></dt>
+    <dd>See <a href="intersect-and-except">intersect and except</a>.</dd>
   </dl>
   <p class="note">
     There is not a hard rule regarding the invocation order of
@@ -67,4 +78,6 @@
   {{include: inner_join.html}}
   {{include: left_outer_join.html}}
   {{include: aggregation.html}}
+  {{include: union_projection.html}}
+  {{include: intersect_except.html}}
 </section>

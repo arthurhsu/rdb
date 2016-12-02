@@ -1,0 +1,30 @@
+<section>
+  <h2>Union Projection</h2>
+  <p>Union projection is different from joins. It just attempts to combine the
+  projected results into rows using the following algorithm:</p>
+  <ol type="1">
+    <li>For any two different queries in union queries, check if their
+    projected columns are compatible.
+    <ol type="A">
+      <li>Let Q<sub>x</sub> and Q<sub>y</sub> denote the queries to be
+      checked.</li>
+      <li>For any column C in Q<sub>x</sub>, it MUST satisfy one of the
+      following condition:
+      <ol type="i">
+        <li>No column in Q<sub>y</sub> has the same name, and C is
+        nullable.</li>
+        <li>Another column C' in Q<sub>y</sub> has the same name or alias as C,
+        and the column has exactly the same data type.</li>
+      </ol>
+      Otherwise a <a>TypeError</a> will be thrown.</li>
+    </ol></li>
+    <li>Union all qualified columns as new projection list, execute the
+      queries. Query engine CAN decide the execution orders. Final projected
+      rows MUST be generated in the order of union queries, i.e. the rows from
+      <code>union()</code> query first, then in the order of the parameters
+      inside <code>union()</code>.</li>
+  </ol>
+  <pre class="example highlight">
+  {{include: select_union.js}}
+  </pre>
+</section>
