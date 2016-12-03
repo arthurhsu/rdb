@@ -3,7 +3,7 @@
   <p>Intersect and except are different from joins, they just attempt to
   perform set operations on the projected results from involving queries.
   The set of projected columns from any two queries involved MUST be identical
-  in name/alias and data type.</p>
+  in name/alias and data type, otherwise a <a>TypeError</a> will be thrown.</p>
   <p>Results returned from <code>intersect()</code> include all the rows that
   exist in all involved queries.</p>
   <p>Results returned from <code>except()</code> exists only in the calling
