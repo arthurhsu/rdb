@@ -757,7 +757,7 @@ IDeleteQuery.prototype.where;
 rdb.IndexableValueType;
 
 
-/** @typedef {rdb.IndexableValueType|IBindableValue} */
+/** @typedef {rdb.IndexableValueType|IBindableValue|ISelectQuery} */
 rdb.ComparableValueType;
 
 
