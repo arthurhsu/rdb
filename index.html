@@ -422,7 +422,10 @@ insertData().then(function() {
         "btree",
 
         // Hash index.
-        "hash"
+        "hash",
+
+        // Full text search.
+        "fulltext"
       };
     </pre>
 
@@ -1007,12 +1010,15 @@ if (version < 2) {
   <section>
     <h2>Transaction Snapshots</h2>
     <p>A <dfn>snapshot</dfn> of the database is the contents of all rows in the 
-    database at the time when the snapshot is taken. Conceptually, each
-    transaction operates on its own snapshot of database, and the snapshot is
-    taken at the beginning of transaction. The beginning of transaction is
-    determined by either calling <a>ITransaction.begin</a> or
-    <a>ITransaction.exec</a> for explicit transactions, or
-    <a>IExecutionContext.commit</a> for implicit transactions.</p>
+    database at the time when the snapshot is taken. At any given time, query
+    engine MUST guarantee only one connection can create snapshot on a given 
+    scope. Conceptually, each transaction operates on its own snapshot of
+    database, and the snapshot is taken at the beginning of transaction. The
+    beginning of transaction is determined by either calling
+    <a>ITransaction.begin</a> or <a>ITransaction.exec</a> for explicit
+    transactions, or <a>IExecutionContext.commit</a> for implicit
+    transactions.</p>
+
     <p>All changes performed by queries inside the transaction will only be
     effective on that snapshot. The end of transaction is determined by
     resolution or rejection of the <code>Promise</code> returned from
@@ -1020,11 +1026,21 @@ if (version < 2) {
     transaction is committed, i.e. resolution of <code>Promise</code>, the
     database MUST be updated to that snapshot. If the transaction is rolled
     back, i.e. rejection of <code>Promise</code>, the snapshot is discarded.</p>
+
     <p>The final data persisted on database is determined by the last
     transaction snapshot committed by the query engine. The transaction
     snapshots MAY come from other sessions other than current session.
     The query engine MUST guarantee only one snapshot can be persisted at a
-    given time.</p>
+    given time if there were multiple snapshots on a given scope. If there were
+    multiple snapshots on a given scope, and one of them is persisted while
+    the others are open, all the opened snapshots will be invalidated and their
+    associated transactions must be rolled back.</p>
+
+    <p class="note">It's up to the implementation to determine whether a table
+    scope or a row scope to be used in transaction snapshots. The minimum
+    requirement for this specification is to support table scope, i.e.
+    different transactions MUST be able to operate on different tables
+    simultaneously.</p>
   </section>
 </section>
 
@@ -1407,7 +1423,7 @@ function updateModel(employeeId) {
     associated column or not. They are defined by the following interface:</p>
     <pre class="idl">
       interface ITruthPredicate {
-        ILogicalPredicate match((IBindableValue or RegExp) value);
+        ILogicalPredicate match((IBindableValue or RegExp or DOMString) value);
         ILogicalPredicate between(ComparableValueType lhs, ComparableValueType rhs);
         ILogicalPredicate in((ComparableValueType[] or IBindableValue) values);
         ILogicalPredicate isNull();
@@ -1415,8 +1431,11 @@ function updateModel(employeeId) {
       };
     </pre>
     <dl class="methods">
-      <dt><code>ILogicalPredicate match((IBindableValue or RegExp) value);</code></dt>
-      <dd>The associated column matches the regular expression provided.</dd>
+      <dt><code>ILogicalPredicate match((IBindableValue or RegExp or DOMString) value);</code></dt>
+      <dd>The associated column matches the regular expression or string
+      provided. When <code>value</code> is provided as string, and the column
+      is indexed using <code>fulltext</code> type, implementation MAY treat
+      this predicate as a hint to perform full text search.</dd>
       <dt><code>ILogicalPredicate between(ComparableValueType lhs, ComparableValueType rhs);</code></dt>
       <dd>The associated column is within the range between lhs and rhs. The
       relation is evaluated using the rule of JavaScript <code>&lt;=</code> and
