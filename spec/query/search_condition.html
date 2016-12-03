@@ -72,7 +72,7 @@
     associated column or not. They are defined by the following interface:</p>
     <pre class="idl">
       interface ITruthPredicate {
-        ILogicalPredicate match((IBindableValue or RegExp) value);
+        ILogicalPredicate match((IBindableValue or RegExp or DOMString) value);
         ILogicalPredicate between(ComparableValueType lhs, ComparableValueType rhs);
         ILogicalPredicate in((ComparableValueType[] or IBindableValue) values);
         ILogicalPredicate isNull();
@@ -80,8 +80,11 @@
       };
     </pre>
     <dl class="methods">
-      <dt><code>ILogicalPredicate match((IBindableValue or RegExp) value);</code></dt>
-      <dd>The associated column matches the regular expression provided.</dd>
+      <dt><code>ILogicalPredicate match((IBindableValue or RegExp or DOMString) value);</code></dt>
+      <dd>The associated column matches the regular expression or string
+      provided. When <code>value</code> is provided as string, and the column
+      is indexed using <code>fulltext</code> type, implementation MAY treat
+      this predicate as a hint to perform full text search.</dd>
       <dt><code>ILogicalPredicate between(ComparableValueType lhs, ComparableValueType rhs);</code></dt>
       <dd>The associated column is within the range between lhs and rhs. The
       relation is evaluated using the rule of JavaScript <code>&lt;=</code> and
