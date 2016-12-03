@@ -1486,6 +1486,34 @@ function updateModel(employeeId) {
     </dl>
   </section>
 
+  <section>
+    <h2>Subqueries</h2>
+    <p><a href="#data-selection">Select queries</a> that can be evaluated into
+    <a>IndexableValueType</a> or <a>IndexableValueType</a><code>[]</code> can
+    be used in predicates as <a>ComparableValueType</a> values. The evaluated
+    type MUST be identical as the type requested by predicate. The query
+    engine MUST evaluate these subqueries first and automatic bind the values
+    into the main query.</p>
+    <pre class="example highlight">
+var db;
+
+function getDepartmentsWithFounders() {
+  var dept = db.schema().table('Department');
+
+  var emp = db.schema().table('Employee');
+
+  return db.select(dept.name)
+           .from(dept)
+           .where(dept.id.in(
+               db.select(emp.deptId)
+                 .from(emp)
+                 .where(emp.id.lt(12))))
+           .commit();
+}
+
+    </pre>
+  </section>
+
 </section>
 
 <section>
