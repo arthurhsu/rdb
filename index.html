@@ -277,9 +277,9 @@ insertData().then(function() {
         IExecutionContext setVersion(unsigned short version);
         IExecutionContext setForeignKeyCheck(boolean value);
         IDatabaseSchema schema();
-        ITableBuilder createTable();
-        ITableChanger alterTable();
-        IExecutionContext dropTable(DOMString name);
+        ITableBuilder createTable(DOMString tableName);
+        ITableChanger alterTable(DOMString tableName);
+        IExecutionContext dropTable(DOMString tableName);
       };
     </pre>
     <dl class="methods">
@@ -298,14 +298,14 @@ insertData().then(function() {
       <dt><code>IDatabaseSchema schema();</code></dt>
       <dd>Returns an <a>IDatabaseSchema</a> object for crafting data
       manipulation queries.</dd>
-      <dt><code>ITableBuilder createTable();</code></dt>
+      <dt><code>ITableBuilder createTable(DOMString tableName);</code></dt>
       <dd>Returns a <a href="#table-builder">table builder</a> for creating a
       new table.</dd>
-      <dt><code>ITableChanger alterTable(string tableName);</code></dt>
+      <dt><code>ITableChanger alterTable(DOMString tableName);</code></dt>
       <dd>Returns a <a href="#table-changer">table changer</a> for altering an
       existing table. The table referred by <code>tableName</code> MUST already
       exist in the database, otherwise a <a>DataError</a> will be raised.</dd>
-      <dt><code>IExecutionContext dropTable(DOMString name);</code></dt>
+      <dt><code>IExecutionContext dropTable(DOMString tableName);</code></dt>
       <dd>Removes a table and all its rows from database. The table referred by 
       <code>name</code> MUST already exist in the database, otherwise a
       <a>DataError</a> will be raised.</dd>
@@ -463,7 +463,7 @@ insertData().then(function() {
     primary key. A primary key can be specified using unique index
     specification, or use the following WebIDL:</p>
     <pre class="idl">
-      dictionary PrimaryKeySpec {
+      dictionary PrimaryKey {
         DOMString name;
         boolean autoIncrement;
       };
