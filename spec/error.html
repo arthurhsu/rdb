@@ -27,7 +27,10 @@
     </tr>
     <tr><td><dfn><code>SyntaxError</code></dfn></td>
       <td>Illegal use of query builder objects, for example, calling
-      <code>into()</code> twice for <a>IInsertQuery</a>.</td>
+      <code>into()</code> twice for <a>IInsertQuery</a>.</td></tr>
+    <tr><td><dfn><code>TimeoutError</code></dfn></td>
+      <td>Transaction takes too long to resolve (commit) or reject (rollback),
+      and is automatically rolled back.</td></tr>
     <tr><td><dfn><code>TransactionStateError</code></dfn></td>
       <td>Attempts to commit/rollback/attach query to a finished/pending finish
         transaction.</td></tr>

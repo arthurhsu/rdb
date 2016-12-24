@@ -61,7 +61,11 @@
   </pre>
   <dl class="methods">
     <dt><code>Promise< void > begin();</code></dt>
-    <dd>Starts <em>sequence mode</em> execution.</dd>
+    <dd>Starts <em>sequence mode</em> execution. The transaction will be kept
+    alive until <code>commit()</code> or <code>rollback()</code> of this
+    transaction is triggered, or the transaction is timed out by implementation
+    (which the implementation MUST throw <a>TimoutError</a> and reject any
+    further calls on this transaction object).</dd>
     <dt><code>Promise< TransactionResults > exec(IExecutionContext[] queries);</code></dt>
     <dd>Starts <em>batch mode</em> execution and auto-commit.</dd>
     <dt><code>Promise< TransactionResults > attach(IExecutionContext query);</code></dt>
