@@ -87,6 +87,7 @@
         ITableBuilder primaryKey(PrimaryKeyDefinition primaryKey);
         ITableBuilder foreignKey(ForeignKeySpec foreignKey);
         ITableBuilder index(DOMString name, IndexedColumnDefinition columns);
+        ITableBuilder index(IndexSpec spec);
       };
     </pre>
     <p>All methods returns the same <code>ITableBuilder</code> object that
@@ -110,6 +111,9 @@
 </code></dt>
       <dd>Adds an index to table. The <code>name</code> is the name of the
       index, and it MUST be unique within the containing table.</dd>
+      <dt><code>ITableBuilder index(IndexSpec spec)</code></dt>
+      <dd>Adds an index to table, overloading form that provides finer control
+      over the index itself.</dd>
     </dl>
   </section>
 
@@ -198,23 +202,31 @@
     primary key. A primary key can be specified using unique index
     specification, or use the following WebIDL:</p>
     <pre class="idl">
-      dictionary PrimaryKey {
+      dictionary PrimaryKeySpec {
         DOMString name;
-        boolean autoIncrement;
+        IndexedColumnDefinition column;
+        boolean autoIncrement = false;
       };
+
+      typedef (IndexedColumnDefinition or PrimaryKeySpec) PrimaryKeyDefinition;
     </pre>
     <dl class="dictionary-members">
-      <dt><code>name</code></dt><dd>Column name of the primary key, MUST
-      <a>refer</a> to <a>indexable</a> column of the containing table.</dd>
+      <dt><code>name</code></dt><dd>Name of primary key. If not specified, it
+      will be named as <code>`PK_${tableName}`</code>.</dd>
+      <dt><code>column</code></dt><dd>Columns that consists primary key, MUST
+      <a>refer</a> to <a>indexable</a> columns of the containing table.</dd>
       <dt><code>autoIncrement</code></dt><dd>Create auto-increment
-      primary key.</dd>
+      primary key. When this is set to <code>true</code>, there MUST be only
+      one column in the <code>column</code> field with <code>numeric</code>
+      column type.</dd>
     </dl>
     <p>When the autoIncrement field is specified, the specified column MUST be
     of type <code>Number</code>. An auto-increment key will start from zero.
     When a new row is inserted into the table, the key will increase by one and
     assigned to that row regardless the original key value given to the
     row.</p>
-    <p class="note">Unlike SQL, primary key does not have name.</p>
+    <p class="note">Unlike SQL, primary key MUST have name. Unnamed primary key
+    will be automatically given a name.</p>
   </section>
 
   <section>
@@ -289,7 +301,6 @@
         ITableChanger addColumn(DOMString name, ColumnType type, optional boolean notNull = false, optional ValueType defaultValue = null);
         ITableChanger dropColumn(DOMString name);
         ITableChanger addPrimaryKey(PrimaryKeyDefinition primaryKey);
-        ITableChanger dropPrimaryKey();
         ITableChanger addForeignKey(ForeignKeySpec foreignKey);
         ITableChanger addIndex(DOMString name, IndexedColumnDefinition columns);
         ITableChanger dropConstraintOrIndex(DOMString name);
