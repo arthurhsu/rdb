@@ -79,9 +79,9 @@ Well this looks good enough. Why do you still need RDB?
 ### Limitations of Lovefield
 
 Lovefield loads all data from IndexedDB into memory during initial load. This
-means that Lovefield will be constrainted for small app usage only.
+means that Lovefield will be constrained for small app usage only.
 
-Why Lovefied does something like this? Because it needs to provide long-lived,
+Why Lovefield does something like this? Because it needs to provide long-lived,
 fine-controlled transaction that meets SQL behaviors. On the other hand, it's
 also unlikely to implement that in today's JavaScript without loading everything
 into memory.
@@ -177,6 +177,11 @@ SQL engines on the browser side (whether it's SQLite or not).
 
 RDB is designed to work with all modern artifacts like Promises, Service
 Workers, etc. It also avoids problems of existing IndexedDB spec.
+
+RDB allows you to have fine control over transaction lifetime. In WebSQL, you
+have only one transaction callback function, and you are not allowed to do any
+asynchronous operation inside that callback function. This is not an issue for
+RDB (mostly, the transaction can still timeout if the async wait is too long).
 
 ### Problems of Existing IndexedDB?
 
