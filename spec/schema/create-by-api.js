@@ -14,7 +14,6 @@ var q2 = db.createTable('Emp')
            .column('deptId', 'string', true)
            .column('title', 'string')
            .primaryKey([{'name': 'id', 'order': 'asc'}])
-           .unique(['name'])
            .index('idx_Desc', [{'name': 'desc', 'order': 'asc'}])
            .foreignKey({
              'name': 'fk_DeptId',

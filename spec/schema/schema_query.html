@@ -86,7 +86,6 @@
         ITableBuilder column(DOMString name, ColumnType type, optional boolean notNull = false);
         ITableBuilder primaryKey(PrimaryKeyDefinition primaryKey);
         ITableBuilder foreignKey(ForeignKeySpec foreignKey);
-        ITableBuilder unique(DOMString name, IndexedColumnDefinition columns);
         ITableBuilder index(DOMString name, IndexedColumnDefinition columns);
       };
     </pre>
@@ -107,10 +106,6 @@
       times.</dd>
       <dt><code>ITableBuilder foreignKey(ForeignKeySpec foreignKey);</code></dt>
       <dd>Adds a foreign key to table.</dd>
-      <dt><code>ITableBuilder unique(DOMString name, IndexedColumnDefinition columns);
-</code></dt>
-      <dd>Adds an unique index to table. The <code>name</code> is the name of
-      the index, and it MUST be unique within the containing table.</dd>
       <dt><code>ITableBuilder index(DOMString name, IndexedColumnDefinition columns);
 </code></dt>
       <dd>Adds an index to table. The <code>name</code> is the name of the
@@ -296,7 +291,6 @@
         ITableChanger addPrimaryKey(PrimaryKeyDefinition primaryKey);
         ITableChanger dropPrimaryKey();
         ITableChanger addForeignKey(ForeignKeySpec foreignKey);
-        ITableChanger addUnique(DOMString name, IndexedColumnDefinition columns);
         ITableChanger addIndex(DOMString name, IndexedColumnDefinition columns);
         ITableChanger dropConstraintOrIndex(DOMString name);
         IColumnChanger setColumn(DOMString name);
@@ -332,9 +326,6 @@
       key, this method will do nothing.</dd>
       <dt><code>ITableChanger addForeignKey(ForeignKeySpec foreignKey);</code></dt>
       <dd>Adds a foreign key to the table.</dd>
-      <dt><code>ITableChanger addUnique(DOMString name, IndexedColumnDefinition columns);</code></dt>
-      <dd>Adds an unique index to the table. The <code>name</code> is the name
-      of the unique index and MUST be unique within the containing table.</dd>
       <dt><code>ITableChanger addIndex(DOMString name, IndexedColumnDefinition columns);</code></dt>
       <dd>Adds an index to the table. The <code>name</code> is the name
       of the index and MUST be unique within the containing table.</dd>
