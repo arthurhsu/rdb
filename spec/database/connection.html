@@ -7,7 +7,7 @@
   <pre class="idl">
     interface IDatabaseConnection {
       ITransaction createTransaction(optional TransactionMode mode = "readonly");
-      Promise< void > close();
+      Promise< Error > close();
       IBindableValue bind(unsigned short index);
     };
   </pre>
@@ -15,11 +15,11 @@
     <dt><code>ITransaction createTransaction(optional TransactionMode mode = "readonly");</code></dt>
     <dd>Creates an explicit transaction. If the connection is marked as close
     pending, throws <a>BlockingError</a>.</dd>
-    <dt><code>Promise< void > close();</code></dt>
-    <dd>Closes the connection. The promise will resolve if and only if all
-    scheduled transactions are finished. The connection will be marked as
+    <dt><code>Promise< Error > close();</code></dt>
+    <dd>Closes the connection. The connection will be marked as
     close pending immediately after this call, and no more new transaction
-    can be created within this connection.</dd>
+    can be created within this connection. It is a best efforts call and
+    may resolve with error, or NULL if everything succeeded.</dd>
     <dt><code>IBindableValue bind(unsigned short index);</code></dt>
     <dd>Returns a bindable value that can be used in parameterized query.</dd>
   </dl>
