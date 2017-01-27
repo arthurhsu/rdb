@@ -14,6 +14,7 @@
     database-level schema:</p>
     <pre class="idl">
       interface ISchemaQueryProvider {
+        readonly attribute boolean supportTransactionalSchemaChange;
         IExecutionContext setVersion(unsigned short version);
         IExecutionContext setForeignKeyCheck(boolean value);
         IDatabaseSchema schema();
@@ -22,6 +23,16 @@
         IExecutionContext dropTable(DOMString tableName);
       };
     </pre>
+    <dl class="attributes">
+      <dt><code>boolean supportTransactionalSchemaChange</code></dt>
+      <dd>Indicates whether the implementation supports schema changes in a
+      transaction. When returning <code>false</code>, the
+      <a>IExecutionContext</a> resulted from <code>createTable()</code>,
+      <code>alterTable()</code>, or <code>dropTable()</code> will immediately
+      commit associated transaction when executed. This implies that these
+      contexts cannot be run in explicit transactions. Implementations MAY
+      throw <a>TransactionStateError</a> if such misusage happened.</dd>
+    </dl>
     <dl class="methods">
       <dt><code>IExecutionContext setVersion(unsigned short version);</code>
       </dt>
@@ -46,7 +57,7 @@
       existing table. The table referred by <code>tableName</code> MUST already
       exist in the database, otherwise a <a>DataError</a> will be raised.</dd>
       <dt><code>IExecutionContext dropTable(DOMString tableName);</code></dt>
-      <dd>Removes a table and all its rows from database. The table referred by 
+      <dd>Removes a table and all its rows from database. The table referred by
       <code>name</code> MUST already exist in the database, otherwise a
       <a>DataError</a> will be raised.</dd>
     </dl>
