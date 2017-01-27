@@ -274,14 +274,25 @@ insertData().then(function() {
     database-level schema:</p>
     <pre class="idl">
       interface ISchemaQueryProvider {
+        readonly attribute boolean supportTransactionalSchemaChange;
         IExecutionContext setVersion(unsigned short version);
         IExecutionContext setForeignKeyCheck(boolean value);
         IDatabaseSchema schema();
-        ITableBuilder createTable();
-        ITableChanger alterTable();
-        IExecutionContext dropTable(DOMString name);
+        ITableBuilder createTable(DOMString tableName);
+        ITableChanger alterTable(DOMString tableName);
+        IExecutionContext dropTable(DOMString tableName);
       };
     </pre>
+    <dl class="attributes">
+      <dt><code>boolean supportTransactionalSchemaChange</code></dt>
+      <dd>Indicates whether the implementation supports schema changes in a
+      transaction. When returning <code>false</code>, the
+      <a>IExecutionContext</a> resulted from <code>createTable()</code>,
+      <code>alterTable()</code>, or <code>dropTable()</code> will immediately
+      commit associated transaction when executed. This implies that these
+      contexts cannot be run in explicit transactions. Implementations MAY
+      throw <a>TransactionStateError</a> if such misusage happened.</dd>
+    </dl>
     <dl class="methods">
       <dt><code>IExecutionContext setVersion(unsigned short version);</code>
       </dt>
@@ -298,15 +309,15 @@ insertData().then(function() {
       <dt><code>IDatabaseSchema schema();</code></dt>
       <dd>Returns an <a>IDatabaseSchema</a> object for crafting data
       manipulation queries.</dd>
-      <dt><code>ITableBuilder createTable();</code></dt>
+      <dt><code>ITableBuilder createTable(DOMString tableName);</code></dt>
       <dd>Returns a <a href="#table-builder">table builder</a> for creating a
       new table.</dd>
-      <dt><code>ITableChanger alterTable(string tableName);</code></dt>
+      <dt><code>ITableChanger alterTable(DOMString tableName);</code></dt>
       <dd>Returns a <a href="#table-changer">table changer</a> for altering an
       existing table. The table referred by <code>tableName</code> MUST already
       exist in the database, otherwise a <a>DataError</a> will be raised.</dd>
-      <dt><code>IExecutionContext dropTable(DOMString name);</code></dt>
-      <dd>Removes a table and all its rows from database. The table referred by 
+      <dt><code>IExecutionContext dropTable(DOMString tableName);</code></dt>
+      <dd>Removes a table and all its rows from database. The table referred by
       <code>name</code> MUST already exist in the database, otherwise a
       <a>DataError</a> will be raised.</dd>
     </dl>
@@ -346,8 +357,8 @@ insertData().then(function() {
         ITableBuilder column(DOMString name, ColumnType type, optional boolean notNull = false);
         ITableBuilder primaryKey(PrimaryKeyDefinition primaryKey);
         ITableBuilder foreignKey(ForeignKeySpec foreignKey);
-        ITableBuilder unique(DOMString name, IndexedColumnDefinition columns);
         ITableBuilder index(DOMString name, IndexedColumnDefinition columns);
+        ITableBuilder index(IndexSpec spec);
       };
     </pre>
     <p>All methods returns the same <code>ITableBuilder</code> object that
@@ -367,14 +378,13 @@ insertData().then(function() {
       times.</dd>
       <dt><code>ITableBuilder foreignKey(ForeignKeySpec foreignKey);</code></dt>
       <dd>Adds a foreign key to table.</dd>
-      <dt><code>ITableBuilder unique(DOMString name, IndexedColumnDefinition columns);
-</code></dt>
-      <dd>Adds an unique index to table. The <code>name</code> is the name of
-      the index, and it MUST be unique within the containing table.</dd>
       <dt><code>ITableBuilder index(DOMString name, IndexedColumnDefinition columns);
 </code></dt>
       <dd>Adds an index to table. The <code>name</code> is the name of the
       index, and it MUST be unique within the containing table.</dd>
+      <dt><code>ITableBuilder index(IndexSpec spec)</code></dt>
+      <dd>Adds an index to table, overloading form that provides finer control
+      over the index itself.</dd>
     </dl>
   </section>
 
@@ -422,7 +432,10 @@ insertData().then(function() {
         "btree",
 
         // Hash index.
-        "hash"
+        "hash",
+
+        // Full text search.
+        "fulltext"
       };
     </pre>
 
@@ -462,21 +475,29 @@ insertData().then(function() {
     <pre class="idl">
       dictionary PrimaryKeySpec {
         DOMString name;
-        boolean autoIncrement;
+        IndexedColumnDefinition column;
+        boolean autoIncrement = false;
       };
+
+      typedef (IndexedColumnDefinition or PrimaryKeySpec) PrimaryKeyDefinition;
     </pre>
     <dl class="dictionary-members">
-      <dt><code>name</code></dt><dd>Column name of the primary key, MUST
-      <a>refer</a> to <a>indexable</a> column of the containing table.</dd>
+      <dt><code>name</code></dt><dd>Name of primary key. If not specified, it
+      will be named as <code>`PK_${tableName}`</code>.</dd>
+      <dt><code>column</code></dt><dd>Columns that consists primary key, MUST
+      <a>refer</a> to <a>indexable</a> columns of the containing table.</dd>
       <dt><code>autoIncrement</code></dt><dd>Create auto-increment
-      primary key.</dd>
+      primary key. When this is set to <code>true</code>, there MUST be only
+      one column in the <code>column</code> field with <code>numeric</code>
+      column type.</dd>
     </dl>
     <p>When the autoIncrement field is specified, the specified column MUST be
     of type <code>Number</code>. An auto-increment key will start from zero.
     When a new row is inserted into the table, the key will increase by one and
     assigned to that row regardless the original key value given to the
     row.</p>
-    <p class="note">Unlike SQL, primary key does not have name.</p>
+    <p class="note">Unlike SQL, primary key MUST have name. Unnamed primary key
+    will be automatically given a name.</p>
   </section>
 
   <section>
@@ -551,9 +572,7 @@ insertData().then(function() {
         ITableChanger addColumn(DOMString name, ColumnType type, optional boolean notNull = false, optional ValueType defaultValue = null);
         ITableChanger dropColumn(DOMString name);
         ITableChanger addPrimaryKey(PrimaryKeyDefinition primaryKey);
-        ITableChanger dropPrimaryKey();
         ITableChanger addForeignKey(ForeignKeySpec foreignKey);
-        ITableChanger addUnique(DOMString name, IndexedColumnDefinition columns);
         ITableChanger addIndex(DOMString name, IndexedColumnDefinition columns);
         ITableChanger dropConstraintOrIndex(DOMString name);
         IColumnChanger setColumn(DOMString name);
@@ -589,9 +608,6 @@ insertData().then(function() {
       key, this method will do nothing.</dd>
       <dt><code>ITableChanger addForeignKey(ForeignKeySpec foreignKey);</code></dt>
       <dd>Adds a foreign key to the table.</dd>
-      <dt><code>ITableChanger addUnique(DOMString name, IndexedColumnDefinition columns);</code></dt>
-      <dd>Adds an unique index to the table. The <code>name</code> is the name
-      of the unique index and MUST be unique within the containing table.</dd>
       <dt><code>ITableChanger addIndex(DOMString name, IndexedColumnDefinition columns);</code></dt>
       <dd>Adds an index to the table. The <code>name</code> is the name
       of the index and MUST be unique within the containing table.</dd>
@@ -641,7 +657,6 @@ var q2 = db.createTable('Emp')
            .column('deptId', 'string', true)
            .column('title', 'string')
            .primaryKey([{'name': 'id', 'order': 'asc'}])
-           .unique(['name'])
            .index('idx_Desc', [{'name': 'desc', 'order': 'asc'}])
            .foreignKey({
              'name': 'fk_DeptId',
@@ -818,7 +833,7 @@ if (version < 2) {
   <pre class="idl">
     interface IDatabaseConnection {
       ITransaction createTransaction(optional TransactionMode mode = "readonly");
-      Promise< void > close();
+      Promise< Error > close();
       IBindableValue bind(unsigned short index);
     };
   </pre>
@@ -826,11 +841,11 @@ if (version < 2) {
     <dt><code>ITransaction createTransaction(optional TransactionMode mode = "readonly");</code></dt>
     <dd>Creates an explicit transaction. If the connection is marked as close
     pending, throws <a>BlockingError</a>.</dd>
-    <dt><code>Promise< void > close();</code></dt>
-    <dd>Closes the connection. The promise will resolve if and only if all
-    scheduled transactions are finished. The connection will be marked as
+    <dt><code>Promise< Error > close();</code></dt>
+    <dd>Closes the connection. The connection will be marked as
     close pending immediately after this call, and no more new transaction
-    can be created within this connection.</dd>
+    can be created within this connection. It is a best efforts call and
+    may resolve with error, or NULL if everything succeeded.</dd>
     <dt><code>IBindableValue bind(unsigned short index);</code></dt>
     <dd>Returns a bindable value that can be used in parameterized query.</dd>
   </dl>
@@ -923,7 +938,11 @@ if (version < 2) {
   </pre>
   <dl class="methods">
     <dt><code>Promise< void > begin();</code></dt>
-    <dd>Starts <em>sequence mode</em> execution.</dd>
+    <dd>Starts <em>sequence mode</em> execution. The transaction will be kept
+    alive until <code>commit()</code> or <code>rollback()</code> of this
+    transaction is triggered, or the transaction is timed out by implementation
+    (which the implementation MUST throw <a>TimoutError</a> and reject any
+    further calls on this transaction object).</dd>
     <dt><code>Promise< TransactionResults > exec(IExecutionContext[] queries);</code></dt>
     <dd>Starts <em>batch mode</em> execution and auto-commit.</dd>
     <dt><code>Promise< TransactionResults > attach(IExecutionContext query);</code></dt>
@@ -1007,12 +1026,15 @@ if (version < 2) {
   <section>
     <h2>Transaction Snapshots</h2>
     <p>A <dfn>snapshot</dfn> of the database is the contents of all rows in the 
-    database at the time when the snapshot is taken. Conceptually, each
-    transaction operates on its own snapshot of database, and the snapshot is
-    taken at the beginning of transaction. The beginning of transaction is
-    determined by either calling <a>ITransaction.begin</a> or
-    <a>ITransaction.exec</a> for explicit transactions, or
-    <a>IExecutionContext.commit</a> for implicit transactions.</p>
+    database at the time when the snapshot is taken. At any given time, query
+    engine MUST guarantee only one connection can create snapshot on a given 
+    scope. Conceptually, each transaction operates on its own snapshot of
+    database, and the snapshot is taken at the beginning of transaction. The
+    beginning of transaction is determined by either calling
+    <a>ITransaction.begin</a> or <a>ITransaction.exec</a> for explicit
+    transactions, or <a>IExecutionContext.commit</a> for implicit
+    transactions.</p>
+
     <p>All changes performed by queries inside the transaction will only be
     effective on that snapshot. The end of transaction is determined by
     resolution or rejection of the <code>Promise</code> returned from
@@ -1020,11 +1042,21 @@ if (version < 2) {
     transaction is committed, i.e. resolution of <code>Promise</code>, the
     database MUST be updated to that snapshot. If the transaction is rolled
     back, i.e. rejection of <code>Promise</code>, the snapshot is discarded.</p>
+
     <p>The final data persisted on database is determined by the last
     transaction snapshot committed by the query engine. The transaction
     snapshots MAY come from other sessions other than current session.
     The query engine MUST guarantee only one snapshot can be persisted at a
-    given time.</p>
+    given time if there were multiple snapshots on a given scope. If there were
+    multiple snapshots on a given scope, and one of them is persisted while
+    the others are open, all the opened snapshots will be invalidated and their
+    associated transactions must be rolled back.</p>
+
+    <p class="note">It's up to the implementation to determine whether a table
+    scope or a row scope to be used in transaction snapshots. The minimum
+    requirement for this specification is to support table scope, i.e.
+    different transactions MUST be able to operate on different tables
+    simultaneously.</p>
   </section>
 </section>
 
@@ -1407,7 +1439,7 @@ function updateModel(employeeId) {
     associated column or not. They are defined by the following interface:</p>
     <pre class="idl">
       interface ITruthPredicate {
-        ILogicalPredicate match((IBindableValue or RegExp) value);
+        ILogicalPredicate match((IBindableValue or RegExp or DOMString) value);
         ILogicalPredicate between(ComparableValueType lhs, ComparableValueType rhs);
         ILogicalPredicate in((ComparableValueType[] or IBindableValue) values);
         ILogicalPredicate isNull();
@@ -1415,8 +1447,11 @@ function updateModel(employeeId) {
       };
     </pre>
     <dl class="methods">
-      <dt><code>ILogicalPredicate match((IBindableValue or RegExp) value);</code></dt>
-      <dd>The associated column matches the regular expression provided.</dd>
+      <dt><code>ILogicalPredicate match((IBindableValue or RegExp or DOMString) value);</code></dt>
+      <dd>The associated column matches the regular expression or string
+      provided. When <code>value</code> is provided as string, and the column
+      is indexed using <code>fulltext</code> type, implementation MAY treat
+      this predicate as a hint to perform full text search.</dd>
       <dt><code>ILogicalPredicate between(ComparableValueType lhs, ComparableValueType rhs);</code></dt>
       <dd>The associated column is within the range between lhs and rhs. The
       relation is evaluated using the rule of JavaScript <code>&lt;=</code> and
@@ -1486,6 +1521,34 @@ function updateModel(employeeId) {
     </dl>
   </section>
 
+  <section>
+    <h2>Subqueries</h2>
+    <p><a href="#data-selection">Select queries</a> that can be evaluated into
+    <a>IndexableValueType</a> or <a>IndexableValueType</a><code>[]</code> can
+    be used in predicates as <a>ComparableValueType</a> values. The evaluated
+    type MUST be identical as the type requested by predicate. The query
+    engine MUST evaluate these subqueries first and automatic bind the values
+    into the main query.</p>
+    <pre class="example highlight">
+var db;
+
+function getDepartmentsWithFounders() {
+  var dept = db.schema().table('Department');
+
+  var emp = db.schema().table('Employee');
+
+  return db.select(dept.name)
+           .from(dept)
+           .where(dept.id.in(
+               db.select(emp.deptId)
+                 .from(emp)
+                 .where(emp.id.lt(12))))
+           .commit();
+}
+
+    </pre>
+  </section>
+
 </section>
 
 <section>
@@ -1535,6 +1598,9 @@ function updateModel(employeeId) {
       ISelectQuery skip((unsigned long or IBindableValue) numberOfRows);
       ISelectQuery orderBy(IColumn column, optional Order order);
       ISelectQuery groupBy(IColumn... column);
+      ISelectQuery union(ISelectQuery... query);
+      ISelectQuery intersect(ISelectQuery... query);
+      ISelectQuery except(ISelectQuery... query);
     };
   </pre>
   <dl class="member">
@@ -1571,6 +1637,14 @@ function updateModel(employeeId) {
     thrown. Caller MUST provide one or more columns in the parameter, otherwise
     <a>SyntaxError</a> will be thrown. If the same column is provided twice
     in the parameters, it will be treated as provided only once.</dd>
+    <dt><code>ISelectQuery union(ISelectQuery... query);</code></dt>
+    <dd>Combine results of two or more select queries into a single result set
+    that includes all the rows that belong to all queries in the union. See
+    <a href="#union-projection">union projection</a> for details.</dd>
+    <dt><code>ISelectQuery intersect(ISelectQuery... query);</code></dt>
+    <dd>See <a href="intersect-and-except">intersect and except</a>.</dd>
+    <dt><code>ISelectQuery except(ISelectQuery... query);</code></dt>
+    <dd>See <a href="intersect-and-except">intersect and except</a>.</dd>
   </dl>
   <p class="note">
     There is not a hard rule regarding the invocation order of
@@ -1809,6 +1883,64 @@ var q2 =
   </section>
 </section>
 
+<section>
+  <h2>Union Projection</h2>
+  <p>Union projection is different from joins. It just attempts to combine the
+  projected results into rows using the following algorithm:</p>
+  <ol type="1">
+    <li>For any two different queries in union queries, check if their
+    projected columns are compatible.
+    <ol type="A">
+      <li>Let Q<sub>x</sub> and Q<sub>y</sub> denote the queries to be
+      checked.</li>
+      <li>For any column C in Q<sub>x</sub>, it MUST satisfy one of the
+      following condition:
+      <ol type="i">
+        <li>No column in Q<sub>y</sub> has the same name, and C is
+        nullable.</li>
+        <li>Another column C' in Q<sub>y</sub> has the same name or alias as C,
+        and the column has exactly the same data type.</li>
+      </ol>
+      Otherwise a <a>TypeError</a> will be thrown.</li>
+    </ol></li>
+    <li>Union all qualified columns as new projection list, execute the
+      queries. Query engine CAN decide the execution orders. Final projected
+      rows MUST be generated in the order of union queries, i.e. the rows from
+      <code>union()</code> query first, then in the order of the parameters
+      inside <code>union()</code>.</li>
+  </ol>
+  <pre class="example highlight">
+var db;
+
+function getOrderList() {
+  var order = db.schema().table('Order');
+
+  var archive = db.schema().table('ArchivedOrder');
+
+  var query = db.select(order.item, order.amount)
+                .from(order)
+                .where(order.category.eq('Clothing'))
+                .union(db.select(archive.item, archive.amount)
+                         .from(archive)
+                         .where(archive.category.eq('Clothing')));
+}
+
+  </pre>
+</section>
+
+<section>
+  <h2>Intersect and Except</h2>
+  <p>Intersect and except are different from joins, they just attempt to
+  perform set operations on the projected results from involving queries.
+  The set of projected columns from any two queries involved MUST be identical
+  in name/alias and data type, otherwise a <a>TypeError</a> will be thrown.</p>
+  <p>Results returned from <code>intersect()</code> include all the rows that
+  exist in all involved queries.</p>
+  <p>Results returned from <code>except()</code> exists only in the calling
+  query.</p>
+</section>
+
+
 </section>
 
 <section>
@@ -1840,12 +1972,15 @@ var q2 =
     </tr>
     <tr><td><dfn><code>SyntaxError</code></dfn></td>
       <td>Illegal use of query builder objects, for example, calling
-      <code>into()</code> twice for <a>IInsertQuery</a>.</td>
+      <code>into()</code> twice for <a>IInsertQuery</a>.</td></tr>
+    <tr><td><dfn><code>TimeoutError</code></dfn></td>
+      <td>Transaction takes too long to resolve (commit) or reject (rollback),
+      and is automatically rolled back.</td></tr>
     <tr><td><dfn><code>TransactionStateError</code></dfn></td>
       <td>Attempts to commit/rollback/attach query to a finished/pending finish
         transaction.</td></tr>
     <tr><td><dfn><code>TypeError</code></dfn></td>
-      <td>Attempts to compare two different data types.</td></tr>
+      <td>Attempts to compare/union two different data types.</td></tr>
     <tr><td><dfn><code>UnsupportedError</code></dfn></td>
       <td>Attempts to use MAY support features that are not supported yet.
       </td></tr>
