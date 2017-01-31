@@ -1483,6 +1483,7 @@ function updateModel(employeeId) {
       interface ILogicalPredicate {
         ILogicalPredicate and(ILogicalPredicate... childPredicate);
         ILogicalPredicate or(ILogicalPredicate... childPredicate);
+        ILogicalPredicate clone();
       };
     </pre>
     <dl class="methods">
@@ -1494,6 +1495,8 @@ function updateModel(employeeId) {
       <dd>Logical <code>OR</code> of logical predicates. The returning logical
       predicate will evaluate to true if any of the predicates in its parameter
       is evaluated true.</dd>
+      <dt><code>ILogicalPredicate clone();</code></dt>
+      <dd>Clone the search condition, including the binding place holders.</dd>
     </dl>
 
     <p class="note">The <code>NOT</code> operation is provided by
