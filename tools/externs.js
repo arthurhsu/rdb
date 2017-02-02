@@ -64,7 +64,7 @@ function IDatabaseConnection () {}
 IDatabaseConnection.prototype.createTransaction;
 
 
-/** @return {!Promise} */
+/** @return {!Promise<Error>} */
 IDatabaseConnection.prototype.close;
 
 
@@ -285,6 +285,10 @@ ISchemaQueryProvider.prototype.alterTable;
 ISchemaQueryProvider.prototype.dropTable;
 
 
+/** @const {boolean} */
+ISchemaQueryProvider.prototype.supportTransactionalSchemaChange;
+
+
 
 /** @constructor */
 function IDatabaseSchema() {}
@@ -449,8 +453,12 @@ IColumnChanger.prototype.set;
 function ITable() {}
 
 
-/** @const {string} */
-ITable.prototype.name;
+/** @return {string} */
+ITable.prototype.getName;
+
+
+/** @return {string} */
+ITable.prototype.getAlias;
 
 
 /**
@@ -698,7 +706,7 @@ IInsertQuery.prototype.into;
 
 
 /**
- * @param {!Object|!Array<!Object>|IBindableValue|!Array<!IBindableValue>}
+ * @param {!Object|!Array<!Object>|IBindableValue}
  *     values
  * @return {!IInsertQuery}
  */
@@ -963,6 +971,7 @@ IDatabaseFunctionProvider.prototype.not;
 /** @override */ DatabaseConnection.prototype.select;
 /** @override */ DatabaseConnection.prototype.setVersion;
 /** @override */ DatabaseConnection.prototype.setForeignKeyCheck;
+/** @override */ DatabaseConnection.prototype.supportTransactionalSchemaChange;
 /** @override */ DatabaseConnection.prototype.unobserve;
 /** @override */ DatabaseConnection.prototype.update;
 

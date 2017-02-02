@@ -18,12 +18,24 @@
     <pre class="idl">
       interface ITable {
         ITable as(DOMString alias);
+        DOMString getName();
+        DOMString getAlias();
       };
     </pre>
     <dl class="methods">
-      <dt><code>ITable as(DOMString alias)</code><dt>
+      <dt><code>ITable as(DOMString alias)</code></dt>
       <dd>Creates an alias for the table, this is useful for self-join.</dd>
+      <dt><code>DOMString getName()</code></dt>
+      <dd>Returns table name.</dd>
+      <dt><code>DOMString getAlias()</code></dt>
+      <dd>Returns table alias. If no alias is defined for this table schema
+      object, <code>null</code> is returned.</dd>
     </dl>
+
+    <p class="note">It is a delibrate design to use <code>getName()</code>
+    and <code>getAlias()</code> in <code>ITable</code>, because the string-based
+    properties of <code>ITable</code> are <code>IColumn</code> objects. In
+    order to create less name conflicts, the get functions are used.</p>
   </section>
 
   <section>
@@ -34,15 +46,20 @@
       interface IColumn {
         readonly attribute DOMString name;
         readonly attribute ColumnType type;
+        readonly attribute DOMString fullName;
         readonly attribute boolean nullable;
         IColumn as(DOMString alias);
       };
     </pre>
     <dl class="attributes">
       <dt><code>name</code></dt>
-      <dd>The <a>canonical name</a> of the column.</dd>
+      <dd>The name of the column.</dd>
       <dt><code>type</code></dt>
       <dd>Data type of the column.</dd>
+      <dt><code>fullName</code></dt>
+      <dd>The <a>full name</a> of the column. When the containing table has
+      alias, it will be <code>`${ITable#getAlias}.${IColumn.name}`</code>,
+      otherwise <code>`${ITable#getName}.${IColumn.name}`</code>.</dd>
       <dt><code>nullable</code></dt>
       <dd>When <code>false</code>, the column is <a>NOT NULL</a></dd>
     </dl>
