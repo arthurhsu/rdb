@@ -1,12 +1,10 @@
 <section>
   <h2>Column Types</h2>
   <p>A table column MUST be associated with a given type. Valid types are
-  defined in <a>ColumnType</a> enum:</p>
+  defined in <a><dfn>ColumnType</dfn></a> enum:</p>
   <pre class="idl">
     enum ColumnType {
-      // ArrayBuffer
       "blob",
-
       "boolean",
       "date",
       "number",
@@ -18,9 +16,20 @@
     typedef (boolean or Date or number or DOMString) IndexableValueType;
   </pre>
 
-  <p>Only some value types are <dfn>indexable</dfn>, indicating that they can
-  be compared, sorted, and used in indices and predicates. Non-indexable types,
-  <code>blob</code> and <code>object</code>, MUST NOT be used to create indices
-  and predicates, except the <code>isNull()</code> and <code>isNotNull()</code>
-  predicates.</p>
+  <p><dfn data-dfn-for="ColumnType">blob</dfn> represents JavaScript
+  <code>ArrayBuffer</code>, and <dfn data-dfn-for="ColumnType">date</dfn>
+  refers to <code>Date</code> object.
+  <dfn data-dfn-for="ColumnType">boolean</dfn>,
+  <dfn data-dfn-for="ColumnType">number</dfn>,
+  <dfn data-dfn-for="ColumnType">string</dfn> and
+  <dfn data-dfn-for="ColumnType">object</dfn> correpond to the types of the same
+  names in JavaScript.</p>
+  <p>JavaScript types that can be used in a column is defined as
+  <dfn>ValueType</dfn>. Only some value types are <dfn>indexable</dfn>,
+  indicating that they can be compared, sorted, and used in indices and
+  predicates. These types are defined as <dfn>IndexableValueType</dfn>.
+  Non-indexable types, <a href="ColumnType#blob">blob</a> and
+  <a href="ColumnType#object">object</a>, MUST NOT be used to
+  create indices and predicates, except the
+  <code>isNull()</code> and <code>isNotNull()</code> predicates.</p>
 </section>

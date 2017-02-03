@@ -1,15 +1,17 @@
 <section>
-  <h2>Orders</h2>
-  <p>There are two sorting orders defined in the following enum:</p>
+  <h2>Ordering</h2>
+  <p>There are two sorting orders defined in the <a><dfn>Order</dfn></a>
+  enum:</p>
   <pre class="idl">
     enum Order {
-      // Represents ascending sort order (Default).
       "asc",
-
-      // Represents descending sort order.
       "desc"
     };
   </pre>
+  <p>The <dfn data-dfn-for="Order">asc</dfn> represents ascending sorting order,
+  and is the default sorting order if none were provided. The
+  <dfn data-dfn-for="Order">desc</dfn> represents descending sorting order.</p>
+
   <p>Ascending sort order is the natural sort order, which means that if two
   fields are ordered as <code>a, b</code>, then <code>(a <= b) === true</code>.
   Since <code>blob</code> and <code>object</code> types are not
