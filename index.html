@@ -1796,6 +1796,10 @@ var q2 =
   <p class="note">Conceptually the inner join will create a new table.
   Implementation MAY NOT create actual table as long as the returned results
   are correct.</p>
+
+  <p>The user is not allowed to mix implicit and explicit join. Implementations
+  will throw either <a>SyntaxError</a> or <a>RuntimeError</a> for invalid
+  queries violating this rule.</p>
 </section>
 
 <section>
@@ -1990,6 +1994,9 @@ function getOrderList() {
     <tr><td><dfn><code>InvalidSchemaError</code></dfn></td>
         <td>Provided schema is invalid.</td>
     </tr>
+    <tr><td><dfn><code>RuntimeError</code></dfn></td>
+        <td>Invalid query has slipped through syntax checks but caught by
+        the query execution engine.</td></tr>
     <tr><td><dfn><code>SyntaxError</code></dfn></td>
       <td>Illegal use of query builder objects, for example, calling
       <code>into()</code> twice for <a>IInsertQuery</a>.</td></tr>
