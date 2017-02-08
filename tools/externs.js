@@ -900,13 +900,6 @@ IAggregateFunction.prototype.distinct;
  * @param {!IColumn} col
  * @return {!IColumn}
  */
-IAggregateFunction.prototype.geomean;
-
-
-/**
- * @param {!IColumn} col
- * @return {!IColumn}
- */
 IAggregateFunction.prototype.max;
 
 

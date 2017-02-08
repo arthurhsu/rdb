@@ -8,7 +8,6 @@
       IColumn avg(IColumn col);
       IColumn count(optional IColumn col = null);
       IColumn distinct(IColumn... col);
-      IColumn geomean(IColumn col);
       IColumn max(IColumn col);
       IColumn min(IColumn col);
       IColumn stddev(IColumn col);
@@ -30,8 +29,6 @@
     <dt><code>IColumn distinct(IColumn... col);</code></dt>
     <dd>Returns distinct value tuples of the specified columns in all grouped
     rows. <code>null</code> is considered as a unique value.</dd>
-    <dt><code>IColumn geomean(IColumn col);</code></dt>
-    <dd>Similar to <code>avg()</code>, but returns geometric mean instead.</dd>
     <dt><code>IColumn max(IColumn col);</code></dt>
     <dd>Returns the maximum value of the column <code>col</code> for all rows
     grouped. The maximum value is determined by the last value of the
