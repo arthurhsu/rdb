@@ -10,9 +10,7 @@
       IColumn distinct(IColumn... col);
       IColumn max(IColumn col);
       IColumn min(IColumn col);
-      IColumn stddev(IColumn col);
       IColumn sum(IColumn col);
-      IColumn var(IColumn col);
     };
   </pre>
   <dl class="methods">
@@ -41,15 +39,11 @@
     <code>orderBy()</code> performed on that column. The <code>max()</code>
     function returns <code>null</code> if and only if all values grouped are
     <code>null</code>.</dd>
-    <dt><code>IColumn stddev(IColumn col);</code></dt>
-    <dd>Similar to <code>avg()</code>, but returns standard deviation.</dd>
     <dt><code>IColumn sum(IColumn col);</code></dt>
     <dd>Calculate the arithematic sum of non-null values of column
     <code>col</code> for all rows grouped. If there are no non-null rows, or
     the column is not typed as <code>number</code>, returns <code>null</code>.
     The returned column is always typed as <code>number</code>.</dd>
-    <dt><code>IColumn var(IColumn col);</code></dt>
-    <dd>Similar to <code>avg()</code>, but returns statistical variance.</dd>
   </dl>
   <p>The <a>IColumn</a> objects returned by
   <a>IAggregateFunction</a> MUST NOT be convertible to <a>Column</a> objects.
