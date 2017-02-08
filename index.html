@@ -215,12 +215,10 @@ insertData().then(function() {
 <section>
   <h2>Column Types</h2>
   <p>A table column MUST be associated with a given type. Valid types are
-  defined in <a>ColumnType</a> enum:</p>
+  defined in <a><dfn>ColumnType</dfn></a> enum:</p>
   <pre class="idl">
     enum ColumnType {
-      // ArrayBuffer
       "blob",
-
       "boolean",
       "date",
       "number",
@@ -232,25 +230,38 @@ insertData().then(function() {
     typedef (boolean or Date or number or DOMString) IndexableValueType;
   </pre>
 
-  <p>Only some value types are <dfn>indexable</dfn>, indicating that they can
-  be compared, sorted, and used in indices and predicates. Non-indexable types,
-  <code>blob</code> and <code>object</code>, MUST NOT be used to create indices
-  and predicates, except the <code>isNull()</code> and <code>isNotNull()</code>
-  predicates.</p>
+  <p><dfn data-dfn-for="ColumnType">blob</dfn> represents JavaScript
+  <code>ArrayBuffer</code>, and <dfn data-dfn-for="ColumnType">date</dfn>
+  refers to <code>Date</code> object.
+  <dfn data-dfn-for="ColumnType">boolean</dfn>,
+  <dfn data-dfn-for="ColumnType">number</dfn>,
+  <dfn data-dfn-for="ColumnType">string</dfn> and
+  <dfn data-dfn-for="ColumnType">object</dfn> correpond to the types of the same
+  names in JavaScript.</p>
+  <p>JavaScript types that can be used in a column is defined as
+  <dfn>ValueType</dfn>. Only some value types are <dfn>indexable</dfn>,
+  indicating that they can be compared, sorted, and used in indices and
+  predicates. These types are defined as <dfn>IndexableValueType</dfn>.
+  Non-indexable types, <a href="ColumnType#blob">blob</a> and
+  <a href="ColumnType#object">object</a>, MUST NOT be used to
+  create indices and predicates, except the
+  <code>isNull()</code> and <code>isNotNull()</code> predicates.</p>
 </section>
 
 <section>
-  <h2>Orders</h2>
-  <p>There are two sorting orders defined in the following enum:</p>
+  <h2>Ordering</h2>
+  <p>There are two sorting orders defined in the <a><dfn>Order</dfn></a>
+  enum:</p>
   <pre class="idl">
     enum Order {
-      // Represents ascending sort order (Default).
       "asc",
-
-      // Represents descending sort order.
       "desc"
     };
   </pre>
+  <p>The <dfn data-dfn-for="Order">asc</dfn> represents ascending sorting order,
+  and is the default sorting order if none were provided. The
+  <dfn data-dfn-for="Order">desc</dfn> represents descending sorting order.</p>
+
   <p>Ascending sort order is the natural sort order, which means that if two
   fields are ordered as <code>a, b</code>, then <code>(a <= b) === true</code>.
   Since <code>blob</code> and <code>object</code> types are not
@@ -270,7 +281,7 @@ insertData().then(function() {
 
   <section>
     <h2>Database-Level Schema Query</h2>
-    <p>The <code>ISchemaQueryProvider</code> is the interface of manipulating
+    <p>The <dfn>ISchemaQueryProvider</dfn> is the interface of manipulating
     database-level schema:</p>
     <pre class="idl">
       interface ISchemaQueryProvider {
@@ -284,7 +295,9 @@ insertData().then(function() {
       };
     </pre>
     <dl class="attributes">
-      <dt><code>boolean supportTransactionalSchemaChange</code></dt>
+      <dt><code>boolean
+      <dfn data-dfn-for="ISchemaQueryProvider">supportTransactionalSchemaChange</dfn>
+      </code></dt>
       <dd>Indicates whether the implementation supports schema changes in a
       transaction. When returning <code>false</code>, the
       <a>IExecutionContext</a> resulted from <code>createTable()</code>,
@@ -294,29 +307,34 @@ insertData().then(function() {
       throw <a>TransactionStateError</a> if such misusage happened.</dd>
     </dl>
     <dl class="methods">
-      <dt><code>IExecutionContext setVersion(unsigned short version);</code>
-      </dt>
+      <dt><code>IExecutionContext
+      <dfn data-dfn-for="ISchemaQueryProvider">setVersion</dfn>(unsigned short version);</code></dt>
       <dd>Sets the version number of the schema, MUST be run in the context of
       a <a>transaction</a>. The <code>version</code> MUST NOT be set to
       <code>0</code>, otherwise <a>InvalidSchemaError</a> will be raised.</dd>
-      <dt><code>IExecutionContext setForeignKeyCheck(boolean value);</code></dt>
+      <dt><code>IExecutionContext
+      <dfn data-dfn-for="ISchemaQueryProvider">setForeignKeyCheck</dfn>(boolean value);</code></dt>
       <dd>Enables or disables foreign key constraint enforcement within the
       transaction that the execution context returned by this function is in.
       The change will be effective only after this function is called, and will
       not affect previously executed queries in the containing transaction.
       Misuse of this function MAY cause broken data integrity.
       </dd>
-      <dt><code>IDatabaseSchema schema();</code></dt>
+      <dt><code>IDatabaseSchema
+      <dfn data-dfn-for="ISchemaQueryProvider">schema</dfn>();</code></dt>
       <dd>Returns an <a>IDatabaseSchema</a> object for crafting data
       manipulation queries.</dd>
-      <dt><code>ITableBuilder createTable(DOMString tableName);</code></dt>
+      <dt><code>ITableBuilder
+      <dfn data-dfn-for="ISchemaQueryProvider">createTable</dfn>(DOMString tableName);</code></dt>
       <dd>Returns a <a href="#table-builder">table builder</a> for creating a
       new table.</dd>
-      <dt><code>ITableChanger alterTable(DOMString tableName);</code></dt>
+      <dt><code>ITableChanger
+      <dfn data-dfn-for="ISchemaQueryProvider">alterTable</dfn>(DOMString tableName);</code></dt>
       <dd>Returns a <a href="#table-changer">table changer</a> for altering an
       existing table. The table referred by <code>tableName</code> MUST already
       exist in the database, otherwise a <a>DataError</a> will be raised.</dd>
-      <dt><code>IExecutionContext dropTable(DOMString tableName);</code></dt>
+      <dt><code>IExecutionContext
+      <dfn data-dfn-for="ISchemaQueryProvider">dropTable</dfn>(DOMString tableName);</code></dt>
       <dd>Removes a table and all its rows from database. The table referred by
       <code>name</code> MUST already exist in the database, otherwise a
       <a>DataError</a> will be raised.</dd>
@@ -325,6 +343,7 @@ insertData().then(function() {
 
   <section>
     <h2>Database Schema</h2>
+    <p><dfn>IDatabaseSchema</dfn> presents a database.</p>
     <pre class="idl">
       interface IDatabaseSchema {
         readonly attribute DOMString name;
@@ -333,13 +352,16 @@ insertData().then(function() {
       };
     </pre>
     <dl class="attributes">
-      <dt><code>DOMString name</code></dt>
+      <dt><code>DOMString
+      <dfn data-dfn-for="IDatabaseSchema">name</dfn></code></dt>
       <dd>Name of the database.</dd>
-      <dt><code>unsigned short version</code></dt>
+      <dt><code>unsigned short
+      <dfn data-dfn-for="IDatabaseSchema">version</dfn></code></dt>
       <dd>Version of the database schema.</dd>
     </dl>
     <dl class="methods">
-      <dt><code>ITable table(DOMString tableName);</code></dt>
+      <dt><code>ITable
+      <dfn data-dfn-for="IDatabaseSchema">table</dfn>(DOMString tableName);</code></dt>
       <dd>Returns a read-only object that implements <a>ITable</a> interface,
       whose members are <a>IColumn</a> objects representing columns in the
       specified table. The table referred by <code>tableName</code> MUST
@@ -350,8 +372,8 @@ insertData().then(function() {
 
   <section>
     <h2>Table Builder</h2>
-    <p>Table builder is used to describe the new table that will be created,
-    and MUST be used within the context of a <a>transaction</a>.</p>
+    <p><dfn>ITableBuilder</dfn> is used to describe the new table that will be
+    created, and MUST be used within the context of a <a>transaction</a>.</p>
     <pre class="idl">
       interface ITableBuilder : IExecutionContext {
         ITableBuilder column(DOMString name, ColumnType type, optional boolean notNull = false);
@@ -361,25 +383,32 @@ insertData().then(function() {
         ITableBuilder index(IndexSpec spec);
       };
     </pre>
-    <p>All methods returns the same <code>ITableBuilder</code> object that
+    <p>All methods returns the same <a>ITableBuilder</a> object that
     they were called from to make cascade builder pattern possible. If any of
     the rule described in the following table were violated, an
     <a>InvalidSchemaError</a> will be thrown. All methods can be called
     multiple times except <code>primaryKey</code>.</p>
     <dl class="methods">
-      <dt><code>ITableBuilder column(DOMString name, ColumnType type, optional boolean notNull = false);</code></dt>
+      <dt><code>ITableBuilder
+      <dfn data-dfn-for="ITableBuilder">column</dfn>(DOMString
+      name, ColumnType type, optional boolean notNull = false);</code></dt>
       <dd>Adds a column to table. <code>name</code> MUST be unique within the
       containing table. <dfn>NOT NULL</dfn> means the column MUST NOT have a
       value of <code>undefined</code> or <code>null</code>. When
       <code>notNull</code> is set to <code>true</code>, the column is treated as
       <a>NOT NULL</a>.</dd>
-      <dt><code>ITableBuilder primaryKey(PrimaryKeyDefinition primaryKey);</code></dt>
+      <dt><code>ITableBuilder
+      <dfn data-dfn-for="ITableBuilder">primaryKey</dfn>(PrimaryKeyDefinition
+      primaryKey);</code></dt>
       <dd>Adds a primary key to table. This method MUST NOT be called multiple
       times.</dd>
-      <dt><code>ITableBuilder foreignKey(ForeignKeySpec foreignKey);</code></dt>
+      <dt><code>ITableBuilder
+      <dfn data-dfn-for="ITableBuilder">foreignKey</dfn>(ForeignKeySpec
+      foreignKey);</code></dt>
       <dd>Adds a foreign key to table.</dd>
-      <dt><code>ITableBuilder index(DOMString name, IndexedColumnDefinition columns);
-</code></dt>
+      <dt><code>ITableBuilder
+      <dfn data-dfn-for="ITableBuilder">index</dfn>(DOMString name,
+      IndexedColumnDefinition columns);</code></dt>
       <dd>Adds an index to table. The <code>name</code> is the name of the
       index, and it MUST be unique within the containing table.</dd>
       <dt><code>ITableBuilder index(IndexSpec spec)</code></dt>
@@ -390,7 +419,8 @@ insertData().then(function() {
 
   <section>
     <h2>Index Specifications</h2>
-    <p>The following WebIDL defines index specification dictionary type:</p>
+    <p>Two major index specification styles are supported. The most complete
+    one is dictionary type <dfn>IndexedSpec</dfn>.</p>
     <pre class="idl">
       typedef (DOMString or DOMString[] or IndexedColumnSpec[]) IndexedColumnDefinition;
       dictionary IndexSpec {
@@ -1839,7 +1869,6 @@ var q2 =
       IColumn avg(IColumn col);
       IColumn count(optional IColumn col = null);
       IColumn distinct(IColumn... col);
-      IColumn geomean(IColumn col);
       IColumn max(IColumn col);
       IColumn min(IColumn col);
       IColumn stddev(IColumn col);
@@ -1861,8 +1890,6 @@ var q2 =
     <dt><code>IColumn distinct(IColumn... col);</code></dt>
     <dd>Returns distinct value tuples of the specified columns in all grouped
     rows. <code>null</code> is considered as a unique value.</dd>
-    <dt><code>IColumn geomean(IColumn col);</code></dt>
-    <dd>Similar to <code>avg()</code>, but returns geometric mean instead.</dd>
     <dt><code>IColumn max(IColumn col);</code></dt>
     <dd>Returns the maximum value of the column <code>col</code> for all rows
     grouped. The maximum value is determined by the last value of the
