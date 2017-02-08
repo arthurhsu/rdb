@@ -1860,10 +1860,10 @@ var q2 =
 </section>
 
 <section>
-  <h2>Aggregation</h2>
-  <p>Aggregation is a special data selection performed via
-  <a>ISelectQuery.groupBy</a> function. The aggregation functions supported are
-  defined in the following.</p>
+  <h2>Aggregate Functions</h2>
+  <p>Aggregate functions are used only in the projection list of a
+  <code>select</code> query. The aggregation functions supported are defined in
+  the following:</p>
   <pre class="idl">
     interface IAggregateFunction {
       IColumn avg(IColumn col);
@@ -1877,10 +1877,10 @@ var q2 =
   <dl class="methods">
     <dt><code>IColumn avg(IColumn col);</code></dt>
     <dd>Calculate the arithematic average of non-null values of column
-    <code>col</code> for all rows grouped. If there are no rows with non-null
-    values, or the column is not typed as <code>number</code>, returns
-    <code>0</code>. The returned column is always typed as
-    <code>number</code>.</dd>
+    <code>col</code> for all rows grouped. If all rows are <code>null</code>,
+    returns <code>null</code>. The returned column is always typed as
+    <code>number</code>. If the <code>col</code> is not typed as
+    <code>number</code>, <a>TypeError</a> will be thrown.</dd>
     <dt><code>IColumn count(IColumn col);</code></dt>
     <dd>Count the number of rows. If <code>col</code> is NOT <code>null</code>,
     returns number of rows in the group whose <code>col</code> is not null,
@@ -1893,24 +1893,31 @@ var q2 =
     grouped. The maximum value is determined by the last value of the
     <code>orderBy()</code> performed on that column. The <code>max()</code>
     function returns <code>null</code> if and only if all values grouped are
-    <code>null</code>.</dd>
+    <code>null</code>. The type of <code>col</code> MUST be either
+    <code>number</code>, <code>string</code>, or <code>date</code>, otherwise
+    <a>TypeError</a> will be thrown.</dd>
     <dt><code>IColumn min(IColumn col);</code></dt>
     <dd>Returns the minimum value of the column <code>col</code> for all rows
     grouped. The minimum value is determined by the first value of the
     <code>orderBy()</code> performed on that column. The <code>max()</code>
     function returns <code>null</code> if and only if all values grouped are
-    <code>null</code>.</dd>
+    <code>null</code>. The type of <code>col</code> MUST be either
+    <code>number</code>, <code>string</code>, or <code>date</code>, otherwise
+    <a>TypeError</a> will be thrown.</dd>
     <dt><code>IColumn sum(IColumn col);</code></dt>
     <dd>Calculate the arithematic sum of non-null values of column
-    <code>col</code> for all rows grouped. If there are no non-null rows, or
-    the column is not typed as <code>number</code>, returns <code>null</code>.
-    The returned column is always typed as <code>number</code>.</dd>
+    <code>col</code> for all rows grouped. If all rows are <code>null</code>,
+    returns <code>null</code>. The returned column is always typed as
+    <code>number</code>. If the <code>col</code> is not typed as
+    <code>number</code>, <a>TypeError</a> will be thrown.</dd>
   </dl>
   <p>The <a>IColumn</a> objects returned by
   <a>IAggregateFunction</a> MUST NOT be convertible to <a>Column</a> objects.
   </p>
+  <p class="note">You cannot use <code>min</code> or <code>max</code> on
+  <code>blob</code>, <code>boolean</code>, and <code>object</code> columns.</p>
   <section>
-  <h2>Limitations of Grouping</h2>
+  <h2>Limitations of Aggregate Functions</h2>
   <p>Aggregation can only happen on a single table. If the select scope
   contains more than one table, a <a>SyntaxError</a> will be thrown.</p>
   <p>The aggregation can happen for the given table without a
@@ -1924,7 +1931,10 @@ var q2 =
   <p>If grouping and search conditions are both provided, search conditions
   will be evaluated first, and grouping will be operated on top of the filtered
   rows.</p>
-  <p class="note">Aggregation by expression is not supported.</p>
+  <p class="note">Aggregation by expression is not supported, i.e. no
+  <code>CASE WHEN</code> equivalents. Also, <code>DISTINCT</code> in SQL is
+  partially implemented in this specification. You can only use it in the
+  projection list, NOT in left joins or other cases.</p>
   </section>
 </section>
 
