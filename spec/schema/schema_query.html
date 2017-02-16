@@ -177,7 +177,9 @@
       <dd>(Optional) Type of index, default to <code>btree</code></dd>
       <dt><code>unique</code></dt>
       <dd>(Optional) Keys in index shall be unique or not,
-          default to <code>false</code>.</dd>
+          default to <code>false</code>. If uniqueness conflicts with
+          index type, for example, full text search index, a <a>SyntaxError</a>
+          MAY be thrown.</dd>
     </dl>
     <p>Index type allows user to hint the query engine to create an index on
     specified columns in given sorting orders. The query engine MAY construct
