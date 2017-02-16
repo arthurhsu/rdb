@@ -477,8 +477,16 @@ function IColumn() {}
 IColumn.prototype.name;
 
 
+/** @const {string} */
+IColumn.prototype.table;
+
+
 /** @const {!rdb.ColumnType} */
 IColumn.prototype.type;
+
+
+/** @const {string} */
+IColumn.prototype.fullName;
 
 
 /** @const {boolean} */

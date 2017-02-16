@@ -45,6 +45,7 @@
     <pre class="idl">
       interface IColumn {
         readonly attribute DOMString name;
+        readonly attribute DOMString table;
         readonly attribute ColumnType type;
         readonly attribute DOMString fullName;
         readonly attribute boolean nullable;
@@ -54,6 +55,8 @@
     <dl class="attributes">
       <dt><code>name</code></dt>
       <dd>The name of the column.</dd>
+      <dt><code>table</code></dt>
+      <dd>The name of the table containing this column.</dd>
       <dt><code>type</code></dt>
       <dd>Data type of the column.</dd>
       <dt><code>fullName</code></dt>
