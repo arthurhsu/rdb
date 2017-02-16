@@ -152,7 +152,7 @@
     <p>Two major index specification styles are supported. The most complete
     one is dictionary type <dfn>IndexedSpec</dfn>.</p>
     <pre class="idl">
-      typedef (DOMString or DOMString[] or IndexedColumnSpec[]) IndexedColumnDefinition;
+      typedef (DOMString or DOMString[] or IndexedColumnSpec or IndexedColumnSpec[]) IndexedColumnDefinition;
       dictionary IndexSpec {
         DOMString name;
         IndexedColumnDefinition column;
