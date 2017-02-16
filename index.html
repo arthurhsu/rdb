@@ -25,6 +25,7 @@
         edDraftURI: 'https://www.github.com/arthurhsu/rdb'
       };
     </script>
+    <link rel="stylesheet" href="style.css" />
   </head>
   <body>
     <section id="abstract">
@@ -41,10 +42,10 @@
 
 <section class="informative">
   <h2>Introduction</h2>
-  <p>Relational data manipulation for the web apps has been in a difficult
-  state for years. WebSQL has quite a few problems with itself and hence
+  <p>Relational data manipulation for web apps has been in a difficult
+  state for years. WebSQL has quite a few problems and is hence
   deprecated. IndexedDB, on the other hand, is an object database. In this
-  document, a set of easy-to-use APIs are defined to promote readable,
+  document, we define a series of easy-to-use APIs that promote readable,
   maintainable, and performant code for apps needing relational data.</p>
 
   <p>The APIs proposed in this document are designed for small-scale relational
@@ -189,16 +190,15 @@ insertData().then(function() {
     The constraints define the relations of rows and ensures data integrity,
     and MUST be honored.</p>
 
-    <p>The database schema can be described in JSON format or constructed via
-    builder pattern APIs. Schema can be changed through schema queries within
-    any <code>readwrite</code> transactions. The JSON format and related APIs
-    are described in the following sections.</p>
+    <p>The database schema is constructed via builder pattern APIs. Schema can
+    be changed through schema queries within any <code>readwrite</code>
+    transactions.</p>
   </section>
 
 <section>
   <h2>Naming Rules</h2>
-  <p>Names in schema means identifiers used to identify an entity, such as
-  database, table, column, index, constraint, and so on. All names used in the
+  <p>Names, also known as identifiers, are used to identify entities in schema,
+  i.e. database, table, column, index, and constraint. All names used in the
   database schema MUST abide the following rules:</p>
   <ul>
     <li>Names are case sensitive</li>
@@ -209,17 +209,16 @@ insertData().then(function() {
         <code>Object.prototype</code> and <a>ITable</a>.
     </li>
   </ul>
+  <p class="note">Unlike SQL, names in RDB are case-sensitive.</p>
 </section>
 
 <section>
   <h2>Column Types</h2>
-  <p>All columns in a table schema MUST be associated with a given type. Valid
-  types of a column are defined in <code>ColumnType</code></p>
+  <p>A table column MUST be associated with a given type. Valid types are
+  defined in <a><dfn>ColumnType</dfn></a> enum:</p>
   <pre class="idl">
     enum ColumnType {
-      // ArrayBuffer
       "blob",
-
       "boolean",
       "date",
       "number",
@@ -231,180 +230,198 @@ insertData().then(function() {
     typedef (boolean or Date or number or DOMString) IndexableValueType;
   </pre>
 
-  <p>Only some value types are <dfn>indexable</dfn>, which means that they can 
-  be compared, sorted, and used in indices and predicates. Non-indexable types,
-  <code>blob</code> and <code>object</code>, MUST NOT be used to create indices
-  and predicates, except the <code>isNull()</code> and <code>isNotNull()</code>
-  predicates.</p>
+  <p><dfn data-dfn-for="ColumnType">blob</dfn> represents JavaScript
+  <code>ArrayBuffer</code>, and <dfn data-dfn-for="ColumnType">date</dfn>
+  refers to <code>Date</code> object.
+  <dfn data-dfn-for="ColumnType">boolean</dfn>,
+  <dfn data-dfn-for="ColumnType">number</dfn>,
+  <dfn data-dfn-for="ColumnType">string</dfn> and
+  <dfn data-dfn-for="ColumnType">object</dfn> correpond to the types of the same
+  names in JavaScript.</p>
+  <p>JavaScript types that can be used in a column is defined as
+  <dfn>ValueType</dfn>. Only some value types are <dfn>indexable</dfn>,
+  indicating that they can be compared, sorted, and used in indices and
+  predicates. These types are defined as <dfn>IndexableValueType</dfn>.
+  Non-indexable types, <a href="ColumnType#blob">blob</a> and
+  <a href="ColumnType#object">object</a>, MUST NOT be used to
+  create indices and predicates, except the
+  <code>isNull()</code> and <code>isNotNull()</code> predicates.</p>
 </section>
 
 <section>
-  <h2>Orders</h2>
-  <p>There are two sorting orders defined in the following enum:</p>
+  <h2>Ordering</h2>
+  <p>There are two sorting orders defined in the <a><dfn>Order</dfn></a>
+  enum:</p>
   <pre class="idl">
     enum Order {
-      // Represents ascending sort order (Default).
       "asc",
-
-      // Represents descending sort order.
       "desc"
     };
   </pre>
+  <p>The <dfn data-dfn-for="Order">asc</dfn> represents ascending sorting order,
+  and is the default sorting order if none were provided. The
+  <dfn data-dfn-for="Order">desc</dfn> represents descending sorting order.</p>
+
   <p>Ascending sort order is the natural sort order, which means that if two
   fields are ordered as <code>a, b</code>, then <code>(a <= b) === true</code>.
-  <code>blob</code> and <code>object</code> types are not <a>indexable</a>,
-  which implied they were not comparable and thus the orders have no effect for
-  these two types.</p>
+  Since <code>blob</code> and <code>object</code> types are not
+  <a>indexable</a>, they cannot be compared and thus the orders have no effect
+  for these two types.</p>
 </section>
 
 <section>
-  <h2>Schema Definition JSON Format</h2>
-  <p>Database schema can be defined using a single dictionary object. The
-  following example demonstrates how to create a database using such object.</p>
-  <pre class="example highlight">
-// Create a database using predefined JSON schema.
-var hrSchema = {
-  'name': 'hr',
-  'version': 2,
-  'table': [
-    {
-      'name': 'Dept',
-      'column': [
-        {'name': 'id', 'type': 'string'},
-        {'name': 'name', 'type': 'string', 'notNull': true}
-      ],
-      'constraint': {
-        'primaryKey': 'id'
-      }
-    },
-    {
-      'name': 'Emp',
-      'column': [
-        {'name': 'id', 'type': 'number'},
-        {'name': 'name', 'type': 'string'},
-        {'name': 'deptId', 'type': 'string'},
-        {'name': 'title', 'type': 'string'}
-      ],
-      'constraint': {
-        'primaryKey': [{'name': 'id', 'order': 'desc'}],
-        'foreignKey': [{
-          'name': 'fk_DeptId',
-          'local': 'deptId',
-          'remote': 'Dept.id',
-          'action': 'restrict',
-          'timing': 'immediate'
-        }],
-        'unique': [{
-          'name': 'uq_Name',
-          'column': [{'name': 'name', 'order': 'desc'}]
-        }],
-        'notNull': ['id', 'name', 'deptId']
-      },
-      'index': [
-        {
-          'name': 'idx_Title',
-          'column': [{'name': 'title', 'order': 'asc'}]
-        }
-      ]
-    }
-  ]
-};
-
-var db;
-navigator.db.open('hr').then(function(connection) {
-  db = connection;
-  var version = db.schema().version;
-  if (version == 0) {
-    return db.create(hrSchema).commit();
-  }
-  return Promise.resolve();
-}).then(function() {
-  // Database created, do something here.
-});
-
-  </pre>
-
-  <p>Any violation of the rules described in this section will result in
-  <a>InvalidSchemaError</a> exception. Any name not obeying
-  <a href="#naming-rules">Naming Rules</a> will also result in
-  <a>InvalidSchemaError</a> exception.</p>
-
-  <p>The following WebIDL defines <code>Schema</code> dictionary type.
-  <pre class="idl">
-    dictionary Schema {
-      DOMString name;
-      unsigned short version = 1;
-      TableSpec[] table;
-    };
-  </pre>
-  <dl class="dictionary-members">
-    <dt><code>name</code></dt>
-    <dd>Name of the database.</dd>
-    <dt><code>version</code></dt>
-    <dd>Version of the database, for reference only.</dd>
-    <dt><code>table</code></dt>
-    <dd>Array of <a href="#table-specifications">table specifications</a>, and
-    it MUST NOT be empty.</dd>
-  </dl>
+  <h2>Schema Query</h2>
+  <p>A database instance is created using schema queries. The schema of a
+  database instance can also be altered via schema queries. Schema queries are
+  run in the context of <a>transaction</a> and can be executed any time during
+  the life time of the database.</p>
+  <p>Any name used inside the schema not obeying
+  <a href="#naming-rules">Naming Rules</a> will result in raising
+  <a>InvalidSchemaError</a> during the execution of schema queries.</p>
 
   <section>
-    <h2>Table Specifications</h2>
-    <p>The following WebIDL defines table specification dictionary type.</p>
+    <h2>Database-Level Schema Query</h2>
+    <p>The <dfn>ISchemaQueryProvider</dfn> is the interface of manipulating
+    database-level schema:</p>
     <pre class="idl">
-      dictionary TableSpec {
-        DOMString name;
-        ColumnSpec[] column;
-        ConstraintSpec? constraint;
-        IndexSpec[]? index;
+      interface ISchemaQueryProvider {
+        readonly attribute boolean supportTransactionalSchemaChange;
+        IExecutionContext setVersion(unsigned short version);
+        IExecutionContext setForeignKeyCheck(boolean value);
+        IDatabaseSchema schema();
+        ITableBuilder createTable(DOMString tableName);
+        ITableChanger alterTable(DOMString tableName);
+        IExecutionContext dropTable(DOMString tableName);
       };
     </pre>
-    <dl class="dictionary-members">
-      <dt><code>name</code></dt>
-      <dd>Name of the table, MUST be unique within the database.</dd>
-      <dt><code>column</code></dt>
-      <dd>Array of <a href="#column-specifications">column specifications</a>,
-      and it MUST NOT be empty.</dd>
-      <dt><code>constraint</code></dt>
-      <dd>(Optional)
-      <a href="#constraint-specifications">Constraint specifications</a>.</dd>
-      <dt><code>index</code></dt>
-      <dd>(Optional) Array of
-      <a href="#index-specifications">index specifications</a>, and it MUST NOT
-      be empty when specified.</dd>
+    <dl class="attributes">
+      <dt><code>boolean
+      <dfn data-dfn-for="ISchemaQueryProvider">supportTransactionalSchemaChange</dfn>
+      </code></dt>
+      <dd>Indicates whether the implementation supports schema changes in a
+      transaction. When returning <code>false</code>, the
+      <a>IExecutionContext</a> resulted from <code>createTable()</code>,
+      <code>alterTable()</code>, or <code>dropTable()</code> will immediately
+      commit associated transaction when executed. This implies that these
+      contexts cannot be run in explicit transactions. Implementations MAY
+      throw <a>TransactionStateError</a> if such misusage happened.</dd>
+    </dl>
+    <dl class="methods">
+      <dt><code>IExecutionContext
+      <dfn data-dfn-for="ISchemaQueryProvider">setVersion</dfn>(unsigned short version);</code></dt>
+      <dd>Sets the version number of the schema, MUST be run in the context of
+      a <a>transaction</a>. The <code>version</code> MUST NOT be set to
+      <code>0</code>, otherwise <a>InvalidSchemaError</a> will be raised.</dd>
+      <dt><code>IExecutionContext
+      <dfn data-dfn-for="ISchemaQueryProvider">setForeignKeyCheck</dfn>(boolean value);</code></dt>
+      <dd>Enables or disables foreign key constraint enforcement within the
+      database that current connection is associated with. The change will be
+      effective only after this function is called, and will not affect
+      previously executed queries. Attaching the returned execution context to
+      any transaction will make this call uneffective, i.e. this call MUST be
+      committed in an implicit transaction. Misuse of this function MAY result
+      in broken data integrity.</dd>
+      <dt><code>IDatabaseSchema
+      <dfn data-dfn-for="ISchemaQueryProvider">schema</dfn>();</code></dt>
+      <dd>Returns an <a>IDatabaseSchema</a> object for crafting data
+      manipulation queries.</dd>
+      <dt><code>ITableBuilder
+      <dfn data-dfn-for="ISchemaQueryProvider">createTable</dfn>(DOMString tableName);</code></dt>
+      <dd>Returns a <a href="#table-builder">table builder</a> for creating a
+      new table.</dd>
+      <dt><code>ITableChanger
+      <dfn data-dfn-for="ISchemaQueryProvider">alterTable</dfn>(DOMString tableName);</code></dt>
+      <dd>Returns a <a href="#table-changer">table changer</a> for altering an
+      existing table. The table referred by <code>tableName</code> MUST already
+      exist in the database, otherwise a <a>DataError</a> will be raised.</dd>
+      <dt><code>IExecutionContext
+      <dfn data-dfn-for="ISchemaQueryProvider">dropTable</dfn>(DOMString tableName);</code></dt>
+      <dd>Removes a table and all its rows from database. The table referred by
+      <code>name</code> MUST already exist in the database, otherwise a
+      <a>DataError</a> will be raised.</dd>
     </dl>
   </section>
 
   <section>
-    <h2>Column Specifications</h2>
-    <p>The following WebIDL defines column specification dictionary type:</p>
+    <h2>Database Schema</h2>
+    <p><dfn>IDatabaseSchema</dfn> presents a database.</p>
     <pre class="idl">
-      dictionary ColumnSpec {
-        DOMString name;
-        ColumnType type;
-        boolean notNull = false;
+      interface IDatabaseSchema {
+        readonly attribute DOMString name;
+        readonly attribute unsigned short version;
+        ITable table(DOMString tableName);
       };
     </pre>
-    <dl class="dictionary-members">
-      <dt><code>name</code></dt>
-      <dd>Name of the column, MUST be unique within the containing table.</dd>
-      <dt><code>type</code></dt>
-      <dd>Associated column type of the column.</dd>
-      <dt><code>notNull</code></dt>
-      <dd>When specified as <code>true</code>, the column is <a>NOT NULL</a>.
-      </dd>
+    <dl class="attributes">
+      <dt><code>DOMString
+      <dfn data-dfn-for="IDatabaseSchema">name</dfn></code></dt>
+      <dd>Name of the database.</dd>
+      <dt><code>unsigned short
+      <dfn data-dfn-for="IDatabaseSchema">version</dfn></code></dt>
+      <dd>Version of the database schema.</dd>
     </dl>
-    <p><dfn>NOT NULL</dfn> means the column MUST NOT have a value of
-    <code>undefined</code> or <code>null</code>.</p>
-    <p>A column has a <dfn>canonical name</dfn>, which is represented as
-    <code>&lt;containing table name&gt;.&lt;column name&gt;</code>. One can
-    <dfn>refer</dfn> to a column by its name, if the referral is happened
-    within the table scope; or by its <a>canonical name</a> from anywhere
-    within the database.</p>
+    <dl class="methods">
+      <dt><code>ITable
+      <dfn data-dfn-for="IDatabaseSchema">table</dfn>(DOMString tableName);</code></dt>
+      <dd>Returns a read-only object that implements <a>ITable</a> interface,
+      whose members are <a>IColumn</a> objects representing columns in the
+      specified table. The table referred by <code>tableName</code> MUST
+      already exist in the database, otherwise a <a>DataError</a> will be
+      raised.</dd>
+    </dl>
+  </section>
+
+  <section>
+    <h2>Table Builder</h2>
+    <p><dfn>ITableBuilder</dfn> is used to describe the new table that will be
+    created, and MUST be used within the context of a <a>transaction</a>.</p>
+    <pre class="idl">
+      interface ITableBuilder : IExecutionContext {
+        ITableBuilder column(DOMString name, ColumnType type, optional boolean notNull = false);
+        ITableBuilder primaryKey(PrimaryKeyDefinition primaryKey);
+        ITableBuilder foreignKey(ForeignKeySpec foreignKey);
+        ITableBuilder index(DOMString name, IndexedColumnDefinition columns);
+        ITableBuilder index(IndexSpec spec);
+      };
+    </pre>
+    <p>All methods returns the same <a>ITableBuilder</a> object that
+    they were called from to make cascade builder pattern possible. If any of
+    the rule described in the following table were violated, an
+    <a>InvalidSchemaError</a> will be thrown. All methods can be called
+    multiple times except <code>primaryKey</code>.</p>
+    <dl class="methods">
+      <dt><code>ITableBuilder
+      <dfn data-dfn-for="ITableBuilder">column</dfn>(DOMString
+      name, ColumnType type, optional boolean notNull = false);</code></dt>
+      <dd>Adds a column to table. <code>name</code> MUST be unique within the
+      containing table. <dfn>NOT NULL</dfn> means the column MUST NOT have a
+      value of <code>undefined</code> or <code>null</code>. When
+      <code>notNull</code> is set to <code>true</code>, the column is treated as
+      <a>NOT NULL</a>.</dd>
+      <dt><code>ITableBuilder
+      <dfn data-dfn-for="ITableBuilder">primaryKey</dfn>(PrimaryKeyDefinition
+      primaryKey);</code></dt>
+      <dd>Adds a primary key to table. This method MUST NOT be called multiple
+      times.</dd>
+      <dt><code>ITableBuilder
+      <dfn data-dfn-for="ITableBuilder">foreignKey</dfn>(ForeignKeySpec
+      foreignKey);</code></dt>
+      <dd>Adds a foreign key to table.</dd>
+      <dt><code>ITableBuilder
+      <dfn data-dfn-for="ITableBuilder">index</dfn>(DOMString name,
+      IndexedColumnDefinition columns);</code></dt>
+      <dd>Adds an index to table. The <code>name</code> is the name of the
+      index, and it MUST be unique within the containing table.</dd>
+      <dt><code>ITableBuilder index(IndexSpec spec)</code></dt>
+      <dd>Adds an index to table, overloading form that provides finer control
+      over the index itself.</dd>
+    </dl>
   </section>
 
   <section>
     <h2>Index Specifications</h2>
-    <p>The following WebIDL defines index specification dictionary type:</p>
+    <p>Two major index specification styles are supported. The most complete
+    one is dictionary type <dfn>IndexedSpec</dfn>.</p>
     <pre class="idl">
       typedef (DOMString or DOMString[] or IndexedColumnSpec[]) IndexedColumnDefinition;
       dictionary IndexSpec {
@@ -446,7 +463,10 @@ navigator.db.open('hr').then(function(connection) {
         "btree",
 
         // Hash index.
-        "hash"
+        "hash",
+
+        // Full text search.
+        "fulltext"
       };
     </pre>
 
@@ -479,58 +499,6 @@ navigator.db.open('hr').then(function(connection) {
   </section>
 
   <section>
-    <h2>Constraint Specifications</h2>
-    <p>The following WebIDL defines constraint specification.</p>
-    <pre class="idl">
-      typedef (DOMString or DOMString[] or IndexedColumnSpec[] or PrimaryKeySpec) PrimaryKeyDefinition;
-      dictionary ConstraintSpec {
-        PrimaryKeyDefinition? primaryKey;
-        ForeignKeySpec? foreignKey;
-        UniqueSpec? unique;
-        (DOMString or DOMString[])? notNull;
-      };
-    </pre>
-    <dl class="dictionary-members">
-      <dt><code>primaryKey</code></dt>
-      <dd>(Optional) <a href="#primary-key-specification">Primary key
-      specification</a>.</dd>
-      <dt><code>foreignKey</code></dt>
-      <dd>(Optional) <a href="#foreign-key-specification">Foreign key
-      specification</a>.</dd>
-      <dt><code>unique</code></dt>
-      <dd>(Optional) <a href="#unique-index-specification">Unique index
-      specification</a>.</dd>
-      <dt><code>notNull</code></dt>
-      <dd>(Optional) Column(s) that are <a>NOT NULL</a>.</dd>
-    </dl>
-    <p>The name(s) specified in the notNull MUST <a>refer</a> to column(s)
-    of the containing table. When provided as <code>DOMString[]</code>, the
-    array MUST NOT be empty, and they MUST <a>refer</a> to different
-    columns.</p>
-  </section>
-
-  <section>
-    <h2>Unique Index Specification</h2>
-    <p>Unique index is a specialized index that disallows duplicated keys.
-    Its definition format is the same as index definition. If two or more
-    columns are defined as keys, the combination of the column values forms the
-    uniqueness.</p>
-    <pre class="idl">
-      dictionary UniqueSpec {
-        DOMString name;
-        IndexedColumnDefinition column;
-      };
-    </pre>
-    <dl class="dictionary-members">
-      <dt><code>name</code></dt>
-      <dd>Name of the index, MUST be unique within the containing table.</dd>
-      <dt><code>column</code></dt>
-      <dd>Same as the <code>column</code> in <a href="#index-specifications">
-      Index Specifications</a>.</dd>
-    </dl>
-  </section>
-
-  <section>
     <h2>Primary Key Specification</h2>
     <p>Primary key is a specialized unique index. Each table can have only one
     primary key. A primary key can be specified using unique index
@@ -538,21 +506,29 @@ navigator.db.open('hr').then(function(connection) {
     <pre class="idl">
       dictionary PrimaryKeySpec {
         DOMString name;
-        boolean autoIncrement;
+        IndexedColumnDefinition column;
+        boolean autoIncrement = false;
       };
+
+      typedef (IndexedColumnDefinition or PrimaryKeySpec) PrimaryKeyDefinition;
     </pre>
     <dl class="dictionary-members">
-      <dt><code>name</code></dt><dd>Column name of the primary key, MUST
-      <a>refer</a> to <a>indexable</a> column of the containing table.</dd>
+      <dt><code>name</code></dt><dd>Name of primary key. If not specified, it
+      will be named as <code>`PK_${tableName}`</code>.</dd>
+      <dt><code>column</code></dt><dd>Columns that consists primary key, MUST
+      <a>refer</a> to <a>indexable</a> columns of the containing table.</dd>
       <dt><code>autoIncrement</code></dt><dd>Create auto-increment
-      primary key.</dd>
+      primary key. When this is set to <code>true</code>, there MUST be only
+      one column in the <code>column</code> field with <code>numeric</code>
+      column type.</dd>
     </dl>
     <p>When the autoIncrement field is specified, the specified column MUST be
     of type <code>Number</code>. An auto-increment key will start from zero.
     When a new row is inserted into the table, the key will increase by one and
     assigned to that row regardless the original key value given to the
     row.</p>
-    <p class="note">Unlike SQL, primary key does not have name.</p>
+    <p class="note">Unlike SQL, primary key MUST have name. Unnamed primary key
+    will be automatically given a name.</p>
   </section>
 
   <section>
@@ -575,7 +551,7 @@ navigator.db.open('hr').then(function(connection) {
       <dd>Referring column name, MUST <a>refer</a> to an <a>indexable</a>
       column of the containing table.</dd>
       <dt><code>remote</code></dt>
-      <dd>Referred column <a>canonical name</a>, MUST <a>refer</a> to an
+      <dd>Referred column in its <a>full name</a>, MUST <a>refer</a> to an
       <a>indexable</a> column.</dd>
       <dt><code>action</code></dt>
       <dd>(Optional) Foreign key action, default to <code>restrict</code>.</dd>
@@ -615,131 +591,6 @@ navigator.db.open('hr').then(function(connection) {
     </pre>
   </section>
 
-</section>
-
-<section>
-  <h2>Schema Query</h2>
-  <p>A database instance is created using schema queries. The associated schema
-  of the database can also be altered using schema queries. Schema queries are
-  run in the context of <a>transaction</a> and can be executed any time during
-  the life time of the database.</p>
-
-  <section>
-    <h2>Database-Level Schema Query</h2>
-    <p>The <code>ISchemaQueryProvider</code> is the interface of manipulating
-    database-level schema:</p>
-    <pre class="idl">
-      interface ISchemaQueryProvider {
-        IExecutionContext exportSchema();
-        IExecutionContext create(Object schema);
-        IExecutionContext setVersion(unsigned short version);
-        IExecutionContext setForeignKeyCheck(boolean value);
-        IDatabaseSchema schema();
-        ITableBuilder createTable();
-        ITableChanger alterTable();
-        IExecutionContext dropTable(DOMString name);
-      };
-    </pre>
-    <dl class="methods">
-      <dt><code>IExecutionContext exportSchema();</code></dt>
-      <dd>Export schema object, MUST be run in the context of a
-      <a>transaction</a>.</dd>
-      <dt><code>IExecutionContext create(Object schema);</code></dt>
-      <dd>Create database schema from provided schema object, MUST be run in
-      the context of a <a>transaction</a>. The schema object MUST conform to
-      the format defined in <a href="#schema-definition-json-format">
-      Schema Definition JSON Format</a>. Any error in the schema will result in
-      transaction failure with <a>InvalidSchemaError</a>.</dd>
-      <dt><code>IExecutionContext setVersion(unsigned short version);</code>
-      </dt>
-      <dd>Sets the version number of the schema, MUST be run in the context of
-      a <a>transaction</a>.</dd>
-      <dt><code>IExecutionContext setForeignKeyCheck(boolean value);</code></dt>
-      <dd>Enables or disables foreign key constraint enforcement within the
-      transaction that the execution context returned by this function is in.
-      Misuse of this function MAY cause broken data integrity.
-      </dd>
-      <dt><code>IDatabaseSchema schema();</code></dt>
-      <dd>Returns an <code>IDatabaseSchema</code> object for crafting data
-      manipulation queries.</dd>
-      <dt><code>ITableBuilder createTable();</code></dt>
-      <dd>Returns a <a href="#table-builder">table builder</a> for creating a
-      new table.</dd>
-      <dt><code>ITableChanger alterTable(string tableName);</code></dt>
-      <dd>Returns a <a href="#table-changer">table changer</a> for altering an
-      existing table. The table referred by <code>tableName</code> MUST already
-      exist in the database, otherwise a <a>DataError</a> will be raised.</dd>
-      <dt><code>IExecutionContext dropTable(DOMString name);</code></dt>
-      <dd>Removes a table and all its rows from database. The table referred by 
-      <code>name</code> MUST already exist in the database, otherwise a
-      <a>DataError</a> will be raised.</dd>
-    </dl>
-  </section>
-  <section>
-    <h2>Database Schema</h2>
-    <p>Database schema obtained from <code>ISchemaQueryProvider.schema()</code>
-    provides <code>IDatabaseSchema</code> interface.</p>
-    <pre class="idl">
-      interface IDatabaseSchema {
-        readonly attribute DOMString name;
-        readonly attribute unsigned short version;
-        ITable table(DOMString tableName);
-      };
-    </pre>
-    <dl class="attributes">
-      <dt><code>DOMString name</code></dt>
-      <dd>Name of the database.</dd>
-      <dt><code>unsigned short version</code></dt>
-      <dd>Version of the database schema.</dd>
-    </dl>
-    <dl class="methods">
-      <dt><code>ITable table(DOMString tableName);</code></dt>
-      <dd>Returns a read-only object that implements <a>ITable</a> interface,
-      whose members are <a>IColumn</a> objects representing columns in the
-      specified table. The table referred by <code>tableName</code> MUST
-      already exist in the database, otherwise a <a>DataError</a> will be
-      raised.</dd>
-    </dl>
-  </section>
-
-  <section>
-    <h2>Table Builder</h2>
-    <p>Table builder is used to describe the new table that will be created,
-    and MUST be used within the context of a <a>transaction</a>.</p>
-    <pre class="idl">
-      interface ITableBuilder : IExecutionContext {
-        ITableBuilder column(DOMString name, ColumnType type, optional boolean notNull = false);
-        ITableBuilder primaryKey(PrimaryKeyDefinition primaryKey);
-        ITableBuilder foreignKey(ForeignKeySpec foreignKey);
-        ITableBuilder unique(DOMString name, IndexedColumnDefinition columns);
-        ITableBuilder index(DOMString name, IndexedColumnDefinition columns);
-      };
-    </pre>
-    <p>All methods returns the same <code>ITableBuilder</code> object that
-    they were called from to make cascade builder pattern possible. If any of
-    the rule described in the following table were violated, an
-    <a>InvalidSchemaError</a> will be thrown. All methods can be called
-    multiple times except <code>primaryKey</code>.</p>
-    <dl class="methods">
-      <dt><code>ITableBuilder column(DOMString name, ColumnType type, optional boolean notNull = false);</code></dt>
-      <dd>Adds a column to table. <code>name</code> MUST be unique within the
-      containing table.</dd>
-      <dt><code>ITableBuilder primaryKey(PrimaryKeyDefinition primaryKey);</code></dt>
-      <dd>Adds a primary key to table. This method MUST NOT be called multiple
-      times.</dd>
-      <dt><code>ITableBuilder foreignKey(ForeignKeySpec foreignKey);</code></dt>
-      <dd>Adds a foreign key to table.</dd>
-      <dt><code>ITableBuilder unique(DOMString name, IndexedColumnDefinition columns);
-</code></dt>
-      <dd>Adds an unique index to table. The <code>name</code> is the name of
-      the index, and it MUST be unique within the containing table.</dd>
-      <dt><code>ITableBuilder index(DOMString name, IndexedColumnDefinition columns);
-</code></dt>
-      <dd>Adds an index to table. The <code>name</code> is the name of the
-      index, and it MUST be unique within the containing table.</dd>
-    </dl>
-  </section>
-
   <section>
     <h2>Table Changer</h2>
     <p>Table changer is used to change the schema of an existing table, and
@@ -752,9 +603,7 @@ navigator.db.open('hr').then(function(connection) {
         ITableChanger addColumn(DOMString name, ColumnType type, optional boolean notNull = false, optional ValueType defaultValue = null);
         ITableChanger dropColumn(DOMString name);
         ITableChanger addPrimaryKey(PrimaryKeyDefinition primaryKey);
-        ITableChanger dropPrimaryKey();
         ITableChanger addForeignKey(ForeignKeySpec foreignKey);
-        ITableChanger addUnique(DOMString name, IndexedColumnDefinition columns);
         ITableChanger addIndex(DOMString name, IndexedColumnDefinition columns);
         ITableChanger dropConstraintOrIndex(DOMString name);
         IColumnChanger setColumn(DOMString name);
@@ -790,9 +639,6 @@ navigator.db.open('hr').then(function(connection) {
       key, this method will do nothing.</dd>
       <dt><code>ITableChanger addForeignKey(ForeignKeySpec foreignKey);</code></dt>
       <dd>Adds a foreign key to the table.</dd>
-      <dt><code>ITableChanger addUnique(DOMString name, IndexedColumnDefinition columns);</code></dt>
-      <dd>Adds an unique index to the table. The <code>name</code> is the name
-      of the unique index and MUST be unique within the containing table.</dd>
       <dt><code>ITableChanger addIndex(DOMString name, IndexedColumnDefinition columns);</code></dt>
       <dd>Adds an index to the table. The <code>name</code> is the name
       of the index and MUST be unique within the containing table.</dd>
@@ -842,7 +688,6 @@ var q2 = db.createTable('Emp')
            .column('deptId', 'string', true)
            .column('title', 'string')
            .primaryKey([{'name': 'id', 'order': 'asc'}])
-           .unique(['name'])
            .index('idx_Desc', [{'name': 'desc', 'order': 'asc'}])
            .foreignKey({
              'name': 'fk_DeptId',
@@ -893,19 +738,19 @@ if (version < 2) {
 <section>
   <h2>Overview</h2>
   <p>A database's origin is the same as the origin of the document or worker.
-  Each origin has an associated set of database.</p>
+  Each origin has an associated set of databases.</p>
 
   <p class="note">The database origin is not affected by changes to
   <code>document.domain</code>.</p>
 
   <p>Every database has a predefined layout of the data structures persisted,
-  which is referred as <a href="#schema">schema</a>. The <em>database name</em>
+  which is called a <a href="#schema">schema</a>. The <em>database name</em>
   specified in schema identifies the database within a specific origin.
   The name MUST satisfy the <a href="#naming-rules">Naming Rules</a>, and stay
   constant for the lifetime of the database. Each database also has a version
   number for reference only.</p>
 
-  <p>Databases has a <em>delete pending</em> flag which is used during
+  <p>Databases have a <em>delete pending</em> flag which is used during
   deletion. When a database is requested to be deleted the flag is set to true
   and all attempts at opening the database are stalled until database is
   deleted.</p>
@@ -918,15 +763,14 @@ if (version < 2) {
 
   <p>When a connection is initially created it is in opened state. The
   connection can be closed through several means. If the connection is garbage
-  collected or execution context where the connection is created is destroyed
+  collected or the execution context where the connection was created is destroyed
   (for example due to the user navigating away from that page), the connection
-  is closed. The connection can also be closed explicitly via API. When the
-  connection is closed the closePending flag is always set to true if it
-  hasn't already been. All uncommitted transactions will be canceled if their
-  associated connections are marked close pending.</p>
+  is closed. The connection can also be closed explicitly via the API. When the
+  connection is closed the closePending flag is always set to true regardless of its previous state.
+  All uncommitted transactions associated with a connection that is marked close pending will be canceled.</p>
 
   <p>Users can create observers associated with a given database. Each
-  observer consists a select query. When the results of that select query
+  observer consists of a select query. When the results of that select query
   change, the observer will be triggered. The change MAY come from other
   connections. When the connection associated with a registered observer is
   marked as close pending, the observer MUST be unregistered automatically.</p>
@@ -970,9 +814,6 @@ if (version < 2) {
     the database does not exist, the returned promise will resolve immediately.
     If the database is marked delete pending, the promise will resolve
     immediately.</dd>
-    <dt><code>IBindableValue bind(unsigned short index);</code></dt>
-    <dd>Provides a bind-able value that can be used to construct parameterized
-    queries.</dd>
   </dl>
 
   <p>Open database options are specified as a dictionary object.</p>
@@ -1023,7 +864,7 @@ if (version < 2) {
   <pre class="idl">
     interface IDatabaseConnection {
       ITransaction createTransaction(optional TransactionMode mode = "readonly");
-      Promise< void > close();
+      Promise< Error > close();
       IBindableValue bind(unsigned short index);
     };
   </pre>
@@ -1031,11 +872,11 @@ if (version < 2) {
     <dt><code>ITransaction createTransaction(optional TransactionMode mode = "readonly");</code></dt>
     <dd>Creates an explicit transaction. If the connection is marked as close
     pending, throws <a>BlockingError</a>.</dd>
-    <dt><code>Promise< void > close();</code></dt>
-    <dd>Closes the connection. The promise will resolve if and only if all
-    scheduled transactions are finished. The connection will be marked as
+    <dt><code>Promise< Error > close();</code></dt>
+    <dd>Closes the connection. The connection will be marked as
     close pending immediately after this call, and no more new transaction
-    can be created within this connection.</dd>
+    can be created within this connection. It is a best efforts call and
+    may resolve with error, or NULL if everything succeeded.</dd>
     <dt><code>IBindableValue bind(unsigned short index);</code></dt>
     <dd>Returns a bindable value that can be used in parameterized query.</dd>
   </dl>
@@ -1074,7 +915,7 @@ if (version < 2) {
   The operations inside a transaction are referred as queries. A
   <dfn>query</dfn> means an interaction with the database: data retrieval,
   data persistence, or change of schema.</p>
-  
+
   <p>Transaction execution behavior is modeled as the following:</p>
 
   <pre class="idl">
@@ -1128,7 +969,11 @@ if (version < 2) {
   </pre>
   <dl class="methods">
     <dt><code>Promise< void > begin();</code></dt>
-    <dd>Starts <em>sequence mode</em> execution.</dd>
+    <dd>Starts <em>sequence mode</em> execution. The transaction will be kept
+    alive until <code>commit()</code> or <code>rollback()</code> of this
+    transaction is triggered, or the transaction is timed out by implementation
+    (which the implementation MUST throw <a>TimoutError</a> and reject any
+    further calls on this transaction object).</dd>
     <dt><code>Promise< TransactionResults > exec(IExecutionContext[] queries);</code></dt>
     <dd>Starts <em>batch mode</em> execution and auto-commit.</dd>
     <dt><code>Promise< TransactionResults > attach(IExecutionContext query);</code></dt>
@@ -1208,6 +1053,42 @@ if (version < 2) {
       otherwise, reject promise with <a>IntegrityError</a>.</li>
     </ol>
   </section>
+
+  <section>
+    <h2>Transaction Snapshots</h2>
+    <p>A <dfn>snapshot</dfn> of the database is the contents of all rows in the 
+    database at the time when the snapshot is taken. At any given time, query
+    engine MUST guarantee only one connection can create snapshot on a given 
+    scope. Conceptually, each transaction operates on its own snapshot of
+    database, and the snapshot is taken at the beginning of transaction. The
+    beginning of transaction is determined by either calling
+    <a>ITransaction.begin</a> or <a>ITransaction.exec</a> for explicit
+    transactions, or <a>IExecutionContext.commit</a> for implicit
+    transactions.</p>
+
+    <p>All changes performed by queries inside the transaction will only be
+    effective on that snapshot. The end of transaction is determined by
+    resolution or rejection of the <code>Promise</code> returned from
+    <a>ITransaction.exec</a> or <a>IExecutionContext.commit</a>. If the
+    transaction is committed, i.e. resolution of <code>Promise</code>, the
+    database MUST be updated to that snapshot. If the transaction is rolled
+    back, i.e. rejection of <code>Promise</code>, the snapshot is discarded.</p>
+
+    <p>The final data persisted on database is determined by the last
+    transaction snapshot committed by the query engine. The transaction
+    snapshots MAY come from other sessions other than current session.
+    The query engine MUST guarantee only one snapshot can be persisted at a
+    given time if there were multiple snapshots on a given scope. If there were
+    multiple snapshots on a given scope, and one of them is persisted while
+    the others are open, all the opened snapshots will be invalidated and their
+    associated transactions must be rolled back.</p>
+
+    <p class="note">It's up to the implementation to determine whether a table
+    scope or a row scope to be used in transaction snapshots. The minimum
+    requirement for this specification is to support table scope, i.e.
+    different transactions MUST be able to operate on different tables
+    simultaneously.</p>
+  </section>
 </section>
 
 <section>
@@ -1253,7 +1134,8 @@ if (version < 2) {
   <h2>Data Manipulation</h2>
   <p>Data manipulation of a database is carried out through transactions and
   the queries within. In this section, the APIs for constructing queries will
-  be detailed.</p>
+  be detailed. Due to the complexity, <a href="#data-selection">
+  data selection</a> will be discussed in its own section.</p>
 
 <section>
   <h2>Schema Representation</h2>
@@ -1262,42 +1144,124 @@ if (version < 2) {
   schema. The schema objects for data manipulation are acquired through
   <a>IDatabaseSchema</a> objects obtained from
   <a>ISchemaQueryProvider</a><code>.schema()</code> offered by
-  <a>DatabaseConnection</a>. The schema table is modeled as following:</p>
+  <a>DatabaseConnection</a>.</p>
 
+  <section>
+    <h2>Table Representation</h2>
+    <p>The table objects returned by <a>IDatabaseSchema</a><code>.table()</code>
+    implements the <a>ITable</a> interface. These table objects MUST have
+    properties with same names as columns of that table, and the properties are
+    <a>Column</a> objects, see <a href="#column-representation">column
+    representation</a> for more details.</p>
+
+    <pre class="idl">
+      interface ITable {
+        ITable as(DOMString alias);
+        DOMString getName();
+        DOMString getAlias();
+      };
+    </pre>
+    <dl class="methods">
+      <dt><code>ITable as(DOMString alias)</code></dt>
+      <dd>Creates an alias for the table, this is useful for self-join.</dd>
+      <dt><code>DOMString getName()</code></dt>
+      <dd>Returns table name.</dd>
+      <dt><code>DOMString getAlias()</code></dt>
+      <dd>Returns table alias. If no alias is defined for this table schema
+      object, <code>null</code> is returned.</dd>
+    </dl>
+
+    <p class="note">It is a delibrate design to use <code>getName()</code>
+    and <code>getAlias()</code> in <code>ITable</code>, because the string-based
+    properties of <code>ITable</code> are <code>IColumn</code> objects. In
+    order to create less name conflicts, the get functions are used.</p>
+  </section>
+
+  <section>
+    <h2>Column Representation</h2>
+    <p>Column representation objects have a base interface as defined in the
+    following:</p>
+    <pre class="idl">
+      interface IColumn {
+        readonly attribute DOMString name;
+        readonly attribute DOMString table;
+        readonly attribute ColumnType type;
+        readonly attribute DOMString fullName;
+        readonly attribute boolean nullable;
+        IColumn as(DOMString alias);
+      };
+    </pre>
+    <dl class="attributes">
+      <dt><code>name</code></dt>
+      <dd>The name of the column.</dd>
+      <dt><code>table</code></dt>
+      <dd>The name of the table containing this column.</dd>
+      <dt><code>type</code></dt>
+      <dd>Data type of the column.</dd>
+      <dt><code>fullName</code></dt>
+      <dd>The <a>full name</a> of the column. When the containing table has
+      alias, it will be <code>`${ITable#getAlias}.${IColumn.name}`</code>,
+      otherwise <code>`${ITable#getName}.${IColumn.name}`</code>.</dd>
+      <dt><code>nullable</code></dt>
+      <dd>When <code>false</code>, the column is <a>NOT NULL</a></dd>
+    </dl>
+    <dl class="methods">
+      <dt><code>IColumn as(DOMString alias);</code></dt>
+      <dd>Creates an alias for the column. The alias will be honored in select
+      queries only.</dd>
+    </dl>
+
+    <p>The objects also provide interfaces for creating predicates, therefore
+    they are defined by the <a>Column</a> interface.</p>
+    <pre class="idl">
+      interface Column : IColumn {
+      };
+      Column implements IComparisonPredicate;
+      Column implements ITruthPredicate;
+    </pre>
+  </section>
+</section>
+
+<section>
+  <h2>Bindable Values</h2>
+  <p>Bindable values provides flexibilities for determining the actual values
+  to be used in queries at run-time. They serve as placeholders of values.
+  Bindable values are typed as following:</p>
   <pre class="idl">
-    interface ITable {
-      ITable as(DOMString alias);
+    interface IBindableValue {
+      readonly attribute any value;
     };
   </pre>
-  <dl class="methods">
-    <dt><code>ITable as(DOMString alias)</code><dt>
-    <dd>Creates an alias for the table, this is useful for self-join.</dd>
-  </dl>
+  <p>Type check of bound value is performed by query engine before executing
+  the query. To assign value to <a>IBindableValue</a>, caller MUST use
+  <a>IQuery.bind</a> prior to query execution. A query with any unassigned
+  <a>IBindableValue</a>, or any assigned <a>IBindableValue</a> with mismatched
+  type, MUST be rejected with <a>BindingError</a> during its execution.</p>
 
-  <p>The <a>ITable</a> objects MUST have attributes that are named as columns
-  of that table, and the attributes are <a>IColumn</a> objects.</a>
+  <p>The following example demonstrate how to perform parameterized query using
+  data binding:</p>
+  <pre class="example highlight">
+var db;
 
-  <pre class="idl">
-    interface IColumn : IPredicate {
-      readonly attribute DOMString name;
-      readonly attribute ColumnType type;
-      readonly attribute boolean nullable;
-      IColumn as(DOMString alias);
-    };
+var query;
+
+function init() {
+  var dept = db.schema().table('Department');
+
+  var emp = db.schema().table('Employee');
+  query = db.select(emp.name.as('ename'), dept.name)
+            .from(dept, emp)
+            .where(dept.id.eq(emp.deptId).and(
+                   emp.id.eq(db.bind(0))));
+}
+
+function updateModel(employeeId) {
+  query.bind(employeeId).commit().then(function(rows) {
+    console.log(rows[0]['ename'], rows[0]['Department.name']);
+  });
+}
+
   </pre>
-  <dl class="attributes">
-    <dt><code>name</code></dt>
-    <dd>The <a>canonical name</a> of the column.</dd>
-    <dt><code>type</code></dt>
-    <dd>Data type of the column.</dd>
-    <dt><code>nullable</code></dt>
-    <dd>When <code>false</code>, the column is <a>NOT NULL</a></dd>
-  </dl>
-  <dl class="methods">
-    <dt><code>IColumn as(DOMString alias);</code></dt>
-    <dd>Creates an alias for the column. The alias will be honored in select
-    queries only.</dd>
-  </dl>
 </section>
 
 <section>
@@ -1316,8 +1280,11 @@ if (version < 2) {
   </pre>
   <dl class="methods">
     <dt><code>ISelectQuery select(IColumn... columns);</code></dt>
-    <dd>Creates a <a href="#select-query">select query</a> to retrieve data
-    from database.</dd>
+    <dd>Creates a <a href="#data-selection">select query</a> to retrieve data
+    from database. The parameters of this function forms the
+    <dfn>projection list</dfn> of the generated select query. If no column
+    is given, then the projection list will contain all columns in the
+    <a href="#select-scope-algorithm">select scope</a>.</dd>
     <dt><code>IInsertQuery insert();</code></dt>
     <dd>Creates an <a href="#insert-query">insert query</a> to insert data into
     database.</dd>
@@ -1350,7 +1317,12 @@ if (version < 2) {
     queries.</dd>
     <dt><code>IQuery bind(any... values);</code></dt>
     <dd>Creates a clone of this query, assigns values to <a>IBindableValue</a>
-    inside the cloned query, and returns the cloned query for execution.</a>
+    inside the cloned query, and returns the cloned query for execution.
+    The order of values provided in the parameter of this function corresponds
+    to the binding index provided in <a>IDatabaseConnection.bind</a>, i.e.
+    the first parameter will be assigned to index 0, the second parameter to
+    index 1, and so on. If the values provided cannot be assigned (e.g.
+    obvious type mismatch), a <a>BindingError</a> MAY be thrown.</dd>
     <dt><code>IQuery clone();</code></dt>
     <dd>Creates a clone of this query with a new execution context. The
     returned query type will be the same as the original, for example,
@@ -1374,7 +1346,7 @@ if (version < 2) {
   <pre class="idl">
     interface IInsertQuery : IQuery {
       IInsertQuery into(ITable table);
-      IInsertQuery values((object or object[] or IBindableValue or IBindableValue[]) rows);
+      IInsertQuery values((object or object[] or IBindableValue) rows);
     };
   </pre>
   <dl class="methods">
@@ -1382,16 +1354,16 @@ if (version < 2) {
     <dd>Specifies the target table to insert rows into. For
     <code>insertOrReplace</code>, the <code>table</code> MUST have a primary
     key, otherwise <a>IntegrityError</a> will be thrown.</dd>
-    <dt><code>IInsertQuery values((object or object[] or IBindableValue or IBindableValue[]) rows);</code></dt>
+    <dt><code>IInsertQuery values((object or object[] or IBindableValue) rows);</code></dt>
     <dd>Supplies the row(s) to be inserted. When given an <code>object</code>
     as parameter, or the bindable value resolved as an object, the object will
     act as a single row; otherwise, each element in the given array is treated
     as an individual row.</dd>
   </dl>
   <p>All methods of <a>IInsertQuery</a> returns the calling
-  <code>IInsertQuery</code> object for cascade builder pattern. The methods can
-  only be called once per query, otherwise <a>SyntaxError</a> MUST be raised.
-  </p>
+  <code>IInsertQuery</code> object for cascade builder pattern. The methods MUST
+  be called once and only once per query before its execution, otherwise
+  <a>SyntaxError</a> MUST be raised.</p>
 
   <p>If an <a>IInsertQuery</a> object is created from <code>insert</code>,
   and a row with duplicated primary key is given, <a>ConstraintError</a>
@@ -1415,8 +1387,10 @@ if (version < 2) {
 <section>
   <h2>Delete Query</h2>
   <p>Delete queries are used to delete rows in a table. The rows to be deleted
-  are specified via <a href="#search-condition">Search Condition</a>. The delete
-  query implements the following interface:</p>
+  are specified via <a href="#search-condition">Search Condition</a>. If the
+  search condition is not provided, all rows in the table specified by
+  <code>from()</code> will be deleted. The delete query implements the following
+  interface:</p>
 
   <pre class="idl">
     interface IDeleteQuery : IQuery {
@@ -1426,7 +1400,8 @@ if (version < 2) {
   </pre>
   <dl class="methods">
     <dt><code>IDeleteQuery from(ITable table);</code></dt>
-    <dd>Specifies the target table to delete rows from.</dd>
+    <dd>Specifies the target table to delete rows from. This method MUST be
+    called before execution, or <a>SyntaxError</a> will be thrown.</dd>
     <dt><code>IDeleteQuery where(ILogicalPredicate searchCondition);</code></dt>
     <dd>Specifies the search condition for filtering rows.</dd>
   </dl>
@@ -1444,20 +1419,21 @@ if (version < 2) {
 <section>
   <h2>Search Condition</h2>
   <p>Search condition specifies how the query engine should search the rows for
-  query. The condition will be evaluated for rows in the database, and returns
-  <code>true</code> if the target row is a match or <code>false</code>
-  otherwise. The query engine MAY apply speed up techniques to accelerate the
-  evaluation, for example, using indices.</p>
-  <p>Search conditions are constructed via <dfn>predicate</dfn>s, which will
-  be evaluated to either <code>true</code> or <code>false</code>. There are
-  three types of predicates defined in this document: comparison, truth, and
-  logical. Comparison and truth predicates are obtained from <a>IColumn</a>
-  objects, and logical predicates are obtained from the comparison and truth
-  predicates. Complement of predicate is provided by the <code>not</code>
+  query. They are represented by logical predicates, will be evaluated for
+  rows in the database during query execution, and returns <code>true</code> if
+  the evaluated row is a match or <code>false</code> otherwise. Each
+  logical predicate implicitly carries a <a>scope</a>, which defines the tables
+  that the predicate shall be evaluated against. All rows in these tables will
+  be evaluated. The query engine MAY apply speed up techniques to accelerate
+  the evaluation, for example, using indices.</p>
+  <p>Logical predicates are obtained from either comparison, truth, or logical
+  predicates. Comparison and truth predicates are obtained from <a>IColumn</a>
+  objects. Complement of predicate is provided by the <code>not</code>
   function in <a>IDatabaseFunctionProvider</a>.</p>
   <p>The comparison or truth predicates can only compare the column type of
-  the column associated. If the provided value type is not the same as the
-  column type, a <a>TypeError</a> will be thrown.</p>
+  the column associated. An implicit <code>typeof</code> will be called against
+  the provided value to get the value type. If the provided value type is not
+  the same as the column type, a <a>TypeError</a> will be thrown.</p>
   <p class="note">
   This spec does not provide implicit type conversion. All types MUST be
   explicit.
@@ -1472,34 +1448,40 @@ if (version < 2) {
       typedef (IndexableValueType or IBindableValue) ComparableValueType;
 
       interface IComparisonPredicate {
-        ILogicalPredicate eq(ComparableValueType value);
-        ILogicalPredicate neq(ComparableValueType value);
-        ILogicalPredicate lt(ComparableValueType value);
-        ILogicalPredicate lte(ComparableValueType value);
-        ILogicalPredicate gt(ComparableValueType value);
-        ILogicalPredicate gte(ComparableValueType value);
+        ILogicalPredicate eq((ComparableValueType or IColumn) value);
+        ILogicalPredicate neq((ComparableValueType or IColumn) value);
+        ILogicalPredicate lt((ComparableValueType or IColumn) value);
+        ILogicalPredicate lte((ComparableValueType or IColumn) value);
+        ILogicalPredicate gt((ComparableValueType or IColumn) value);
+        ILogicalPredicate gte((ComparableValueType or IColumn) value);
       };
     </pre>
     <dl class="methods">
-      <dt><code>ILogicalPredicate eq(ComparableValueType value);</code></dt>
+      <dt><code>ILogicalPredicate eq:((ComparableValueType or IColumn) value);</code></dt>
       <dd>The associated column equals to value. Equality is evaluated using
       the rule of JavaScript <code>==</code> operator.</dd>
-      <dt><code>ILogicalPredicate neq(ComparableValueType value);</code></dt>
+      <dt><code>ILogicalPredicate neq((ComparableValueType or IColumn) value);</code></dt>
       <dd>The associated column does not equal to value. Inequality is evaluated
       using the rule of JavaScript <code>!=</code> operator.</dd>
-      <dt><code>ILogicalPredicate lt(ComparableValueType value);</code></dt>
+      <dt><code>ILogicalPredicate lt((ComparableValueType or IColumn) value);</code></dt>
       <dd>The associated column is smaller than value. Relation is evaluated
       using the rule of JavaScript <code>&lt;</code> operator.</dd>
-      <dt><code>ILogicalPredicate lte(ComparableValueType value);</code></dt>
+      <dt><code>ILogicalPredicate lte((ComparableValueType or IColumn) value);</code></dt>
       <dd>The associated column is smaller than or equals to value. Relation is
       evaluated using the rule of JavaScript <code>&lt;=</code> operator.</dd>
-      <dt><code>ILogicalPredicate gt(ComparableValueType value);</code></dt>
+      <dt><code>ILogicalPredicate gt((ComparableValueType or IColumn) value);</code></dt>
       <dd>The associated column is greater than value. Relation is evaluated
       using the rule of JavaScript <code>&gt;</code> operator.</dd>
-      <dt><code>ILogicalPredicate lt(ComparableValueType value);</code></dt>
+      <dt><code>ILogicalPredicate lt((ComparableValueType or IColumn) value);</code></dt>
       <dd>The associated column is greater than or equals to value. Relation is
       evaluated using the rule of JavaScript <code>&gt;=</code> operator.</dd>
     </dl>
+    <p>Giving <code>IColumn</code> as the parameter of
+    <a>IComparisonPredicate</a> creates implicit <a href="#inner-join">inner
+    join</a> syntax. The search condition given by this predicate MUST be
+    evaluated as if given in the form of <code>innerJoin</code>. If the given
+    <a>IColumn</a> is of different type other than the associated column of
+    <a>IComparisonPredicate</a>, a <a>TypeError</a> MUST be thrown.</p>
   </section>
 
   <section>
@@ -1508,7 +1490,7 @@ if (version < 2) {
     associated column or not. They are defined by the following interface:</p>
     <pre class="idl">
       interface ITruthPredicate {
-        ILogicalPredicate match((IBindableValue or RegExp) value);
+        ILogicalPredicate match((IBindableValue or RegExp or DOMString) value);
         ILogicalPredicate between(ComparableValueType lhs, ComparableValueType rhs);
         ILogicalPredicate in((ComparableValueType[] or IBindableValue) values);
         ILogicalPredicate isNull();
@@ -1516,8 +1498,11 @@ if (version < 2) {
       };
     </pre>
     <dl class="methods">
-      <dt><code>ILogicalPredicate match((IBindableValue or RegExp) value);</code></dt>
-      <dd>The associated column matches the regular expression provided.</dd>
+      <dt><code>ILogicalPredicate match((IBindableValue or RegExp or DOMString) value);</code></dt>
+      <dd>The associated column matches the regular expression or string
+      provided. When <code>value</code> is provided as string, and the column
+      is indexed using <code>fulltext</code> type, implementation MAY treat
+      this predicate as a hint to perform full text search.</dd>
       <dt><code>ILogicalPredicate between(ComparableValueType lhs, ComparableValueType rhs);</code></dt>
       <dd>The associated column is within the range between lhs and rhs. The
       relation is evaluated using the rule of JavaScript <code>&lt;=</code> and
@@ -1549,6 +1534,7 @@ if (version < 2) {
       interface ILogicalPredicate {
         ILogicalPredicate and(ILogicalPredicate... childPredicate);
         ILogicalPredicate or(ILogicalPredicate... childPredicate);
+        ILogicalPredicate clone();
       };
     </pre>
     <dl class="methods">
@@ -1560,90 +1546,457 @@ if (version < 2) {
       <dd>Logical <code>OR</code> of logical predicates. The returning logical
       predicate will evaluate to true if any of the predicates in its parameter
       is evaluated true.</dd>
+      <dt><code>ILogicalPredicate clone();</code></dt>
+      <dd>Clone the search condition, including the binding place holders.</dd>
     </dl>
 
     <p class="note">The <code>NOT</code> operation is provided by
     <code>IDatabaseFunctionProvider.not().</code></p>
+
+    <p>The <dfn>predicate scope</dfn> is the union of all tables involved for
+    creating the predicate. For example, <code>IColumn.eq()</code> creates an
+    <a>ILogicalPredicate</a>, and scope of that predicate is the table
+    associated with the creating <a>IColumn</a> object.</p>
   </section>
+
+  <section>
+    <h2>Complementing Predicates</h2>
+    <p>The predicates can be complemented using a global function
+    <code>not()</code>. The function is provided as following:</p>
+    <pre class="idl">
+      interface IDatabaseFunctionProvider : IAggregateFunction {
+        ILogicalPredicate not(ILogicalPredicate predicate);
+      };
+    </pre>
+    <dl class="methods">
+      <dt><code>ILogicalPredicate not(ILogicalPredicate predicate);</code></dt>
+      <dd>Complement the evaluation result of passed in predicate, i.e. returns
+      <code>false</code> if the predicate evaluated true, and vice versa.</dd>
+    </dl>
+  </section>
+
+  <section>
+    <h2>Subqueries</h2>
+    <p><a href="#data-selection">Select queries</a> that can be evaluated into
+    <a>IndexableValueType</a> or <a>IndexableValueType</a><code>[]</code> can
+    be used in predicates as <a>ComparableValueType</a> values. The evaluated
+    type MUST be identical as the type requested by predicate. The query
+    engine MUST evaluate these subqueries first and automatic bind the values
+    into the main query.</p>
+    <pre class="example highlight">
+var db;
+
+function getDepartmentsWithFounders() {
+  var dept = db.schema().table('Department');
+
+  var emp = db.schema().table('Employee');
+
+  return db.select(dept.name)
+           .from(dept)
+           .where(dept.id.in(
+               db.select(emp.deptId)
+                 .from(emp)
+                 .where(emp.id.lt(12))))
+           .commit();
+}
+
+    </pre>
+  </section>
+
 </section>
 
 <section>
-  <h2>Data Query</h2>
-  <pre class="idl">
-    interface ISelectQuery : IQuery {
-      ISelectQuery from(ITable... tables);
-      ISelectQuery where(ILogicalPredicate searchCondition);
-      ISelectQuery innerJoin(ITable table, Predicate onCondition);
-      ISelectQuery leftOuterJoin(ITable table, Predicate onCondition);
-      ISelectQuery limit((unsigned long or IBindableValue) numberOfRows);
-      ISelectQuery skip((unsigned long or IBindableValue) numberOfRows);
-      ISelectQuery orderBy(IColumn column, optional Order order);
-      ISelectQuery groupBy(IColumn... column);
-    };
-  </pre>
+  <h2>Update Query</h2>
+  <p>Update queries updates the value of a column in all rows that matches the
+  search condition. If the search condition is not provided, then the update
+  will be applied to all rows of the table.</p>
   <pre class="idl">
     interface IUpdateQuery : IQuery {
       IUpdateQuery set(IColumn column, ValueType value);
       IUpdateQuery where(ILogicalPredicate searchCondition);
     };
   </pre>
-  <section>
-    <h2>Aggregation Functions</h2>
-    <pre class="idl">
-      interface IAggregateFunction {
-        IColumn avg(IColumn col);
-        IColumn count(optional IColumn col = null);
-        IColumn geomean(IColumn col);
-        IColumn max(IColumn col);
-        IColumn min(IColumn col);
-        IColumn stddev(IColumn col);
-        IColumn sum(IColumn col);
-        IColumn var(IColumn col);
-      };
-    </pre>
-  </section>
+  <dl class="methods">
+    <dt><code>IUpdateQuery set(IColumn column, ValueType value);</code></dt>
+    <dd>Set the column to specified value. If the value type is not the same
+    as the column type, a <a>TypeError</a> will be thrown. If the updated value
+    will result in integrity check failure, a <a>ConstraintError</a> will be
+    thrown. This function can be called multiple times per query, but each
+    column can only be used once, otherwise a <a>SyntaxError</a> will be
+    thrown.</dd>
+    <dt><code>IUpdateQuery where(ILogicalPredicate searchCondition);</code></dt>
+    <dd>Specify the search condition of update. This function can only be called
+    once per query, otherwise <a>SyntaxError</a> will be thrown.</dd>
+  </dl>
+</section>
+
+
+</section>
+
+<section>
+  <h2>Data Selection</h2>
+  <p>Data selection is done via select queries, which select rows matching
+  search conditions or join conditions from database. If the search conditions
+  are not specified, <a href="#cartesian-product">Cartesian product</a> of all
+  rows from the tables specified by <code>from()</code> will be returned.</p>
+  <p>Scope of select queries MUST be evaluated using
+  <a href="#select-scope-algorithm">select scope algorithm</a> before
+  execution. The select queries implement the following interface:</p>
   <pre class="idl">
-    interface IDatabaseFunctionProvider : IAggregateFunction {
-      IColumn distinct(IColumn... col);
-      ILogicalPredicate not(IPredicate predicate);
+    interface ISelectQuery : IQuery {
+      ISelectQuery from(ITable... tables);
+      ISelectQuery where(ILogicalPredicate searchCondition);
+      ISelectQuery innerJoin(ITable table, ILogicalPredicate joinCondition);
+      ISelectQuery leftOuterJoin(ITable table, ILogicalPredicate joinCondition);
+      ISelectQuery limit((unsigned long or IBindableValue) numberOfRows);
+      ISelectQuery skip((unsigned long or IBindableValue) numberOfRows);
+      ISelectQuery orderBy(IColumn column, optional Order order);
+      ISelectQuery groupBy(IColumn... column);
+      ISelectQuery union(ISelectQuery... query);
+      ISelectQuery intersect(ISelectQuery... query);
+      ISelectQuery except(ISelectQuery... query);
     };
+  </pre>
+  <dl class="member">
+    <dt><code>ISelectQuery from(ITable... tables);</code></dt>
+    <dd>Specifies the scope of the select query. This function can only be
+    called once per query, otherwise <a>SyntaxError</a> will be thrown.</dd>
+    <dt><code>ISelectQuery where(ILogicalPredicate searchCondition);</code></dt>
+    <dd>Specifies search condition. This function can only be
+    called once per query, otherwise <a>SyntaxError</a> will be thrown.</dd>
+    <dt><code>ISelectQuery innerJoin(ITable table, ILogicalPredicate joinCondition);</code></dt>
+    <dd>Specifies explicit <a href="#inner-join">inner join</a>. This function
+    can be called multiple times per query.</dd>
+    <dt><code>ISelectQuery leftOuterJoin(ITable table, ILogicalPredicate joinCondition);</code></dt>
+    <dd>Specifies <a href="#left-outer-join">left outer join</a>. This function
+    can be called multiple times per query.</dd>
+    <dt><code>ISelectQuery limit((unsigned long or IBindableValue) numberOfRows);</code></dt>
+    <dd>Specifies maximum number of rows to return. If the number is
+    <code>0</code>, the query is effectively an no-op. This function can only
+    be called once per query, otherwise <a>SyntaxError</a> will be thrown.</dd>
+    <dt><code>ISelectQuery skip((unsigned long or IBindableValue) numberOfRows);</code></dt>
+    <dd>Specifies maximum number of rows to skip from returning. If the
+    number is greater than total number of rows filtered, an empty array will
+    be returned. This function can only be called once per query, otherwise 
+    <a>SyntaxError</a> will be thrown.</dd>
+    <dt><code>ISelectQuery orderBy(IColumn column, optional Order order);</code></dt>
+    <dd>Specify how to sort the returning row. This function can be called
+    multiple times per query. The invocation order of this function will affect
+    the results of sorting, , see
+    <a href="#sorting-algorithm">sorting algorithm</a>.</dd>
+    <dt><code>ISelectQuery groupBy(IColumn... column);</code></dt>
+    <dd>Specify how to group returning rows in aggregation, see
+    <a href="#aggregation">aggregation</a> for more details. This function can
+    only be called once per query, otherwise <a>SyntaxError</a> will be
+    thrown. Caller MUST provide one or more columns in the parameter, otherwise
+    <a>SyntaxError</a> will be thrown. If the same column is provided twice
+    in the parameters, it will be treated as provided only once.</dd>
+    <dt><code>ISelectQuery union(ISelectQuery... query);</code></dt>
+    <dd>Combine results of two or more select queries into a single result set
+    that includes all the rows that belong to all queries in the union. See
+    <a href="#union-projection">union projection</a> for details.</dd>
+    <dt><code>ISelectQuery intersect(ISelectQuery... query);</code></dt>
+    <dd>See <a href="intersect-and-except">intersect and except</a>.</dd>
+    <dt><code>ISelectQuery except(ISelectQuery... query);</code></dt>
+    <dd>See <a href="intersect-and-except">intersect and except</a>.</dd>
+  </dl>
+  <p class="note">
+    There is not a hard rule regarding the invocation order of
+    <a>ISelectQuery</a> member functions. However, it is recommended that the
+    functions are invoked in the order of their appearance order in the
+    interface for better readability.
+  </p>
+
+<section>
+  <h2>Cartesian Product</h2>
+  <p>The Cartesian product of two tables is calculated using the following
+  algorithm.</p>
+  <ol>
+    <li>Let T<sub>1</sub> and T<sub>2</sub> denote the tables involved in the
+      Cartesian product, and the target is to have
+      T<sub>1</sub> &times T<sub>2</sub>.</li>
+    <li>Let R<sub>1</sub> = [R<sub>11</sub>, R<sub>12</sub>, R<sub>13</sub>,
+      ..., R<sub>1M</sub>] denote the rows of T<sub>1</sub>.</li>
+    <li>Let R<sub>2</sub> = [R<sub>21</sub>, R<sub>22</sub>, R<sub>23</sub>,
+      ..., R<sub>2N</sub>] denote the rows of T<sub>2</sub>.</li>
+    <li>Cartesian product of T<sub>1</sub> and T<sub>2</sub> are performed in
+      two steps.</li>
+    <ol>
+      <li>Let R = R<sub>1</sub> &times; R<sub>2</sub>. This makes R looks like
+        [[R<sub>11</sub>, R<sub>21</sub>], [R<sub>11</sub>, R<sub>22</sub>],
+        ..., [R<sub>11</sub>, R<sub>2N</sub>], [R<sub>12</sub>,
+        R<sub>21</sub>], ..., [R<sub>1M</sub>, R<sub>1N</sub>]].</li>
+      <li>Flatten all pairs in R as a row, where T<sub>1</sub>'s columns are
+        expanded before T<sub>2</sub>'s columns. T<sub>1</sub>'s columns
+        appear in the order of schema declaration, and the same rule applies
+        to T<sub>2</sub>'s column.</li>
+    </ol>
+  </ol>
+</section>
+
+<section>
+  <h2>Select Scope Algorithm</h2>
+  <p>The scope of a select query is determined by the following algorithm.</p>
+  <ol>
+    <li>Let T<sub>1</sub> denote the set of tables specified by <code>from()</code></li>
+    <li>If <code>innerJoin()</code> existed in query:</li>
+      <ol>
+        <li>Let T<sub>2</sub> denote the table specified by inner join</li>
+        <li>Let S<sub>2</sub> denote the scope of the join condition</li>
+        <li>If S<sub>2</sub> &nsub; (T<sub>1</sub> &cup; T<sub>2</sub>), throws <a>SyntaxError</a></li>
+      </ol>
+    <li>If <code>leftOuterJoin()</code> existed in query:</li>
+      <ol>
+        <li>Let T<sub>3</sub> denote the table specified by left outer join</li>
+        <li>Let S<sub>3</sub> denote the scope of the join condition</li>
+        <li>If S<sub>3</sub> &nsub; (T<sub>1</sub> &cup; T<sub>3</sub>), throws <a>SyntaxError</a></li>
+      </ol>
+    <li>Let T<sub>4</sub> denote <dfn>valid projection scope</dfn>:
+    T<sub>1</sub> &cup; T<sub>2</sub> &cup; T<sub>3</sub></li>
+    <li>If <code>where()</code> existed in query:</li>
+      <ol>
+        <li>Let S<sub>4</sub> denote the scope of search condition</li>
+        <li>If S<sub>4</sub> &nsub; T<sub>4</sub>, throws <a>SyntaxError</a></li>
+      </ol>
+    <li>If any column in <code>orderBy()</code>, <code>groupBy()</code>,
+    or the projection list passed in the constructor of <a>ISelectQuery</a>
+    object is not in the valid projection scope, throw <a>SyntaxError</a>.</li>
+  </ol>
+</section>
+
+<section>
+  <h2>Sorting Algorithm</h2>
+  <p>The sorting algorithm is represented in the pseudo JavaScript code
+  below.</p>
+  <pre><code class="highlight">
+    var orderBySpecs;  // Array of orderBy() specs given in this query.
+    filteredRows.sort(function(lhs, rhs) {
+      for (var i = 0; i < orderBySpecs.length; ++i) {
+        var spec = orderBySpecs[i];
+        var col = spec.column;
+        if (lhs[col] == rhs[col]) {
+          continue;
+        }
+        if ((spec.order == 'asc' && lhs[col] < rhs[col]) ||
+            (spec.order == 'desc' && lhs[col] > rhs[col])) {
+          return -1;
+        } else {
+          return 1;
+        }
+      }
+      return 0;
+    });
+  </code></pre>
+</section>
+
+<section>
+  <h2>Inner Join</h2>
+  <p>Inner joins create a new result table by combining column values of two
+  tables involved in the join based upon the predicate given as join
+  condition. Inner joins MAY be specified either implicitly through search
+  conditions, or explicitly via <code>innerJoin()</code>. The following
+  example demonstrates two equivalent inner join syntaxes:</p>
+  <pre class="example highlight">
+var db;
+
+var tableA;
+
+var tableB;
+
+// Implicit inner join.
+var q1 =
+  db.select(tableA['key'], tableA['value'], tableB['timestamp'])
+    .from(tableA, tableB)
+    .where(tableA['key'].eq(tableB['key']));
+
+// Explicit inner join.
+var q2 =
+  db.select(tableA['key'], tableA['value'], tableB['timestamp'])
+    .from(tableA)
+    .innerJoin(tableB, tableA['key'].eq(tableB['key']));
+
+  </pre>
+
+  <p>The results of inner join MUST be equivalent to the outcome of the
+  following algorithm:</p>
+  <ol>
+    <li>Let T<sub>1</sub> and T<sub>2</sub> denote tables involved in the
+      inner join.</li>
+    <li>Let C denotes the <a href="#cartesian-product">Cartesian product</a>
+    of T<sub>1</sub> and T<sub>2</sub>.</li>
+    <li>For each row in C, evaluate the predicate provided as join
+    condition. Return the rows whose evaluation is true.</li>
+  </ol>
+  <p class="note">Conceptually the inner join will create a new table.
+  Implementation MAY NOT create actual table as long as the returned results
+  are correct.</p>
+
+  <p>The user is not allowed to mix implicit and explicit join. Implementations
+  will throw either <a>SyntaxError</a> or <a>RuntimeError</a> for invalid
+  queries violating this rule.</p>
+</section>
+
+<section>
+  <h2>Left Outer Join</h2>
+  <p>This specification supports only left outer join, which preserves the
+  unmatched rows from the first (left) table, joining them with a
+  <code>NULL</code> row in the shape of the second (right) table.
+  The algorithm is described below:</p>
+  <ol>
+    <li>Let T<sub>l</sub> and T<sub>r</sub> denote the left and right table
+      involved in the left-outer join. Let c<sub>l</sub> denote columns of
+      T<sub>l</sub>, and c<sub>r</sub> for T<sub>r</sub>.</li>
+    <li>Create an empty result row array R.</li>
+    <li>For each row r in T<sub>l</sub></li>
+      <ol>
+        <li>Find matching rows set R<sub>m</sub> within T<sub>r</sub> so that
+          for each r<sub>m</sub> in R the join condition is satisfied by the
+          pair (r, r<sub>m</sub>).</li>
+        <li>If R<sub>m</sub> is empty, push a row with columns T<sub>r</sub>
+          and fill every column with <code>null</code>.</li>
+        <li>For each r<sub>m</sub> in R<sub>m</sub>, push a new row with
+          columns c<sub>l</sub> from r, followed by columns c<sub>r</sub> from
+          r<sub>m</sub>.</li>
+      </ol>
+    </li>
+    <li>Return result array R.</li>
+  </ol>
+</section>
+
+<section>
+  <h2>Aggregate Functions</h2>
+  <p>Aggregate functions are used only in the projection list of a
+  <code>select</code> query. The aggregation functions supported are defined in
+  the following:</p>
+  <pre class="idl">
+    interface IAggregateFunction {
+      IColumn avg(IColumn col);
+      IColumn count(optional IColumn col = null);
+      IColumn distinct(IColumn... col);
+      IColumn max(IColumn col);
+      IColumn min(IColumn col);
+      IColumn sum(IColumn col);
+    };
+  </pre>
+  <dl class="methods">
+    <dt><code>IColumn avg(IColumn col);</code></dt>
+    <dd>Calculate the arithematic average of non-null values of column
+    <code>col</code> for all rows grouped. If all rows are <code>null</code>,
+    returns <code>null</code>. The returned column is always typed as
+    <code>number</code>. If the <code>col</code> is not typed as
+    <code>number</code>, <a>TypeError</a> will be thrown.</dd>
+    <dt><code>IColumn count(IColumn col);</code></dt>
+    <dd>Count the number of rows. If <code>col</code> is NOT <code>null</code>,
+    returns number of rows in the group whose <code>col</code> is not null,
+    otherwise returns the total number of rows in the group.</dd>
+    <dt><code>IColumn distinct(IColumn... col);</code></dt>
+    <dd>Returns distinct value tuples of the specified columns in all grouped
+    rows. <code>null</code> is considered as a unique value.</dd>
+    <dt><code>IColumn max(IColumn col);</code></dt>
+    <dd>Returns the maximum value of the column <code>col</code> for all rows
+    grouped. The maximum value is determined by the last value of the
+    <code>orderBy()</code> performed on that column. The <code>max()</code>
+    function returns <code>null</code> if and only if all values grouped are
+    <code>null</code>. The type of <code>col</code> MUST be either
+    <code>number</code>, <code>string</code>, or <code>date</code>, otherwise
+    <a>TypeError</a> will be thrown.</dd>
+    <dt><code>IColumn min(IColumn col);</code></dt>
+    <dd>Returns the minimum value of the column <code>col</code> for all rows
+    grouped. The minimum value is determined by the first value of the
+    <code>orderBy()</code> performed on that column. The <code>max()</code>
+    function returns <code>null</code> if and only if all values grouped are
+    <code>null</code>. The type of <code>col</code> MUST be either
+    <code>number</code>, <code>string</code>, or <code>date</code>, otherwise
+    <a>TypeError</a> will be thrown.</dd>
+    <dt><code>IColumn sum(IColumn col);</code></dt>
+    <dd>Calculate the arithematic sum of non-null values of column
+    <code>col</code> for all rows grouped. If all rows are <code>null</code>,
+    returns <code>null</code>. The returned column is always typed as
+    <code>number</code>. If the <code>col</code> is not typed as
+    <code>number</code>, <a>TypeError</a> will be thrown.</dd>
+  </dl>
+  <p>The <a>IColumn</a> objects returned by
+  <a>IAggregateFunction</a> MUST NOT be convertible to <a>Column</a> objects.
+  </p>
+  <p class="note">You cannot use <code>min</code> or <code>max</code> on
+  <code>blob</code>, <code>boolean</code>, and <code>object</code> columns.</p>
+  <section>
+  <h2>Limitations of Aggregate Functions</h2>
+  <p>Aggregation can only happen on a single table. If the select scope
+  contains more than one table, a <a>SyntaxError</a> will be thrown.</p>
+  <p>The aggregation can happen for the given table without a
+  <code>groupBy()</code> function, which implies grouping on all rows of that
+  table.</p>
+  <p>If the <code>groupBy()</code> is present, the <a>projection list</a> MUST
+  consist of either the columns in projection list, or aggregation functions.
+  The parameters of aggregation functions MUST be either <code>undefined</code>
+  if allowed by signature, or from the columns provided as
+  <code>groupBy()</code> parameters.</p>
+  <p>If grouping and search conditions are both provided, search conditions
+  will be evaluated first, and grouping will be operated on top of the filtered
+  rows.</p>
+  <p class="note">Aggregation by expression is not supported, i.e. no
+  <code>CASE WHEN</code> equivalents. Also, <code>DISTINCT</code> in SQL is
+  partially implemented in this specification. You can only use it in the
+  projection list, NOT in left joins or other cases.</p>
+  </section>
+</section>
+
+<section>
+  <h2>Union Projection</h2>
+  <p>Union projection is different from joins. It just attempts to combine the
+  projected results into rows using the following algorithm:</p>
+  <ol type="1">
+    <li>For any two different queries in union queries, check if their
+    projected columns are compatible.
+    <ol type="A">
+      <li>Let Q<sub>x</sub> and Q<sub>y</sub> denote the queries to be
+      checked.</li>
+      <li>For any column C in Q<sub>x</sub>, it MUST satisfy one of the
+      following condition:
+      <ol type="i">
+        <li>No column in Q<sub>y</sub> has the same name, and C is
+        nullable.</li>
+        <li>Another column C' in Q<sub>y</sub> has the same name or alias as C,
+        and the column has exactly the same data type.</li>
+      </ol>
+      Otherwise a <a>TypeError</a> will be thrown.</li>
+    </ol></li>
+    <li>Union all qualified columns as new projection list, execute the
+      queries. Query engine CAN decide the execution orders. Final projected
+      rows MUST be generated in the order of union queries, i.e. the rows from
+      <code>union()</code> query first, then in the order of the parameters
+      inside <code>union()</code>.</li>
+  </ol>
+  <pre class="example highlight">
+var db;
+
+function getOrderList() {
+  var order = db.schema().table('Order');
+
+  var archive = db.schema().table('ArchivedOrder');
+
+  var query = db.select(order.item, order.amount)
+                .from(order)
+                .where(order.category.eq('Clothing'))
+                .union(db.select(archive.item, archive.amount)
+                         .from(archive)
+                         .where(archive.category.eq('Clothing')));
+}
+
   </pre>
 </section>
 
 <section>
-  <h2>Bindable Values</h2>
-  <pre class="idl">
-    interface IBindableValue {
-      readonly attribute any value;
-    };
-  </pre>
-  <p>Type check of bound value is performed by query engine before executing
-  the query.</p>
-
-  <p>The following example demonstrate how to perform parameterized query using
-  data binding:</p>
-  <pre class="example highlight">
-var db;
-
-var query;
-
-function init() {
-  var dept = db.schema().table('Department');
-
-  var emp = db.schema().table('Employee');
-  query = db.select(emp.name.as('ename'), dept.name)
-            .from(dept, emp)
-            .where(dept.id.eq(emp.deptId).and(
-                   emp.id.eq(db.bind(0))));
-}
-
-function updateModel(employeeId) {
-  query.bind(employeeId).commit().then(function(rows) {
-    console.log(rows[0]['ename'], rows[0]['Department.name']);
-  });
-}
-
-  </pre>
+  <h2>Intersect and Except</h2>
+  <p>Intersect and except are different from joins, they just attempt to
+  perform set operations on the projected results from involving queries.
+  The set of projected columns from any two queries involved MUST be identical
+  in name/alias and data type, otherwise a <a>TypeError</a> will be thrown.</p>
+  <p>Results returned from <code>intersect()</code> include all the rows that
+  exist in all involved queries.</p>
+  <p>Results returned from <code>except()</code> exists only in the calling
+  query.</p>
 </section>
 
 
@@ -1657,7 +2010,10 @@ function updateModel(employeeId) {
     <tr><th>Field</th><th>Description</th></tr>
     <tr><td><dfn><code>BlockingError</code></dfn></td>
       <td>Attempts to open a delete pending database, or to create a
-      transaction in a close pending connection.</td></tr>
+        transaction in a close pending connection.</td></tr>
+    <tr><td><dfn><code>BindingError</code></dfn></td>
+      <td>The values given in <a>IQuery.bind</a> have type match, or the
+        executing query has unprovided bindable values.</td></tr>
     <tr><td><dfn><code>ConstraintError</code></dfn></td>
         <td>Constraints are violated.</td>
     </tr>
@@ -1673,19 +2029,40 @@ function updateModel(employeeId) {
     <tr><td><dfn><code>InvalidSchemaError</code></dfn></td>
         <td>Provided schema is invalid.</td>
     </tr>
+    <tr><td><dfn><code>RuntimeError</code></dfn></td>
+        <td>Invalid query has slipped through syntax checks but caught by
+        the query execution engine.</td></tr>
     <tr><td><dfn><code>SyntaxError</code></dfn></td>
       <td>Illegal use of query builder objects, for example, calling
-      <code>into()</code> twice for <a>IInsertQuery</a>.</td>
+      <code>into()</code> twice for <a>IInsertQuery</a>.</td></tr>
+    <tr><td><dfn><code>TimeoutError</code></dfn></td>
+      <td>Transaction takes too long to resolve (commit) or reject (rollback),
+      and is automatically rolled back.</td></tr>
     <tr><td><dfn><code>TransactionStateError</code></dfn></td>
       <td>Attempts to commit/rollback/attach query to a finished/pending finish
         transaction.</td></tr>
     <tr><td><dfn><code>TypeError</code></dfn></td>
-      <td>Attempts to compare two different data types.</td></tr>
+      <td>Attempts to compare/union two different data types.</td></tr>
     <tr><td><dfn><code>UnsupportedError</code></dfn></td>
       <td>Attempts to use MAY support features that are not supported yet.
       </td></tr>
   </table>
 </section>
 
+
+    <section class="appendix">
+      <h2>Acknowledgements</h2>
+      <p>
+      Many thanks to people who have contributed to this specification and
+      helped to improve it by sending suggestions and corrections.
+      </p>
+      <p>
+      We also want to thank the authors of
+      <a href="https://www.w3.org/respec/">ReSpec</a>,
+      <a href="https://nodejs.org/">Node.js</a>, and
+      <a href="https://gulpjs.com/">gulp.js</a> for the powerful and handy
+      tools that are used to produce this spec.
+      </p>
+    </section>
  </body>
 </html>
