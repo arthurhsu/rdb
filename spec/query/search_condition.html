@@ -72,23 +72,31 @@
     associated column or not. They are defined by the following interface:</p>
     <pre class="idl">
       interface ITruthPredicate {
-        ILogicalPredicate match((IBindableValue or RegExp or DOMString) value);
         ILogicalPredicate between(ComparableValueType lhs, ComparableValueType rhs);
+        ILogicalPredicate match((IBindableValue or DOMString) value);
+        ILogicalPredicate startsWith((IBindableValue or DOMString) value);
+        ILogicalPredicate endsWith((IBindableValue or DOMString) value);
         ILogicalPredicate in((ComparableValueType[] or IBindableValue or ISelectQuery) values);
         ILogicalPredicate isNull();
         ILogicalPredicate isNotNull();
       };
     </pre>
     <dl class="methods">
-      <dt><code>ILogicalPredicate match((IBindableValue or RegExp or DOMString) value);</code></dt>
-      <dd>The associated column matches the regular expression or string
-      provided. When <code>value</code> is provided as string, and the column
-      is indexed using <code>fulltext</code> type, implementation MAY treat
-      this predicate as a hint to perform full text search.</dd>
       <dt><code>ILogicalPredicate between(ComparableValueType lhs, ComparableValueType rhs);</code></dt>
       <dd>The associated column is within the range between lhs and rhs. The
       relation is evaluated using the rule of JavaScript <code>&lt;=</code> and
       <code>&gt;=</code>.</dd>
+      <dt><code>ILogicalPredicate match((IBindableValue or DOMString) value);</code></dt>
+      <dd>The associated column matches the string provided using full text
+      search. If the column is not indexed using <code>fulltext</code> type,
+      or implementation does not offer full text search, <a>UnsupportedError</a>
+      MAY be thrown.</dd>
+      <dt><code>ILogicalPredicate startsWith((IBindableValue or DOMString) value);</code></dt>
+      <dd>The associated column starts with the string provided. If the column
+      is not of string type, <a>TypeError</a> will be thrown.</dd>
+      <dt><code>ILogicalPredicate endsWith((IBindableValue or DOMString) value);</code></dt>
+      <dd>The associated column starts with the string provided. If the column
+      is not of string type, <a>TypeError</a> will be thrown.</dd>
       <dt><code>ILogicalPredicate in((ComparableValueType[] or IBindableValue or ISelectQuery) values);</code></dt>
       <dd>The associated column equals to one of the value inside
       <code>values</code>. Equality is evaluated using the rule of JavaScript
