@@ -1494,7 +1494,7 @@ function updateModel(employeeId) {
       interface ITruthPredicate {
         ILogicalPredicate match((IBindableValue or RegExp or DOMString) value);
         ILogicalPredicate between(ComparableValueType lhs, ComparableValueType rhs);
-        ILogicalPredicate in((ComparableValueType[] or IBindableValue) values);
+        ILogicalPredicate in((ComparableValueType[] or IBindableValue or ISelectQuery) values);
         ILogicalPredicate isNull();
         ILogicalPredicate isNotNull();
       };
@@ -1509,10 +1509,13 @@ function updateModel(employeeId) {
       <dd>The associated column is within the range between lhs and rhs. The
       relation is evaluated using the rule of JavaScript <code>&lt;=</code> and
       <code>&gt;=</code>.</dd>
-      <dt><code>ILogicalPredicate in((ComparableValueType[] or IBindableValue) values);</code></dt>
+      <dt><code>ILogicalPredicate in((ComparableValueType[] or IBindableValue or ISelectQuery) values);</code></dt>
       <dd>The associated column equals to one of the value inside
       <code>values</code>. Equality is evaluated using the rule of JavaScript
-      <code>==</code> operator.</dd>
+      <code>===</code> operator. If the <code>values</code> are specified as an
+      <a>ISelectQuery</a>, the given query will be evaluated first and generate
+      values from its projection list. If the projection list is of different
+      data type, the implementation will throw <a>TypeError</a>.</dd>
       <dt><code>ILogicalPredicate isNull();</code></dt>
       <dd>The associated column is <code>null</code> or <code>undefined</code>.</dd>
       <dt><code>ILogicalPredicate isNotNull();</code></dt>
