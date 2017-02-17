@@ -1,20 +1,19 @@
-var fs = require('fs-extra');
-var gulp = require('gulp');
-var gulpConnect = require('gulp-connect');
-var gulpForEach = require('gulp-foreach');
-var closureCompiler = require('gulp-closure-compiler');
-var nopt = require('nopt');
-var path = require('path');
-var temp = require('temp');
+const fs = require('fs-extra');
+const gulp = require('gulp');
+const gulpConnect = require('gulp-connect');
+const dom = require('jsdom');
+const nopt = require('nopt');
+const path = require('path');
+const webidl2 = require('webidl2');
 
-var log = console.log;
+const log = console.log;
 
-gulp.task('default', function() {
+gulp.task('default', () => {
   log('Usage: ');
   log('  gulp debug [--port <port number>]');
   log('      Start a debug server (default is test at port 8000)');
   log('  gulp lint');
-  log('      Launch Closure compiler to check JS errors');
+  log('      Check WebIDL is sane');
 });
 
 function getOutputPath() {
@@ -35,10 +34,10 @@ function copyLines(lines, contents, baseDir) {
 
 function expandLine(line, contents, baseDir) {
   try {
-    var includeFile = path.resolve(path.join(
+    let includeFile = path.resolve(path.join(
         baseDir,
         line.match(/{{include:(.*?)}}/)[1].trim()));
-    var lines = fs.readFileSync(includeFile, 'utf8').split('\n');
+    let lines = fs.readFileSync(includeFile, 'utf8').split('\n');
     copyLines(lines, contents, path.dirname(includeFile));
   } catch (e) {
     console.log('Error parsing: ', line);
@@ -48,9 +47,9 @@ function expandLine(line, contents, baseDir) {
 function generateIndex() {
   console.log('Regenerating index.html ...');
   fs.ensureDirSync(getOutputPath());
-  var lines = fs.readFileSync(path.resolve(
+  let lines = fs.readFileSync(path.resolve(
         path.join(__dirname, 'spec/main.html')), 'utf8').split('\n');
-  var contents = [];
+  let contents = [];
   copyLines(lines, contents, path.resolve(path.join(__dirname, 'spec')));
   fs.writeFileSync(
       path.resolve(path.join(__dirname, 'out/index.html')),
@@ -61,17 +60,17 @@ function generateIndex() {
       path.resolve(path.join(__dirname, 'out/style.css')));
 }
 
-gulp.task('watch', function() {
+gulp.task('watch', () => {
   gulp.watch('spec/**/*').on('change', generateIndex);
 });
 
-gulp.task('debug', ['watch'], function() {
-  var knownOpts = {
+gulp.task('debug', ['watch'], () => {
+  let knownOpts = {
     'port': [Number, null]
   };
 
-  var options = nopt(knownOpts);
-  var port = options.port || 8000;
+  let options = nopt(knownOpts);
+  let port = options.port || 8000;
 
   generateIndex();
   gulpConnect.server({
@@ -81,50 +80,32 @@ gulp.task('debug', ['watch'], function() {
   });
 });
 
-gulp.task('lint', function() {
-  var ccPath = path.resolve(path.join(__dirname,
-      'node_modules/google-closure-compiler/compiler.jar'));
-  var ccOptions = {
-    // gulp-closure-compiler does not support checks only.
-    //'checks-only': true,
-    'jscomp_error': [
-      'accessControls',
-      'ambiguousFunctionDecl',
-      'checkDebuggerStatement',
-      'checkRegExp',
-      'checkTypes',
-      'checkVars',
-      'const',
-      'constantProperty',
-      'duplicate',
-      'es5Strict',
-      'externsValidation',
-      'fileoverviewTags',
-      'globalThis',
-      'invalidCasts',
-      'missingProperties',
-      'missingReturn',
-      'nonStandardJsDocs',
-      'strictModuleDepCheck',
-      'suspiciousCode',
-      'undefinedNames',
-      'undefinedVars',
-      'unknownDefines',
-      'uselessCode',
-      'visibility'
-    ],
-    'externs': path.resolve(path.join(__dirname, 'tools/externs.js')),
-    'jscomp_off': 'deprecated',
-    'language_in': 'ECMASCRIPT5_STRICT',
-    'warning_level': 'VERBOSE'
-  };
+gulp.task('idl', (cb) => {
+  generateIndex();
+  dom.env('./out/index.html', (errors, window) => {
+    let elements = window.document.getElementsByClassName('idl');
+    let idl = Array.from(elements).map(e => {
+      let lines = e.innerHTML.split('\n');
+      let spaces = lines[0].search(/\S|$/);
+      for (let i = 0; i < lines.length; ++i) {
+        lines[i] = lines[i].substring(spaces)
+                           .replace('&lt; ', '<')
+                           .replace(' &gt;', '>');
+      }
+      return lines.join('\n');
+    }).join('\n\n');
+    fs.writeFileSync('./out/rdb.idl', idl, {encoding: 'utf8'});
+    cb();
+  });
+});
 
-  return gulp.src('spec/**/*.js')
-             .pipe(gulpForEach(function(stream, file) {
-               return stream.pipe(closureCompiler({
-                 compilerPath: ccPath,
-                 fileName: temp.path({'suffix': '.js'}),
-                 compilerFlags: ccOptions
-               }));
-             }));
+gulp.task('lint', ['idl'], () => {
+  let idl = fs.readFileSync('./out/rdb.idl', {encoding: 'utf8'});
+  try {
+    let tree = webidl2.parse(idl);
+  } catch(e) {
+    console.error('ERROR:', e);
+  }
+
+  log('OK: IDL validated');
 });

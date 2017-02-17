@@ -16,15 +16,13 @@
   },
   "devDependencies": {
     "fs-extra": "*",
-    "google-closure-compiler": "latest",
     "gulp": "^3.9.0",
-    "gulp-closure-compiler": "0.3.1",
     "gulp-connect": "^2.3.1",
-    "gulp-foreach": "^0.1.0",
+    "jsdom": "^9.11.0",
     "nopt": "~2.2.1",
-    "temp": "^0.8.3"
+    "webidl2": "^2.2.2"
   },
   "engines": {
-    "node": ">=0.12"
+    "node": ">=6.4.0"
   }
 }
