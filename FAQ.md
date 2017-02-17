@@ -17,11 +17,20 @@ The goal is to provide a relational DB for web apps, which
   third-party libraries (e.g. [Lovefield](https://github.com/google/lovefield))
 
 
+## Q: Why do you need relational database? There's NoSQL ...
+
+Different tools are made for different purposes, and different strengths and
+weakness. You can always fly a helicopter or a jet plane, so why do human beings
+need both of them? The claim "NoSQL is better" is simply misleading and falsy.
+I believe it's the platform's job to honor developers with proper tools that
+they can choose and use.
+
+
 ## Q: Why not just use existing IndexedDB? You can ...
 
 TL;DR:
 
-* IndexedDB does not have a relational query engine.
+* IndexedDB does not have a relational query engine. It's NoSQL.
 * IndexedDB is the only viable persistent storage on web platform, but it is
   not suitable for relational data manipulation.
 * A relational query/manipulation API can be useful even when persistence is
@@ -47,7 +56,7 @@ developers. Writing such a simple app using so many lines with IndexedDB is
 simply wrong. A generic purpose relational data query/manipulation API would
 relieve developers from re-inventing the wheel, over and over again.
 
-#### Problems for Implementing a Generic Relational Query Engine
+#### Problems for Implementing a Generic Relational Query Engine in JavaScript
 
 I am the creator of Lovefield and I have found many constraints of implementing
 a generic relational query engine using JavaScript. JavaScript is not designed
@@ -75,9 +84,9 @@ I believe so (see what Lovefield can do).
 implements a simple but super common usage of relational database:
 a master-slave view. It joins three tables and shows the details result.
 The key number here is the time it takes to generate the details data,
-when the user clicks on a grid row. 
+when the user clicks on a grid row.
 
-On my Macbook Pro, IndexedDB is about 70~200ms, WebSQL is 5ms~9ms, and
+On my Macbook Pro 2013, IndexedDB is about 70~200ms, WebSQL is 5ms~9ms, and
 Lovefield is 5ms~15ms. Remember this is just for a single row and it is order
 of magnitude difference between IndexedDB and WebSQL. If you were curious,
 you can also profile the process memory usage and JS heap usage. You shall see
@@ -141,6 +150,11 @@ already showed us the strength and weakness of object DB and relational DB.
 It is not reasonable nor useful to force everyone to use object DB to simulate
 relational DB behavior.
 
+Remember, developers vote by feet. We can keep web platform not providing the
+tools they need, and then just see everyone posting a QR code on their web site
+to download Android/iPhone apps. If that's the direction W3C wanted to see,
+so be it and we should just stop further development of "web platform" today.
+
 
 ## Q: How hard is this for browser vendors to implement?
 
@@ -164,9 +178,10 @@ scratch as I did for Lovefield.
 ## Q: Why not from(...).where(...).select(...)? SQL made a mistake ...
 
 First of all, I disagree that SQL made a mistake. It's extremely important to
-make things readable. Secondly, this syntax makes sense only when free-form
-parsing are involved. The builder pattern of this spec will build a query syntax
-tree, which can be augmented or modified from a pre-stored subtree.
+make things readable and read just like English. Secondly, this syntax makes
+sense only when free-form parsing are involved. The builder pattern of this
+spec will build a query syntax tree, which can be augmented or modified from a
+pre-stored subtree.
 
 More discussions about syntax design can be found from [Lovefield's design
 document](https://github.com/google/lovefield/blob/master/docs/dd/00_intro.md#07-api-design).
