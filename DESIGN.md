@@ -78,17 +78,29 @@ can be a good performance improvement.
 The `ALTER TABLE` support among SQL engines are very diversified. Current
 `ITableChanger` design is not universal enough for implementation.
 
+### Naming Limitations
+
+Currently names are limited to be `/^[A-Za-z_][A-Za-z0-9_]*$/`, which is there
+for simplifying implementation. Because names are case-sensitive, there needs
+to be an escaping algorithm to transfer names into case-insensitive SQL.
+Opening this to UTF-16 as in JavaScript naming will cause this algorithm
+to be hard to implement. We do understand W3C loves UTF-16 but this will
+cause unnessary difficulty.
+
+
+## Not Implemented in this Version
+
 ### Full Text Search
 
-Current FTS design assumes that FTS is carried out through indices. This is not
-true. FTS can be done using virtual tables or table views. In that case the
-spec design will have problems accomodating different implementations.
+FTS can be done using virtual tables or table views. In that case the spec
+design will need to accomodate different implementations.
 
-Chances are we may withdraw the FTS feature and leave it to v2.
+Due to the complexity, FTS feature is left to v2.
 
 ### Index Type
 
 Ideally SQL engines should support at least two index types: Hash and B-Tree.
 However, the engine may choose not to expose the API and silently determine what
-to use underneath. We need to see how the reviewers of this spec react to
-the "nice to have" feature since implementation can decide what to do.
+to use underneath. To simplify the already huge v1 spec, this feature is left
+out.
+

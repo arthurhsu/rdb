@@ -109,8 +109,7 @@
         ITableBuilder column(DOMString name, ColumnType type, optional boolean notNull = false);
         ITableBuilder primaryKey(PrimaryKeyDefinition primaryKey);
         ITableBuilder foreignKey(ForeignKeySpec foreignKey);
-        ITableBuilder index(DOMString name, IndexedColumnDefinition columns);
-        ITableBuilder index(IndexSpec spec);
+        ITableBuilder index(DOMString name, IndexedColumnDefinition columns, optional boolean unique = false);
       };
     </pre>
     <p>All methods returns the same <a>ITableBuilder</a> object that
@@ -138,68 +137,20 @@
       <dd>Adds a foreign key to table.</dd>
       <dt><code>ITableBuilder
       <dfn data-dfn-for="ITableBuilder">index</dfn>(DOMString name,
-      IndexedColumnDefinition columns);</code></dt>
+      IndexedColumnDefinition columns, optional boolean unique = false);</code></dt>
       <dd>Adds an index to table. The <code>name</code> is the name of the
-      index, and it MUST be unique within the containing table.</dd>
-      <dt><code>ITableBuilder index(IndexSpec spec)</code></dt>
-      <dd>Adds an index to table, overloading form that provides finer control
-      over the index itself.</dd>
+      index, and it MUST be unique within the containing table. The 
+      <code>columns</code> allows multiple type of definitions. If provided as
+      <code>DOMString</code>, the string MUST <a>refer</a> to an
+      <a>indexable</a> column of the containing table; if provided as
+      <code>DOMString[]</code>, it MUST NOT be empty, and the strings MUST
+      <a>refer</a> to different <a>indexable</a> columns of the containing
+      table. In these two cases, default sort order of <code>asc</code> is
+      used. If provided as <code>IndexedColumnSpec[]</code>, it MUST NOT
+      be empty, and each <code>IndexedColumnSpec</code> MUST <a>refer</a>
+      to different column. The optional <code>unique</code> parameter specifies
+      whether keys in index are unique or not, default to <code>false</code>.</dd>
     </dl>
-  </section>
-
-  <section>
-    <h2>Index Specifications</h2>
-    <p>Two major index specification styles are supported. The most complete
-    one is dictionary type <dfn>IndexedSpec</dfn>.</p>
-    <pre class="idl">
-      typedef (DOMString or DOMString[] or IndexedColumnSpec or IndexedColumnSpec[]) IndexedColumnDefinition;
-      dictionary IndexSpec {
-        DOMString name;
-        IndexedColumnDefinition column;
-        IndexType type = "btree";
-        boolean unique = false;
-      };
-    </pre>
-    <dl class="dictionary-members">
-      <dt><code>name</code></dt>
-      <dd>Name of the index, MUST be unique within the containing table.</dd>
-      <dt><code>column</code></dt>
-      <dd>Indexed column definitions. If provided as
-          <code>DOMString</code>, the string MUST <a>refer</a> to an
-          <a>indexable</a> column of the containing table; if provided as
-          <code>DOMString[]</code>, it MUST NOT be empty, and the strings MUST
-          <a>refer</a> to different <a>indexable</a> columns of the containing
-          table. In these two cases, default sort order of <code>asc</code> is
-          used. If provided as <code>IndexedColumnSpec[]</code>, it MUST NOT
-          be empty, and each <code>IndexedColumnSpec</code> MUST <a>refer</a>
-          to different column.</dd>
-      <dt><code>type</code></dt>
-      <dd>(Optional) Type of index, default to <code>btree</code></dd>
-      <dt><code>unique</code></dt>
-      <dd>(Optional) Keys in index shall be unique or not,
-          default to <code>false</code>. If uniqueness conflicts with
-          index type, for example, full text search index, a <a>SyntaxError</a>
-          MAY be thrown.</dd>
-    </dl>
-    <p>Index type allows user to hint the query engine to create an index on
-    specified columns in given sorting orders. The query engine MAY construct
-    the index, MAY follow the given sorting orders, and MAY use the specified
-    type. The query engine can refuse to construct the index as specified, or
-    construct a different index.</p>
-
-    <p>The index type is an enum:</p>
-    <pre class="idl">
-      enum IndexType {
-        // B+ Tree index.
-        "btree",
-
-        // Hash index.
-        "hash",
-
-        // Full text search.
-        "fulltext"
-      };
-    </pre>
 
     <p>An index can be keyed by one or more columns. A <dfn>unique key</dfn>
     means that the value or combination of values used as index key is unique
@@ -210,6 +161,7 @@
 
     <p>The WebIDL below defines indexed column specification.</p>
     <pre class="idl">
+      typedef (DOMString or DOMString[] or IndexedColumnSpec or IndexedColumnSpec[]) IndexedColumnDefinition;
       dictionary IndexedColumnSpec {
         DOMString name;
         Order order = "asc";
@@ -227,6 +179,9 @@
     constraints (for example, create an index on the same column of the primary
     key), it will be up to the query engine to determine whether or not to
     create this index.</p>
+
+    <p class="note">Cross-table indices or views are not supported in this
+    specification.</p>
   </section>
 
   <section>

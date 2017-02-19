@@ -73,7 +73,6 @@
     <pre class="idl">
       interface ITruthPredicate {
         ILogicalPredicate between(ComparableValueType lhs, ComparableValueType rhs);
-        ILogicalPredicate match((IBindableValue or DOMString) value);
         ILogicalPredicate startsWith((IBindableValue or DOMString) value);
         ILogicalPredicate endsWith((IBindableValue or DOMString) value);
         ILogicalPredicate in((ComparableValueType[] or IBindableValue or ISelectQuery) values);
@@ -86,11 +85,6 @@
       <dd>The associated column is within the range between lhs and rhs. The
       relation is evaluated using the rule of JavaScript <code>&lt;=</code> and
       <code>&gt;=</code>.</dd>
-      <dt><code>ILogicalPredicate match((IBindableValue or DOMString) value);</code></dt>
-      <dd>The associated column matches the string provided using full text
-      search. If the column is not indexed using <code>fulltext</code> type,
-      or implementation does not offer full text search, <a>UnsupportedError</a>
-      MAY be thrown.</dd>
       <dt><code>ILogicalPredicate startsWith((IBindableValue or DOMString) value);</code></dt>
       <dd>The associated column starts with the string provided. If the column
       is not of string type, <a>TypeError</a> will be thrown.</dd>
