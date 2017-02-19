@@ -561,7 +561,7 @@ insertData().then(function() {
         ITableChanger dropColumn(DOMString name);
         ITableChanger addPrimaryKey(PrimaryKeyDefinition primaryKey);
         ITableChanger addForeignKey(ForeignKeySpec foreignKey);
-        ITableChanger addIndex(DOMString name, IndexedColumnDefinition columns);
+        ITableChanger addIndex(DOMString name, IndexedColumnDefinition columns, optional boolean unique = false);
         ITableChanger dropConstraintOrIndex(DOMString name);
         IColumnChanger setColumn(DOMString name);
       };
@@ -596,9 +596,10 @@ insertData().then(function() {
       key, this method will do nothing.</dd>
       <dt><code>ITableChanger addForeignKey(ForeignKeySpec foreignKey);</code></dt>
       <dd>Adds a foreign key to the table.</dd>
-      <dt><code>ITableChanger addIndex(DOMString name, IndexedColumnDefinition columns);</code></dt>
+      <dt><code>ITableChanger addIndex(DOMString name, IndexedColumnDefinition columns, optional boolean unique = false);</code></dt>
       <dd>Adds an index to the table. The <code>name</code> is the name
-      of the index and MUST be unique within the containing table.</dd>
+      of the index and MUST be unique within the containing table. If
+      <code>unique</code> is set to true, add a unique index.</dd>
       <dt><code>ITableChanger dropConstraintOrIndex(DOMString name);</code></dt>
       <dd>Removes a constraint or index in table by name. The <code>name</code>
       MUST refer to an existing constraint or index.</dd>
