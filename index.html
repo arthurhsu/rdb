@@ -378,7 +378,7 @@ insertData().then(function() {
     <pre class="idl">
       interface ITableBuilder : IExecutionContext {
         ITableBuilder column(DOMString name, ColumnType type, optional boolean notNull = false);
-        ITableBuilder primaryKey(DOMString name, (DOMString or DOMString[]) columns, optional boolean autoIncrement = false);
+        ITableBuilder primaryKey((DOMString or DOMString[]) columns, optional boolean autoIncrement = false);
         ITableBuilder foreignKey(ForeignKeySpec foreignKey);
         ITableBuilder index(DOMString name, IndexedColumnDefinition columns, optional boolean unique = false);
       };
@@ -398,8 +398,8 @@ insertData().then(function() {
       <code>notNull</code> is set to <code>true</code>, the column is treated as
       <a>NOT NULL</a>.</dd>
       <dt><code>ITableBuilder
-      <dfn data-dfn-for="ITableBuilder">primaryKey</dfn>(DOMString name,
-      (DOMString or DOMString[]) columns, optional boolean autoIncrement = false);</code></dt>
+      <dfn data-dfn-for="ITableBuilder">primaryKey</dfn>((DOMString
+      or DOMString[]) columns, optional boolean autoIncrement = false);</code></dt>
       <dd>Adds a primary key to table. This method MUST NOT be called multiple
       times. Primary key is a specialized unique index. Each table can have only
       one primary key. Column(s) that consists primary key, MUST <a>refer</a> to
@@ -430,9 +430,8 @@ insertData().then(function() {
       whether keys in index are unique or not, default to <code>false</code>.</dd>
     </dl>
 
-    <p class="note">Primary key MUST have name. Unnamed primary key
-    will be automatically given a name <code>`PK_${tableName}`</code>.
-    Primary keys can only have ascending order.</p>
+    <p class="note">This specification does not support named primary key.
+    Moreover, primary keys can only have ascending order.</p>
 
     <p>An index can be keyed by one or more columns. A <dfn>unique key</dfn>
     means that the value or combination of values used as index key is unique
@@ -537,7 +536,7 @@ insertData().then(function() {
         ITableChanger rename(DOMString newTableName);
         ITableChanger addColumn(DOMString name, ColumnType type, optional boolean notNull = false, optional ValueType defaultValue = null);
         ITableChanger dropColumn(DOMString name);
-        ITableChanger addPrimaryKey(PrimaryKeyDefinition primaryKey);
+        ITableChanger addPrimaryKey((DOMString or DOMString[]) columns);
         ITableChanger addForeignKey(ForeignKeySpec foreignKey);
         ITableChanger addIndex(DOMString name, IndexedColumnDefinition columns, optional boolean unique = false);
         ITableChanger dropConstraintOrIndex(DOMString name);
@@ -566,12 +565,13 @@ insertData().then(function() {
       be the only column in the table schema, and MUST NOT be referred by any
       index nor constraints. Every existing row in the table will be modified
       to remove the field represented by that column.</dd>
-      <dt><code>ITableChanger addPrimaryKey(DOMString name, IndexedColumnDefinition columns, optional boolean autoIncrement = false);</code></dt>
+      <dt><code>ITableChanger addPrimaryKey((DOMString or DOMString[]) columns);</code></dt>
       <dd>Adds a primary key to table, the table MUST not have existing primary
-      key.</dd>
+      key. The key MUST NOT auto increment.</dd>
       <dt><code>ITableChanger dropPrimaryKey();</code></dt>
       <dd>Removes primary key from table. If the table does not have primary
-      key, this method will do nothing.</dd>
+      key, this method will do nothing. If the primary key is auto-increment
+      primary key, an <a>UnsupportedError</a> will be thrown.</dd>
       <dt><code>ITableChanger addForeignKey(ForeignKeySpec foreignKey);</code></dt>
       <dd>Adds a foreign key to the table.</dd>
       <dt><code>ITableChanger addIndex(DOMString name, IndexedColumnDefinition columns, optional boolean unique = false);</code></dt>
@@ -585,6 +585,8 @@ insertData().then(function() {
       <dd>Changes a column in the table, and the <code>name</code> MUST
       <a>refer</a> to an existing column in the table schema.</dd>
     </dl>
+    <p class="note">This specification does not support adding or dropping
+    auto increment primary key.</p>
   </section>
 
   <section>
