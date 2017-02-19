@@ -107,7 +107,7 @@
     <pre class="idl">
       interface ITableBuilder : IExecutionContext {
         ITableBuilder column(DOMString name, ColumnType type, optional boolean notNull = false);
-        ITableBuilder primaryKey(PrimaryKeyDefinition primaryKey);
+        ITableBuilder primaryKey(DOMString name, (DOMString or DOMString[]) columns, optional boolean autoIncrement = false);
         ITableBuilder foreignKey(ForeignKeySpec foreignKey);
         ITableBuilder index(DOMString name, IndexedColumnDefinition columns, optional boolean unique = false);
       };
@@ -119,18 +119,25 @@
     multiple times except <code>primaryKey</code>.</p>
     <dl class="methods">
       <dt><code>ITableBuilder
-      <dfn data-dfn-for="ITableBuilder">column</dfn>(DOMString
-      name, ColumnType type, optional boolean notNull = false);</code></dt>
+      <dfn data-dfn-for="ITableBuilder">column</dfn>(DOMString name,
+      ColumnType type, optional boolean notNull = false);</code></dt>
       <dd>Adds a column to table. <code>name</code> MUST be unique within the
       containing table. <dfn>NOT NULL</dfn> means the column MUST NOT have a
       value of <code>undefined</code> or <code>null</code>. When
       <code>notNull</code> is set to <code>true</code>, the column is treated as
       <a>NOT NULL</a>.</dd>
       <dt><code>ITableBuilder
-      <dfn data-dfn-for="ITableBuilder">primaryKey</dfn>(PrimaryKeyDefinition
-      primaryKey);</code></dt>
+      <dfn data-dfn-for="ITableBuilder">primaryKey</dfn>(DOMString name,
+      (DOMString or DOMString[]) columns, optional boolean autoIncrement = false);</code></dt>
       <dd>Adds a primary key to table. This method MUST NOT be called multiple
-      times.</dd>
+      times. Primary key is a specialized unique index. Each table can have only
+      one primary key. Column(s) that consists primary key, MUST <a>refer</a> to
+      <a>indexable</a> column(s) of the containing table. When
+      <code>autoIncrement</code> is set to <code>true</code>, there MUST be only
+      one column in the <code>column</code> field with <code>numeric</code>
+      column type. An auto-increment key will start from zero. When a new row is
+      inserted into the table, the key will increase by one and assigned to that
+      row regardless the original key value given to the row.</dd>
       <dt><code>ITableBuilder
       <dfn data-dfn-for="ITableBuilder">foreignKey</dfn>(ForeignKeySpec
       foreignKey);</code></dt>
@@ -151,6 +158,10 @@
       to different column. The optional <code>unique</code> parameter specifies
       whether keys in index are unique or not, default to <code>false</code>.</dd>
     </dl>
+
+    <p class="note">Primary key MUST have name. Unnamed primary key
+    will be automatically given a name <code>`PK_${tableName}`</code>.
+    Primary keys can only have ascending order.</p>
 
     <p>An index can be keyed by one or more columns. A <dfn>unique key</dfn>
     means that the value or combination of values used as index key is unique
@@ -183,40 +194,7 @@
     <p class="note">Cross-table indices or views are not supported in this
     specification.</p>
   </section>
-
-  <section>
-    <h2>Primary Key Specification</h2>
-    <p>Primary key is a specialized unique index. Each table can have only one
-    primary key. A primary key can be specified using unique index
-    specification, or use the following WebIDL:</p>
-    <pre class="idl">
-      dictionary PrimaryKeySpec {
-        DOMString name;
-        IndexedColumnDefinition column;
-        boolean autoIncrement = false;
-      };
-
-      typedef (IndexedColumnDefinition or PrimaryKeySpec) PrimaryKeyDefinition;
-    </pre>
-    <dl class="dictionary-members">
-      <dt><code>name</code></dt><dd>Name of primary key. If not specified, it
-      will be named as <code>`PK_${tableName}`</code>.</dd>
-      <dt><code>column</code></dt><dd>Columns that consists primary key, MUST
-      <a>refer</a> to <a>indexable</a> columns of the containing table.</dd>
-      <dt><code>autoIncrement</code></dt><dd>Create auto-increment
-      primary key. When this is set to <code>true</code>, there MUST be only
-      one column in the <code>column</code> field with <code>numeric</code>
-      column type.</dd>
-    </dl>
-    <p>When the autoIncrement field is specified, the specified column MUST be
-    of type <code>Number</code>. An auto-increment key will start from zero.
-    When a new row is inserted into the table, the key will increase by one and
-    assigned to that row regardless the original key value given to the
-    row.</p>
-    <p class="note">Unlike SQL, primary key MUST have name. Unnamed primary key
-    will be automatically given a name.</p>
-  </section>
-
+  
   <section>
     <h2>Foreign Key Specification</h2>
     <p>The following WebIDL defines foreign key specification.</p>
@@ -317,7 +295,7 @@
       be the only column in the table schema, and MUST NOT be referred by any
       index nor constraints. Every existing row in the table will be modified
       to remove the field represented by that column.</dd>
-      <dt><code>ITableChanger addPrimaryKey(PrimaryKeyDefinition primaryKey);</code></dt>
+      <dt><code>ITableChanger addPrimaryKey(DOMString name, IndexedColumnDefinition columns, optional boolean autoIncrement = false);</code></dt>
       <dd>Adds a primary key to table, the table MUST not have existing primary
       key.</dd>
       <dt><code>ITableChanger dropPrimaryKey();</code></dt>
