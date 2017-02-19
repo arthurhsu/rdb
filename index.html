@@ -75,19 +75,19 @@ function setUpNewDb() {
   var tx = db.createTransaction('readwrite');
   var q1 = db.createTable('Dept')
              .column(/* column_name */ 'id',
-                     /* column_type */ 'String',
+                     /* column_type */ 'string',
                      /* not_null */ true)
-             .column('name', 'String', true)
-             .column('desc', 'String')
+             .column('name', 'string', true)
+             .column('desc', 'string')
              .primaryKey([{'name': 'id'}]);
 
   var q2 = db.createTable('Emp')
-             .column('id', 'Number', true)
-             .column('name', 'String', true)
-             .column('deptId', 'String', true)
-             .column('title', 'String')
+             .column('id', 'number', true)
+             .column('name', 'string', true)
+             .column('deptId', 'string', true)
+             .column('title', 'string')
              .primaryKey([{name: 'id', order: 'asc'}])
-             .unique(['name'])
+             .index('idx_name', 'name', /* unique */ true)
              .index('idx_Desc', [{name: 'desc', order: 'asc'}])
              .foreignKey({
                'name': 'fk_DeptId',
@@ -103,7 +103,7 @@ function setUpNewDb() {
 }
 
 function upgradeDb() {
-  return db.alterTable('Dept').addColumn('desc', 'String').commit();
+  return db.alterTable('Dept').addColumn('desc', 'string').commit();
 }
 
 connect().then(function() {
