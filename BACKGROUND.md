@@ -166,6 +166,37 @@ collations, sorting, transactions, corner cases using engines other than SQLite.
 More details can be found on [mistakes that got WebSQL killed](https://hacks.mozilla.org/2010/06/beyond-html5-database-apis-and-the-road-to-indexeddb/).
 
 
+## Why can't we just use SQLite + WebAssembly?
+
+Yes there's nothing stopping you. Someone did similar thing before using SQLite
+and Chrome Native Client. I already see quite some issues with this approach:
+
+* The size will be big. We are talking about mega bytes of downloading a SQL
+  engine per origin whoever use it. This effectivly demotes the usage of those
+  web sites who dare to adopt it. Users will need to download one copy per
+  origin, which also punishes the users that use these sites on their mobile
+  devices.
+
+* I don't see why developers will buy in such a complicated technology. Using
+  this technology also assumes security patch burdens. I'm just a user that
+  wanted to use database as a library, and the platform failed me and want me
+  to update such a huge component which the competing platforms provide. Why not
+  just put a QR code on my web site to ask people to download my native app,
+  and I have much better tooling there. 
+
+* You are still vulnerable to SQL injection or other attack means that targeted
+  at the SQL parser.
+
+* It's a bit too early to say. I'm curious about the performance of this.
+  For persistent storage, it must still use IndexedDB, which means that it will
+  be using IndexedDB as a page store. That I/O performance compared to native
+  file read/write is already order of magnitude slower. If we consider memory
+  constraint and swapping, I highly doubt how practical this approach is.
+  Ironically, it might still be faster than apps written in pure IndexedDB,
+  because query optimizers inside SQL engine are really good and can easily
+  defeat naive handcrafted JavaScript. Isn't that another fact that we should
+  really re-investigate this problem?
+
 ## What are the differences between RDB and WebSQL?
 
 RDB uses builder patterns to communicate queries instead of passing SQL
