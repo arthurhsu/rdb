@@ -1,39 +1,45 @@
-/** @type {DatabaseConnection} */
-var db;
-var d = db.schema().table('Dept');
-
+let dbConnection;
+let dept = dbConnection.schema().table('Dept');
 function insertData() {
-  var deptData = [
-    {'id': 'HR', 'name': 'Human Resources', 'desc': 'Rock stars'},
-    {'id': 'ENG', 'name': 'Engineering', 'desc': 'Hard workers'},
-    {'id': 'NADA', 'name': 'Non existing'},
-    {'id': 'L', 'name': 'Leadership'}
-  ];
-  return db.insert().into(d).values(deptData).commit();
+    let deptData = [
+        { 'id': 'HR', 'name': 'Human Resources', 'desc': 'Rock stars' },
+        { 'id': 'ENG', 'name': 'Engineering', 'desc': 'Hard workers' },
+        { 'id': 'NADA', 'name': 'Non existing' },
+        { 'id': 'L', 'name': 'Leadership' }
+    ];
+    return dbConnection.insert().into(dept).values(deptData).commit();
 }
 
 function updateData() {
-  return db.update(d).set(d.desc, 'Master minds').where(d.id.eq('L')).commit();
+    return dbConnection
+        .update(dept)
+        .set(dept['desc'], 'Master minds')
+        .where(dept['id'].eq('L'))
+        .commit();
 }
 
 function deleteData() {
-  return db.delete().from(d).where(d.id.eq('NADA')).commit();
+    return dbConnection
+        .delete()
+        .from(dept)
+        .where(dept['id'].eq('NADA'))
+        .commit();
 }
 
 function selectData() {
-  return db.select().from(d).commit();
+    return dbConnection.select().from(dept).commit();
 }
 
-insertData().then(function() {
-  return updateData();
-}).then(function() {
-  return deleteData();
-}).then(function() {
-  return selectData();
-}).then(function(rows) {
-  // Expected returns:
-  // [{'id': 'HR', 'name': 'Human Resources', 'desc': 'Rock stars'},
-  //  {'id': 'ENG', 'name': 'Engineering', 'desc': 'Hard workers'},
-  //  {'id': 'L', 'name': 'Leadership', 'desc': 'Master minds'}]
-  console.log(rows);
+insertData().then(function () {
+    return updateData();
+}).then(function () {
+    return deleteData();
+}).then(function () {
+    return selectData();
+}).then(function (rows) {
+    // Expected returns:
+    // [{'id': 'HR', 'name': 'Human Resources', 'desc': 'Rock stars'},
+    //  {'id': 'ENG', 'name': 'Engineering', 'desc': 'Hard workers'},
+    //  {'id': 'L', 'name': 'Leadership', 'desc': 'Master minds'}]
+    console.log(rows);
 });

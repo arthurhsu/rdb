@@ -1,20 +1,13 @@
-/** @type {!DatabaseConnection} */
-var db;
-
-/** @type {ITable} */
-var tableA;
-
-/** @type {ITable} */
-var tableB;
-
+let dbConnection;
+let tableA = dbConnection.schema().table('A');
+let tableB = dbConnection.schema().table('B');
 // Implicit inner join.
-var q1 =
-  db.select(tableA['key'], tableA['value'], tableB['timestamp'])
+let q1 = dbConnection
+    .select(tableA['key'], tableA['value'], tableB['timestamp'])
     .from(tableA, tableB)
     .where(tableA['key'].eq(tableB['key']));
-
 // Explicit inner join.
-var q2 =
-  db.select(tableA['key'], tableA['value'], tableB['timestamp'])
+let q2 = dbConnection
+    .select(tableA['key'], tableA['value'], tableB['timestamp'])
     .from(tableA)
     .innerJoin(tableB, tableA['key'].eq(tableB['key']));

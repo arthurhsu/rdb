@@ -1,58 +1,61 @@
 // Open database named 'hr'.
 // If the named instance does not exist, create an empty database instance.
 // Otherwise, open the existing database named 'hr'.
-var db;
-
+let dbConnection;
 function connect() {
-  return navigator.db.open('hr').then(function(instance) {
-    db = instance;
-
-    // version is a read-only number that is for reference only.
-    if (db.version == 0) {
-      // This is an empty database.
-      return setUpNewDb();
-    } else if (db.version < 2) {
-      // Version is smaller than expected, perform upgrades.
-      return upgradeDb();
-    }
-  });
+    let rdb = navigator['db'];
+    return rdb.open('hr').then((connection) => {
+        dbConnection = connection;
+        // version is a read-only number that is for reference only.
+        if (dbConnection.schema().version == 0) {
+            // This is an empty database.
+            return createDB();
+        }
+        else if (dbConnection.schema().version < 2) {
+            // Version is smaller than expected, perform upgrades.
+            return upgradeDB();
+        }
+        return dbConnection;
+    });
 }
 
-function setUpNewDb() {
-  var tx = db.createTransaction('readwrite');
-  var q1 = db.createTable('Dept')
-             .column(/* column_name */ 'id',
-                     /* column_type */ 'string',
-                     /* not_null */ true)
-             .column('name', 'string', true)
-             .column('desc', 'string')
-             .primaryKey([{'name': 'id'}]);
-
-  var q2 = db.createTable('Emp')
-             .column('id', 'number', true)
-             .column('name', 'string', true)
-             .column('deptId', 'string', true)
-             .column('title', 'string')
-             .primaryKey([{name: 'id', order: 'asc'}])
-             .index('idx_name', 'name', /* unique */ true)
-             .index('idx_Desc', [{name: 'desc', order: 'asc'}])
-             .foreignKey({
-               'name': 'fk_DeptId',
-               'local': 'deptId',
-               'remote': 'Dept.id',
-               'action': 'restrict',
-               'timing': 'immediate'
-             });
-  var q3 = db.setVersion(2);
-
-  tx.append([q1, q2, q3]);
-  return tx.commit();
+function createDB() {
+    let tx = dbConnection.createTransaction('readwrite');
+    let q1 = dbConnection
+        .createTable('Dept')
+        .column(/* name */ 'id', /* type */ 'string', /* not null */ true)
+        .column('name', 'string', true)
+        .column('desc', 'string')
+        .primaryKey('id');
+    let q2 = dbConnection
+        .createTable('Emp')
+        .column('id', 'number', true)
+        .column('name', 'string', true)
+        .column('deptId', 'string', true)
+        .column('title', 'string')
+        .primaryKey('id')
+        .index('idx_name', 'name', /* unique */ true)
+        .index('idx_desc', { name: 'desc', order: 'desc' })
+        .foreignKey({
+            'name': 'fk_DeptId',
+            'local': 'deptId',
+            'remote': 'Dept.id',
+            'action': 'restrict',
+            'timing': 'immediate'
+        });
+    let q3 = dbConnection.setVersion(2);
+    return tx.exec([q1, q2, q3]).then(() => { return dbConnection; });
 }
 
-function upgradeDb() {
-  return db.alterTable('Dept').addColumn('desc', 'string').commit();
+function upgradeDB() {
+    return dbConnection
+        .alterTable('Dept')
+        .addColumn('desc', 'string')
+        .addIndex('idx_desc', { name: 'desc', order: 'desc' })
+        .commit()
+        .then(() => { return dbConnection; });
 }
 
-connect().then(function() {
-  // Real work starts here.
+connect().then(() => {
+    // Real work starts here.
 });
