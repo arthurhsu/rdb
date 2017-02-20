@@ -54,104 +54,112 @@
 // Open database named 'hr'.
 // If the named instance does not exist, create an empty database instance.
 // Otherwise, open the existing database named 'hr'.
-var db;
-
+let dbConnection;
 function connect() {
-  return navigator.db.open('hr').then(function(instance) {
-    db = instance;
-
-    // version is a read-only number that is for reference only.
-    if (db.version == 0) {
-      // This is an empty database.
-      return setUpNewDb();
-    } else if (db.version < 2) {
-      // Version is smaller than expected, perform upgrades.
-      return upgradeDb();
-    }
-  });
+    let rdb = navigator['db'];
+    return rdb.open('hr').then((connection) => {
+        dbConnection = connection;
+        // version is a read-only number that is for reference only.
+        if (dbConnection.schema().version == 0) {
+            // This is an empty database.
+            return createDB();
+        }
+        else if (dbConnection.schema().version < 2) {
+            // Version is smaller than expected, perform upgrades.
+            return upgradeDB();
+        }
+        return dbConnection;
+    });
 }
 
-function setUpNewDb() {
-  var tx = db.createTransaction('readwrite');
-  var q1 = db.createTable('Dept')
-             .column(/* column_name */ 'id',
-                     /* column_type */ 'string',
-                     /* not_null */ true)
-             .column('name', 'string', true)
-             .column('desc', 'string')
-             .primaryKey([{'name': 'id'}]);
-
-  var q2 = db.createTable('Emp')
-             .column('id', 'number', true)
-             .column('name', 'string', true)
-             .column('deptId', 'string', true)
-             .column('title', 'string')
-             .primaryKey([{name: 'id', order: 'asc'}])
-             .index('idx_name', 'name', /* unique */ true)
-             .index('idx_Desc', [{name: 'desc', order: 'asc'}])
-             .foreignKey({
-               'name': 'fk_DeptId',
-               'local': 'deptId',
-               'remote': 'Dept.id',
-               'action': 'restrict',
-               'timing': 'immediate'
-             });
-  var q3 = db.setVersion(2);
-
-  tx.append([q1, q2, q3]);
-  return tx.commit();
+function createDB() {
+    let tx = dbConnection.createTransaction('readwrite');
+    let q1 = dbConnection
+        .createTable('Dept')
+        .column(/* name */ 'id', /* type */ 'string', /* not null */ true)
+        .column('name', 'string', true)
+        .column('desc', 'string')
+        .primaryKey('id');
+    let q2 = dbConnection
+        .createTable('Emp')
+        .column('id', 'number', true)
+        .column('name', 'string', true)
+        .column('deptId', 'string', true)
+        .column('title', 'string')
+        .primaryKey('id')
+        .index('idx_name', 'name', /* unique */ true)
+        .index('idx_desc', { name: 'desc', order: 'desc' })
+        .foreignKey({
+            'name': 'fk_DeptId',
+            'local': 'deptId',
+            'remote': 'Dept.id',
+            'action': 'restrict',
+            'timing': 'immediate'
+        });
+    let q3 = dbConnection.setVersion(2);
+    return tx.exec([q1, q2, q3]).then(() => { return dbConnection; });
 }
 
-function upgradeDb() {
-  return db.alterTable('Dept').addColumn('desc', 'string').commit();
+function upgradeDB() {
+    return dbConnection
+        .alterTable('Dept')
+        .addColumn('desc', 'string')
+        .addIndex('idx_desc', { name: 'desc', order: 'desc' })
+        .commit()
+        .then(() => { return dbConnection; });
 }
 
-connect().then(function() {
-  // Real work starts here.
+connect().then(() => {
+    // Real work starts here.
 });
-
   </pre>
   <p>Once the database is opened, queries can be performed.</p>
   <pre class="example highlight">
-var db;
-var d = db.schema().table('Dept');
-
+let dbConnection;
+let dept = dbConnection.schema().table('Dept');
 function insertData() {
-  var deptData = [
-    {'id': 'HR', 'name': 'Human Resources', 'desc': 'Rock stars'},
-    {'id': 'ENG', 'name': 'Engineering', 'desc': 'Hard workers'},
-    {'id': 'NADA', 'name': 'Non existing'},
-    {'id': 'L', 'name': 'Leadership'}
-  ];
-  return db.insert().into(d).values(deptData).commit();
+    let deptData = [
+        { 'id': 'HR', 'name': 'Human Resources', 'desc': 'Rock stars' },
+        { 'id': 'ENG', 'name': 'Engineering', 'desc': 'Hard workers' },
+        { 'id': 'NADA', 'name': 'Non existing' },
+        { 'id': 'L', 'name': 'Leadership' }
+    ];
+    return dbConnection.insert().into(dept).values(deptData).commit();
 }
 
 function updateData() {
-  return db.update(d).set(d.desc, 'Master minds').where(d.id.eq('L')).commit();
+    return dbConnection
+        .update(dept)
+        .set(dept['desc'], 'Master minds')
+        .where(dept['id'].eq('L'))
+        .commit();
 }
 
 function deleteData() {
-  return db.delete().from(d).where(d.id.eq('NADA')).commit();
+    return dbConnection
+        .delete()
+        .from(dept)
+        .where(dept['id'].eq('NADA'))
+        .commit();
 }
 
 function selectData() {
-  return db.select().from(d).commit();
+    return dbConnection.select().from(dept).commit();
 }
 
-insertData().then(function() {
-  return updateData();
-}).then(function() {
-  return deleteData();
-}).then(function() {
-  return selectData();
-}).then(function(rows) {
-  // Expected returns:
-  // [{'id': 'HR', 'name': 'Human Resources', 'desc': 'Rock stars'},
-  //  {'id': 'ENG', 'name': 'Engineering', 'desc': 'Hard workers'},
-  //  {'id': 'L', 'name': 'Leadership', 'desc': 'Master minds'}]
-  console.log(rows);
+insertData().then(function () {
+    return updateData();
+}).then(function () {
+    return deleteData();
+}).then(function () {
+    return selectData();
+}).then(function (rows) {
+    // Expected returns:
+    // [{'id': 'HR', 'name': 'Human Resources', 'desc': 'Rock stars'},
+    //  {'id': 'ENG', 'name': 'Engineering', 'desc': 'Hard workers'},
+    //  {'id': 'L', 'name': 'Leadership', 'desc': 'Master minds'}]
+    console.log(rows);
 });
-
   </pre>
 
   <p>The proposed spec defines the behaviors of a database. A database consists
@@ -611,56 +619,64 @@ insertData().then(function() {
     <h2>Schema Query Examples</h2>
     <p>The following example demonstrates how to create a database schema.</p>
     <pre class="example highlight">
-var db;
-var tx = db.createTransaction('readwrite');
-var q1 = db.createTable('Dept')
-           .column(/* column_name */ 'id',
-                   /* column_type */ 'string',
-                   /* not_null */ true)
-           .column('name', 'string', true)
-           .primaryKey([{'name': 'id'}]);
-
-var q2 = db.createTable('Emp')
-           .column('id', 'number', true)
-           .column('name', 'string', true)
-           .column('deptId', 'string', true)
-           .column('title', 'string')
-           .primaryKey([{'name': 'id', 'order': 'asc'}])
-           .index('idx_Desc', [{'name': 'desc', 'order': 'asc'}])
-           .foreignKey({
-             'name': 'fk_DeptId',
-             'local': 'deptId',
-             'remote': 'Dept.id',
-             'action': 'restrict',
-             'timing': 'immediate'
-           });
-
-tx.exec([q1, q2]).then(function() {
-  // Table created, do something here.
+let dbConnection;
+let tx = dbConnection.createTransaction('readwrite');
+let q1 = dbConnection
+    .createTable('Dept')
+    .column(/* name */ 'id', /* column_type */ 'string', /* not_null */ true)
+    .column('name', 'string', true)
+    .primaryKey('id');
+let q2 = dbConnection
+    .createTable('Emp')
+    .column('id', 'number', true)
+    .column('name', 'string', true)
+    .column('deptId', 'string', true)
+    .column('title', 'string')
+    .primaryKey('id')
+    .index('idx_Desc', { 'name': 'desc', 'order': 'desc' })
+    .foreignKey({
+        'name': 'fk_DeptId',
+        'local': 'deptId',
+        'remote': 'Dept.id',
+        'action': 'restrict',
+        'timing': 'immediate'
+    });
+tx.exec([q1, q2]).then(() => {
+    // Table created, do something here.
 });
-
     </pre>
     <p>The following example shows how to alter database schema during schema
     upgrade.</p>
     <pre class="example highlight">
-var db;
-var version = db.schema().version();
-
+let dbConnection;
+let version = dbConnection.schema().version;
 if (version < 2) {
-  // Need DB upgrade.
-  var tx = db.createTransaction('readwrite');
-  var q1 = db.setVersion(2);
-  var q2 = db.createTable('NewTable')
-             .column('id', 'string', true)
-             .column('name', 'string', true);
-  var q3 = db.alterTable('Emp')
-             .addColumn('location', 'string', true, 'LAX')
-             .setColumn('title').set('title', true)  // Change to NOT NULL
-             .addIndex('idx_location', 'location');
-  var q4 = db.dropTable('Foo');
-  tx.exec([q1, q2, q3, q4]).then(function() {
-    // Update data after schema has changed.
-  });
+    // Need DB upgrade.
+    let tx = dbConnection.createTransaction('readwrite');
+    // BEGIN TRANSACTION equivalent in RDB.
+    tx.begin().then(() => {
+        return tx.attach(dbConnection.setVersion(2));
+    }).then(() => {
+        let q = dbConnection
+            .createTable('NewTable')
+            .column('id', 'string', true)
+            .column('name', 'string', true);
+        return tx.attach(q);
+    }).then(() => {
+        let q = dbConnection
+            .alterTable('Emp')
+            .addColumn('location', 'string', true, 'LAX')
+            .setColumn('title').set('title', true) // Change to NOT NULL
+            .addIndex('idx_location', 'location');
+        return tx.attach(q);
+    }).then(() => {
+        return tx.attach(dbConnection.dropTable('Foo'));
+    }).then(() => {
+        // COMMIT current transaction.
+        return tx.commit();
+    }).then(() => {
+        // Schema change has finished, start work here.
+    });
 }
 
     </pre>
@@ -1179,24 +1195,21 @@ if (version < 2) {
   <p>The following example demonstrate how to perform parameterized query using
   data binding:</p>
   <pre class="example highlight">
-var db;
-
-var query;
-
+let dbConnection;
+let query;
 function init() {
-  var dept = db.schema().table('Department');
-
-  var emp = db.schema().table('Employee');
-  query = db.select(emp.name.as('ename'), dept.name)
-            .from(dept, emp)
-            .where(dept.id.eq(emp.deptId).and(
-                   emp.id.eq(db.bind(0))));
+    let dept = dbConnection.schema().table('Dept');
+    let emp = dbConnection.schema().table('Employee');
+    query = dbConnection
+        .select(emp['name'].as('ename'), dept['name'])
+        .from(dept, emp)
+        .where(dept['id'].eq(emp['id']).and(emp['id'].eq(dbConnection.bind(0))));
 }
 
 function updateModel(employeeId) {
-  query.bind(employeeId).commit().then(function(rows) {
-    console.log(rows[0]['ename'], rows[0]['Department.name']);
-  });
+    query.bind(employeeId).commit().then(rows => {
+        console.log(rows[0]['ename'], rows[0]['Department.name']);
+    });
 }
 
   </pre>
@@ -1527,20 +1540,19 @@ function updateModel(employeeId) {
     engine MUST evaluate these subqueries first and automatic bind the values
     into the main query.</p>
     <pre class="example highlight">
-var db;
-
+let dbConnection;
 function getDepartmentsWithFounders() {
-  var dept = db.schema().table('Department');
-
-  var emp = db.schema().table('Employee');
-
-  return db.select(dept.name)
-           .from(dept)
-           .where(dept.id.in(
-               db.select(emp.deptId)
-                 .from(emp)
-                 .where(emp.id.lt(12))))
-           .commit();
+    let dept = dbConnection.schema().table('Department');
+    let emp = dbConnection.schema().table('Employee');
+    return dbConnection
+        .select(dept.name)
+        .from(dept)
+        .where(dept['id'].in(
+            dbConnection
+                .select(emp['deptId'])
+                .from(emp)
+                .where(emp['id'].lt(12))))
+        .commit();
 }
 
     </pre>
@@ -1740,24 +1752,19 @@ function getDepartmentsWithFounders() {
   conditions, or explicitly via <code>innerJoin()</code>. The following
   example demonstrates two equivalent inner join syntaxes:</p>
   <pre class="example highlight">
-var db;
-
-var tableA;
-
-var tableB;
-
+let dbConnection;
+let tableA = dbConnection.schema().table('A');
+let tableB = dbConnection.schema().table('B');
 // Implicit inner join.
-var q1 =
-  db.select(tableA['key'], tableA['value'], tableB['timestamp'])
+let q1 = dbConnection
+    .select(tableA['key'], tableA['value'], tableB['timestamp'])
     .from(tableA, tableB)
     .where(tableA['key'].eq(tableB['key']));
-
 // Explicit inner join.
-var q2 =
-  db.select(tableA['key'], tableA['value'], tableB['timestamp'])
+let q2 = dbConnection
+    .select(tableA['key'], tableA['value'], tableB['timestamp'])
     .from(tableA)
     .innerJoin(tableB, tableA['key'].eq(tableB['key']));
-
   </pre>
 
   <p>The results of inner join MUST be equivalent to the outcome of the
@@ -1912,19 +1919,19 @@ var q2 =
       inside <code>union()</code>.</li>
   </ol>
   <pre class="example highlight">
-var db;
-
+let dbConnection;
 function getOrderList() {
-  var order = db.schema().table('Order');
-
-  var archive = db.schema().table('ArchivedOrder');
-
-  var query = db.select(order.item, order.amount)
-                .from(order)
-                .where(order.category.eq('Clothing'))
-                .union(db.select(archive.item, archive.amount)
-                         .from(archive)
-                         .where(archive.category.eq('Clothing')));
+    let order = dbConnection.schema().table('Order');
+    let archive = dbConnection.schema().table('ArchivedOrder');
+    return dbConnection
+        .select(order['item'], order['amount'])
+        .from(order)
+        .where(order['category'].eq('Clothing'))
+        .union(dbConnection
+            .select(archive['item'], archive['amount'])
+            .from(archive)
+            .where(archive.category.eq('Clothing')))
+        .commit();
 }
 
   </pre>
