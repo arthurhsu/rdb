@@ -89,13 +89,7 @@ function createDB() {
         .primaryKey('id')
         .index('idx_name', 'name', /* unique */ true)
         .index('idx_desc', { name: 'desc', order: 'desc' })
-        .foreignKey({
-            'name': 'fk_DeptId',
-            'local': 'deptId',
-            'remote': 'Dept.id',
-            'action': 'restrict',
-            'timing': 'immediate'
-        });
+        .foreignKey('fk_DeptId', 'deptId', 'Dept.id');
     let q3 = dbConnection.setVersion(2);
     return tx.exec([q1, q2, q3]).then(() => { return dbConnection; });
 }
@@ -387,7 +381,7 @@ insertData().then(function () {
       interface ITableBuilder : IExecutionContext {
         ITableBuilder column(DOMString name, ColumnType type, optional boolean notNull = false);
         ITableBuilder primaryKey((DOMString or DOMString[]) columns, optional boolean autoIncrement = false);
-        ITableBuilder foreignKey(ForeignKeySpec foreignKey);
+        ITableBuilder foreignKey(DOMString name, (DOMString or DOMString[]) column, (DOMString or DOMString[]) foreign, optional ForeignKeyAction action = "restrict", optional ForeignKeyTiming timing = "immediate");
         ITableBuilder index(DOMString name, IndexedColumnDefinition columns, optional boolean unique = false);
       };
     </pre>
@@ -418,9 +412,13 @@ insertData().then(function () {
       inserted into the table, the key will increase by one and assigned to that
       row regardless the original key value given to the row.</dd>
       <dt><code>ITableBuilder
-      <dfn data-dfn-for="ITableBuilder">foreignKey</dfn>(ForeignKeySpec
-      foreignKey);</code></dt>
-      <dd>Adds a foreign key to table.</dd>
+      <dfn data-dfn-for="ITableBuilder">foreignKey</dfn>(DOMString name,
+      (DOMString or DOMString[]) column, (DOMString or DOMString[]) foreign,
+      optional ForeignKeyAction action = 'restrict',
+      optional ForeignKeyTiming timing = 'immediate');</code></dt>
+      <dd>Adds a foreign key to table. See
+      <a href="#foreign-key-declaration">Foreign Key Declaration</a> for
+      details.</dd>
       <dt><code>ITableBuilder
       <dfn data-dfn-for="ITableBuilder">index</dfn>(DOMString name,
       IndexedColumnDefinition columns, optional boolean unique = false);</code></dt>
@@ -449,12 +447,12 @@ insertData().then(function () {
     index is specified.</p>
 
     <p>The WebIDL below defines indexed column specification.</p>
-    <pre class="idl">
-      typedef (DOMString or DOMString[] or IndexedColumnSpec or IndexedColumnSpec[]) IndexedColumnDefinition;
+    <pre class="idl">      
       dictionary IndexedColumnSpec {
         DOMString name;
         Order order = "asc";
       };
+      typedef (DOMString or DOMString[] or IndexedColumnSpec or IndexedColumnSpec[]) IndexedColumnDefinition;
     </pre>
     <dl class="dictionary-members">
       <dt><code>name</code></dt>
@@ -474,33 +472,25 @@ insertData().then(function () {
   </section>
   
   <section>
-    <h2>Foreign Key Specification</h2>
-    <p>The following WebIDL defines foreign key specification.</p>
-    <pre class="idl">
-      dictionary ForeignKeySpec {
-        DOMString name;
-        DOMString local;
-        DOMString remote;
-        ForeignKeyAction action = "restrict";
-        ForeignKeyTiming timing = "immediate";
-      };
-    </pre>
-    <dl class="dictionary-members">
-      <dt><code>name</code></dt>
-      <dd>Name of the foreign key, MUST be unique withing the containing table.
-      </dd>
-      <dt><code>local</code></dt>
-      <dd>Referring column name, MUST <a>refer</a> to an <a>indexable</a>
-      column of the containing table.</dd>
-      <dt><code>remote</code></dt>
-      <dd>Referred column in its <a>full name</a>, MUST <a>refer</a> to an
-      <a>indexable</a> column.</dd>
-      <dt><code>action</code></dt>
-      <dd>(Optional) Foreign key action, default to <code>restrict</code>.</dd>
-      <dt><code>timing</code></dt>
-      <dd>(Optional) Foreign key timing, default to <code>immediate</code>.
-      </dd>
-    </dl>
+    <h2>Foreign Key Declaration</h2>
+    <p>Foreign keys provides <dfn>referential integrity</dfn>, which means that
+    a value in a column MUST match the values appearing in some row of another
+    table. A foreign key is defined with five parameters:</p>
+    <ul>
+      <li><code>name</code> is a unique name within the containing table that
+      identifies this constraint.</li>
+      <li><code>column</code> is the name of local (referring) column(s).
+      It MUST be <a>indexable</a>.</li>
+      <li><code>foreign</code> is the <a>full name</a> of the remote (referred)
+      column(s). It MUST consist a unique index or primary key. The number of
+      columns and column types MUST exactly match what are provided in the
+      <code>column</code> parameter.</li>
+      <li><code>action</code> is an optional parameter, and default to
+      <code>restrict</code>.</li>
+      <li><code>timing</code> is an optional paramter, and default to
+      <code>immediate</code>.</li>
+    </ul>
+
     <p>A <dfn>chainned foreign key</dfn> means the <code>remote</code> column
     is also a <code>local</code> column of another foreign key, which forms a
     dependency. The query engine MAY support chainned foreign key. The query
@@ -509,28 +499,39 @@ insertData().then(function () {
     <p>Foreign key actions are enum values as defined in the following:</p>
     <pre class="idl">
       enum ForeignKeyAction {
-        // Any constraint violation results in cancelling the operation that
-        // violated the constraint.
         "restrict",
-
-        // Constraint violation results in modifying related tables as
-        // necessary to maintain data integrity.
         "cascade"
       };
     </pre>
+    <dl class="dictionary-members">
+      <dt><code>restrict</code></dt>
+      <dd>Any constraint violation results in cancelling the operation that
+      violated the constraint. This is the default value.</dd>
+      <dt><code>cascade</code></dt>
+      <dd>Constraint violation results in modifying related tables as necessary
+      to maintain data integrity.</dd>
+    </dl>
     <p>Foreign key timings are enum values as defined below:</p>
     <pre class="idl">
       enum ForeignKeyTiming {
-        // The constraint is enforced right before a transaction is committed.
-        // The constraint can be violated by individual queries during the
-        // lifetime of the enclosing transaction, without any error being
-        // thrown.
-        "deferrable",
-
-        // The constraint is enforced during execution of each individual query.
-        "immediate"
+        "immediate",
+        "deferrable"
       };
     </pre>
+    <dl class="dictionary-members">
+      <dt><code>immediate</code></dt>
+      <dd>The constraint is enforced during execution of each individual query.
+      This is the default value.</dd>
+      <dt><code>deferrable</code></dt>
+      <dd>The constraint is enforced right before a transaction is committed.
+      The constraint can be violated by individual queries during the lifetime
+      of the enclosing transaction, without any error being thrown.</dd>
+    </dl>
+
+    <p class="note">This specification does NOT support granuarity of cascade,
+    e.g. <code>ON DELETE UPDATE ON UPDATE NO_ACTION</code>. It also does NOT
+    support granuarity of deferral, e.g.
+    <code>DEFERRABLE INITIALLY IMMEDIATE</code>.</p>
   </section>
 
   <section>
@@ -545,7 +546,7 @@ insertData().then(function () {
         ITableChanger addColumn(DOMString name, ColumnType type, optional boolean notNull = false, optional ValueType defaultValue = null);
         ITableChanger dropColumn(DOMString name);
         ITableChanger addPrimaryKey((DOMString or DOMString[]) columns);
-        ITableChanger addForeignKey(ForeignKeySpec foreignKey);
+        ITableChanger addForeignKey(DOMString name, (DOMString or DOMString[]) column, (DOMString or DOMString[]) foreign, optional ForeignKeyAction action = "restrict", optional ForeignKeyTiming timing = "immediate");
         ITableChanger addIndex(DOMString name, IndexedColumnDefinition columns, optional boolean unique = false);
         ITableChanger dropConstraintOrIndex(DOMString name);
         IColumnChanger setColumn(DOMString name);
@@ -580,7 +581,7 @@ insertData().then(function () {
       <dd>Removes primary key from table. If the table does not have primary
       key, this method will do nothing. If the primary key is auto-increment
       primary key, an <a>UnsupportedError</a> will be thrown.</dd>
-      <dt><code>ITableChanger addForeignKey(ForeignKeySpec foreignKey);</code></dt>
+      <dt><code>ITableChanger addForeignKey(DOMString name, (DOMString or DOMString[]) column, (DOMString or DOMString[]) foreign, optional ForeignKeyAction action = 'restrict', optional ForeignKeyTiming timing = 'immediate')</code></dt>
       <dd>Adds a foreign key to the table.</dd>
       <dt><code>ITableChanger addIndex(DOMString name, IndexedColumnDefinition columns, optional boolean unique = false);</code></dt>
       <dd>Adds an index to the table. The <code>name</code> is the name
@@ -634,13 +635,7 @@ let q2 = dbConnection
     .column('title', 'string')
     .primaryKey('id')
     .index('idx_Desc', { 'name': 'desc', 'order': 'desc' })
-    .foreignKey({
-        'name': 'fk_DeptId',
-        'local': 'deptId',
-        'remote': 'Dept.id',
-        'action': 'restrict',
-        'timing': 'immediate'
-    });
+    .foreignKey('fk_DeptId', 'deptId', 'Dept.id');
 tx.exec([q1, q2]).then(() => {
     // Table created, do something here.
 });
@@ -1153,9 +1148,10 @@ if (version < 2) {
       <dt><code>type</code></dt>
       <dd>Data type of the column.</dd>
       <dt><code>fullName</code></dt>
-      <dd>The <a>full name</a> of the column. When the containing table has
-      alias, it will be <code>`${ITable#getAlias}.${IColumn.name}`</code>,
-      otherwise <code>`${ITable#getName}.${IColumn.name}`</code>.</dd>
+      <dd>The <dfn>full name</dfn> of the column. When the containing table does
+      not have alias, or used in foreign key definition, it will be
+      <code>`${ITable#getName}.${IColumn.name}`</code>, otherwise
+      <code>`${ITable#getAlias}.${IColumn.name}`</code>.</dd>
       <dt><code>nullable</code></dt>
       <dd>When <code>false</code>, the column is <a>NOT NULL</a></dd>
     </dl>
