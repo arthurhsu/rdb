@@ -13,13 +13,7 @@ let q2 = dbConnection
     .column('title', 'string')
     .primaryKey('id')
     .index('idx_Desc', { 'name': 'desc', 'order': 'desc' })
-    .foreignKey({
-        'name': 'fk_DeptId',
-        'local': 'deptId',
-        'remote': 'Dept.id',
-        'action': 'restrict',
-        'timing': 'immediate'
-    });
+    .foreignKey('fk_DeptId', 'deptId', 'Dept.id');
 tx.exec([q1, q2]).then(() => {
     // Table created, do something here.
 });

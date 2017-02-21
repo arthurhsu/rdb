@@ -13,6 +13,14 @@ IndexedDB limitations, which implies that certain API needs to be redesigned.
 On the other hand, to become a W3C standard, use of scoped global function
 needs to be limited, which is a new constraint in API design.
 
+## DDL Changes
+
+DDL changes are the main changes from Lovefield to RDB specification. The way of
+defining tables, indices and constraints are similar, but with subtle
+differences. The new syntax is less verbose and easier to call. Besides that,
+it also allows multi-column foreign key, schema change at arbitary readwrite
+transactions, schema persistence, and so on.
+
 ## Search Condition Changes
 
 ### Logical operation

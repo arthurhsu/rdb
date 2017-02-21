@@ -60,9 +60,10 @@
       <dt><code>type</code></dt>
       <dd>Data type of the column.</dd>
       <dt><code>fullName</code></dt>
-      <dd>The <a>full name</a> of the column. When the containing table has
-      alias, it will be <code>`${ITable#getAlias}.${IColumn.name}`</code>,
-      otherwise <code>`${ITable#getName}.${IColumn.name}`</code>.</dd>
+      <dd>The <dfn>full name</dfn> of the column. When the containing table does
+      not have alias, or used in foreign key definition, it will be
+      <code>`${ITable#getName}.${IColumn.name}`</code>, otherwise
+      <code>`${ITable#getAlias}.${IColumn.name}`</code>.</dd>
       <dt><code>nullable</code></dt>
       <dd>When <code>false</code>, the column is <a>NOT NULL</a></dd>
     </dl>
