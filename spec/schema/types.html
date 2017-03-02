@@ -7,13 +7,14 @@
       "blob",
       "boolean",
       "date",
+      "integer",
       "number",
       "string",
       "object"
     };
 
-    typedef (ArrayBuffer or boolean or Date or number or DOMString or object) ValueType;
-    typedef (boolean or Date or number or DOMString) IndexableValueType;
+    typedef (ArrayBuffer or boolean or Date or long long or double or DOMString or object) ValueType;
+    typedef (boolean or Date or long or double or DOMString) IndexableValueType;
   </pre>
 
   <p><dfn data-dfn-for="ColumnType">blob</dfn> represents JavaScript
@@ -23,7 +24,16 @@
   <dfn data-dfn-for="ColumnType">number</dfn>,
   <dfn data-dfn-for="ColumnType">string</dfn> and
   <dfn data-dfn-for="ColumnType">object</dfn> correpond to the types of the same
-  names in JavaScript.</p>
+  names in JavaScript. The type <code>number</code> is the Web IDL type
+  <code>double</code>.</p>
+
+  <p><dfn data-dfn-for="ColumnType">integer</dfn> is a special data type
+  representing integers, corresponding to Web IDL type <code>long long</code>,
+  but within the range of <code>[Number#MIN_SAFE_INTEGER,
+  Number#MAX_SAFE_INTEGER]</code>. Integer columns will be converted to and from
+  JavaScript <code>number</code> types using equivalent of
+  <code>Number#toPrecision(1)</code>. If the converted number failed test of
+  <code>Number#isSafeInteger()</code>, a <a>DataError</a> will be thrown.</p>
   <p>JavaScript types that can be used in a column is defined as
   <dfn>ValueType</dfn>. Only some value types are <dfn>indexable</dfn>,
   indicating that they can be compared, sorted, and used in indices and

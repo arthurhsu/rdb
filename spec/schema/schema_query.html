@@ -134,10 +134,16 @@
       one primary key. Column(s) that consists primary key, MUST <a>refer</a> to
       <a>indexable</a> column(s) of the containing table. When
       <code>autoIncrement</code> is set to <code>true</code>, there MUST be only
-      one column in the <code>column</code> field with <code>numeric</code>
+      one column in the <code>column</code> field with <code>integer</code>
       column type. An auto-increment key will start from zero. When a new row is
       inserted into the table, the key will increase by one and assigned to that
-      row regardless the original key value given to the row.</dd>
+      row regardless the original key value given to the row. If the key grows
+      beyond the integer range <code>Number#MAX_SAFE_INTEGER</code>, it will be
+      reset to <code>0</code> and start over. If a column is designated as
+      auto-increment primary key, its values become read-only and MUST NOT be
+      updatable by the user (i.e. users cannot call <code>update()</code> on
+      that column). The next auto-increment value cannot be reset even when all
+      rows are deleted from that table.</dd>
       <dt><code>ITableBuilder
       <dfn data-dfn-for="ITableBuilder">foreignKey</dfn>(DOMString name,
       (DOMString or DOMString[]) column, (DOMString or DOMString[]) foreign,
@@ -150,7 +156,7 @@
       <dfn data-dfn-for="ITableBuilder">index</dfn>(DOMString name,
       IndexedColumnDefinition columns, optional boolean unique = false);</code></dt>
       <dd>Adds an index to table. The <code>name</code> is the name of the
-      index, and it MUST be unique within the containing table. The 
+      index, and it MUST be unique within the containing table. The
       <code>columns</code> allows multiple type of definitions. If provided as
       <code>DOMString</code>, the string MUST <a>refer</a> to an
       <a>indexable</a> column of the containing table; if provided as
@@ -174,7 +180,7 @@
     index is specified.</p>
 
     <p>The WebIDL below defines indexed column specification.</p>
-    <pre class="idl">      
+    <pre class="idl">
       dictionary IndexedColumnSpec {
         DOMString name;
         Order order = "asc";
@@ -197,7 +203,7 @@
     <p class="note">Cross-table indices or views are not supported in this
     specification.</p>
   </section>
-  
+
   <section>
     <h2>Foreign Key Declaration</h2>
     <p>Foreign keys provides <dfn>referential integrity</dfn>, which means that
