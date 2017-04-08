@@ -5,7 +5,7 @@
   Bindable values are typed as following:</p>
   <pre class="idl">
     interface IBindableValue {
-      readonly attribute any value;
+      readonly attribute octet index;
     };
   </pre>
   <p>Type check of bound value is performed by query engine before executing
@@ -13,6 +13,9 @@
   <a>IQuery.bind</a> prior to query execution. A query with any unassigned
   <a>IBindableValue</a>, or any assigned <a>IBindableValue</a> with mismatched
   type, MUST be rejected with <a>BindingError</a> during its execution.</p>
+
+  <p>One can bind at most 255 bindable values for any given statement. This
+  limitation is created for simpler implementation.</p>
 
   <p>The following example demonstrate how to perform parameterized query using
   data binding:</p>
