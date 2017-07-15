@@ -107,8 +107,8 @@
     <pre class="idl">
       interface ITableBuilder : IExecutionContext {
         ITableBuilder column(DOMString name, ColumnType type, optional boolean notNull = false);
-        ITableBuilder primaryKey((DOMString or DOMString[]) columns, optional boolean autoIncrement = false);
-        ITableBuilder foreignKey(DOMString name, (DOMString or DOMString[]) column, (DOMString or DOMString[]) foreign, optional ForeignKeyAction action = "restrict", optional ForeignKeyTiming timing = "immediate");
+        ITableBuilder primaryKey((DOMString or sequence< DOMString >) columns, optional boolean autoIncrement = false);
+        ITableBuilder foreignKey(DOMString name, (DOMString or sequence< DOMString >) column, (DOMString or sequence< DOMString >) foreign, optional ForeignKeyAction action = "restrict", optional ForeignKeyTiming timing = "immediate");
         ITableBuilder index(DOMString name, IndexedColumnDefinition columns, optional boolean unique = false);
       };
     </pre>
@@ -128,7 +128,7 @@
       <a>NOT NULL</a>.</dd>
       <dt><code>ITableBuilder
       <dfn data-dfn-for="ITableBuilder">primaryKey</dfn>((DOMString
-      or DOMString[]) columns, optional boolean autoIncrement = false);</code></dt>
+      or sequence< DOMString >) columns, optional boolean autoIncrement = false);</code></dt>
       <dd>Adds a primary key to table. This method MUST NOT be called multiple
       times. Primary key is a specialized unique index. Each table can have only
       one primary key. Column(s) that consists primary key, MUST <a>refer</a> to
@@ -146,7 +146,7 @@
       rows are deleted from that table.</dd>
       <dt><code>ITableBuilder
       <dfn data-dfn-for="ITableBuilder">foreignKey</dfn>(DOMString name,
-      (DOMString or DOMString[]) column, (DOMString or DOMString[]) foreign,
+      (DOMString or sequence< DOMString >) column, (DOMString or sequence< DOMString >) foreign,
       optional ForeignKeyAction action = 'restrict',
       optional ForeignKeyTiming timing = 'immediate');</code></dt>
       <dd>Adds a foreign key to table. See
@@ -160,10 +160,10 @@
       <code>columns</code> allows multiple type of definitions. If provided as
       <code>DOMString</code>, the string MUST <a>refer</a> to an
       <a>indexable</a> column of the containing table; if provided as
-      <code>DOMString[]</code>, it MUST NOT be empty, and the strings MUST
+      <code>sequence< DOMString ></code>, it MUST NOT be empty, and the strings MUST
       <a>refer</a> to different <a>indexable</a> columns of the containing
       table. In these two cases, default sort order of <code>asc</code> is
-      used. If provided as <code>IndexedColumnSpec[]</code>, it MUST NOT
+      used. If provided as <code>sequence< IndexedColumnSpec ></code>, it MUST NOT
       be empty, and each <code>IndexedColumnSpec</code> MUST <a>refer</a>
       to different column. The optional <code>unique</code> parameter specifies
       whether keys in index are unique or not, default to <code>false</code>.</dd>
@@ -185,7 +185,7 @@
         DOMString name;
         Order order = "asc";
       };
-      typedef (DOMString or DOMString[] or IndexedColumnSpec or IndexedColumnSpec[]) IndexedColumnDefinition;
+      typedef (DOMString or sequence< DOMString > or IndexedColumnSpec or sequence< IndexedColumnSpec >) IndexedColumnDefinition;
     </pre>
     <dl class="dictionary-members">
       <dt><code>name</code></dt>
@@ -278,8 +278,8 @@
         ITableChanger rename(DOMString newTableName);
         ITableChanger addColumn(DOMString name, ColumnType type, optional boolean notNull = false, optional ValueType defaultValue = null);
         ITableChanger dropColumn(DOMString name);
-        ITableChanger addPrimaryKey((DOMString or DOMString[]) columns);
-        ITableChanger addForeignKey(DOMString name, (DOMString or DOMString[]) column, (DOMString or DOMString[]) foreign, optional ForeignKeyAction action = "restrict", optional ForeignKeyTiming timing = "immediate");
+        ITableChanger addPrimaryKey((DOMString or sequence< DOMString >) columns);
+        ITableChanger addForeignKey(DOMString name, (DOMString or sequence< DOMString >) column, (DOMString or sequence< DOMString >) foreign, optional ForeignKeyAction action = "restrict", optional ForeignKeyTiming timing = "immediate");
         ITableChanger addIndex(DOMString name, IndexedColumnDefinition columns, optional boolean unique = false);
         ITableChanger dropConstraintOrIndex(DOMString name);
         IColumnChanger setColumn(DOMString name);
@@ -307,14 +307,14 @@
       be the only column in the table schema, and MUST NOT be referred by any
       index nor constraints. Every existing row in the table will be modified
       to remove the field represented by that column.</dd>
-      <dt><code>ITableChanger addPrimaryKey((DOMString or DOMString[]) columns);</code></dt>
+      <dt><code>ITableChanger addPrimaryKey((DOMString or sequence< DOMString >) columns);</code></dt>
       <dd>Adds a primary key to table, the table MUST not have existing primary
       key. The key MUST NOT auto increment.</dd>
       <dt><code>ITableChanger dropPrimaryKey();</code></dt>
       <dd>Removes primary key from table. If the table does not have primary
       key, this method will do nothing. If the primary key is auto-increment
       primary key, an <a>UnsupportedError</a> will be thrown.</dd>
-      <dt><code>ITableChanger addForeignKey(DOMString name, (DOMString or DOMString[]) column, (DOMString or DOMString[]) foreign, optional ForeignKeyAction action = 'restrict', optional ForeignKeyTiming timing = 'immediate')</code></dt>
+      <dt><code>ITableChanger addForeignKey(DOMString name, (DOMString or sequence< DOMString >) column, (DOMString or sequence< DOMString >) foreign, optional ForeignKeyAction action = 'restrict', optional ForeignKeyTiming timing = 'immediate')</code></dt>
       <dd>Adds a foreign key to the table.</dd>
       <dt><code>ITableChanger addIndex(DOMString name, IndexedColumnDefinition columns, optional boolean unique = false);</code></dt>
       <dd>Adds an index to the table. The <code>name</code> is the name

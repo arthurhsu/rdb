@@ -75,7 +75,7 @@
         ILogicalPredicate between(ComparableValueType lhs, ComparableValueType rhs);
         ILogicalPredicate startsWith((IBindableValue or DOMString) value);
         ILogicalPredicate endsWith((IBindableValue or DOMString) value);
-        ILogicalPredicate in((ComparableValueType[] or IBindableValue or ISelectQuery) values);
+        ILogicalPredicate in((sequence< ComparableValueType > or IBindableValue or ISelectQuery) values);
         ILogicalPredicate isNull();
         ILogicalPredicate isNotNull();
       };
@@ -91,7 +91,7 @@
       <dt><code>ILogicalPredicate endsWith((IBindableValue or DOMString) value);</code></dt>
       <dd>The associated column starts with the string provided. If the column
       is not of string type, <a>TypeError</a> will be thrown.</dd>
-      <dt><code>ILogicalPredicate in((ComparableValueType[] or IBindableValue or ISelectQuery) values);</code></dt>
+      <dt><code>ILogicalPredicate in((sequence< ComparableValueType > or IBindableValue or ISelectQuery) values);</code></dt>
       <dd>The associated column equals to one of the value inside
       <code>values</code>. Equality is evaluated using the rule of JavaScript
       <code>===</code> operator. If the <code>values</code> are specified as an
@@ -165,7 +165,7 @@
   <section>
     <h2>Subqueries</h2>
     <p><a href="#data-selection">Select queries</a> that can be evaluated into
-    <a>IndexableValueType</a> or <a>IndexableValueType</a><code>[]</code> can
+    <a>IndexableValueType</a> or <code>sequence< IndexableValueType ></code>can
     be used in predicates as <a>ComparableValueType</a> values. The evaluated
     type MUST be identical as the type requested by predicate. The query
     engine MUST evaluate these subqueries first and automatic bind the values

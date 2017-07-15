@@ -11,7 +11,7 @@
   <p>Transaction execution behavior is modeled as the following:</p>
 
   <pre class="idl">
-    typedef (void or object[]) TransactionResults;
+    typedef (void or sequence< object >) TransactionResults;
 
     interface IExecutionContext {
       Promise< TransactionResults > commit();
@@ -55,7 +55,7 @@
   <pre class="idl">
     interface ITransaction : IExecutionContext {
       Promise< void > begin();
-      Promise< TransactionResults > exec(IExecutionContext[] queries);
+      Promise< TransactionResults > exec(sequence< IExecutionContext > queries);
       Promise< TransactionResults > attach(IExecutionContext query);
     };
   </pre>
@@ -66,7 +66,7 @@
     transaction is triggered, or the transaction is timed out by implementation
     (which the implementation MUST throw <a>TimoutError</a> and reject any
     further calls on this transaction object).</dd>
-    <dt><code>Promise< TransactionResults > exec(IExecutionContext[] queries);</code></dt>
+    <dt><code>Promise< TransactionResults > exec(sequence< IExecutionContext > queries);</code></dt>
     <dd>Starts <em>batch mode</em> execution and auto-commit.</dd>
     <dt><code>Promise< TransactionResults > attach(IExecutionContext query);</code></dt>
     <dd>Schedules a query to existing <em>sequence mode</em> execution. The

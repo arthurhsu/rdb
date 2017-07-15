@@ -8,7 +8,7 @@
   <pre class="idl">
     interface IInsertQuery : IQuery {
       IInsertQuery into(ITable table);
-      IInsertQuery values((object or object[] or IBindableValue) rows);
+      IInsertQuery values((object or sequence< object > or IBindableValue) rows);
     };
   </pre>
   <dl class="methods">
@@ -16,7 +16,7 @@
     <dd>Specifies the target table to insert rows into. For
     <code>insertOrReplace</code>, the <code>table</code> MUST have a primary
     key, otherwise <a>IntegrityError</a> will be thrown.</dd>
-    <dt><code>IInsertQuery values((object or object[] or IBindableValue) rows);</code></dt>
+    <dt><code>IInsertQuery values((object or sequence< object > or IBindableValue) rows);</code></dt>
     <dd>Supplies the row(s) to be inserted. When given an <code>object</code>
     as parameter, or the bindable value resolved as an object, the object will
     act as a single row; otherwise, each element in the given array is treated
