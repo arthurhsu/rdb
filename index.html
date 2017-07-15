@@ -82,7 +82,7 @@ function createDB() {
         .primaryKey('id');
     let q2 = dbConnection
         .createTable('Emp')
-        .column('id', 'number', true)
+        .column('id', 'integer', true)
         .column('name', 'string', true)
         .column('deptId', 'string', true)
         .column('title', 'string')
@@ -223,13 +223,14 @@ insertData().then(function () {
       "blob",
       "boolean",
       "date",
+      "integer",
       "number",
       "string",
       "object"
     };
 
-    typedef (ArrayBuffer or boolean or Date or number or DOMString or object) ValueType;
-    typedef (boolean or Date or number or DOMString) IndexableValueType;
+    typedef (ArrayBuffer or boolean or Date or long long or double or DOMString or object) ValueType;
+    typedef (boolean or Date or long or double or DOMString) IndexableValueType;
   </pre>
 
   <p><dfn data-dfn-for="ColumnType">blob</dfn> represents JavaScript
@@ -239,7 +240,16 @@ insertData().then(function () {
   <dfn data-dfn-for="ColumnType">number</dfn>,
   <dfn data-dfn-for="ColumnType">string</dfn> and
   <dfn data-dfn-for="ColumnType">object</dfn> correpond to the types of the same
-  names in JavaScript.</p>
+  names in JavaScript. The type <code>number</code> is the Web IDL type
+  <code>double</code>.</p>
+
+  <p><dfn data-dfn-for="ColumnType">integer</dfn> is a special data type
+  representing integers, corresponding to Web IDL type <code>long long</code>,
+  but within the range of <code>[Number#MIN_SAFE_INTEGER,
+  Number#MAX_SAFE_INTEGER]</code>. Integer columns will be converted to and from
+  JavaScript <code>number</code> types using equivalent of
+  <code>Number#toPrecision(1)</code>. If the converted number failed test of
+  <code>Number#isSafeInteger()</code>, a <a>DataError</a> will be thrown.</p>
   <p>JavaScript types that can be used in a column is defined as
   <dfn>ValueType</dfn>. Only some value types are <dfn>indexable</dfn>,
   indicating that they can be compared, sorted, and used in indices and
@@ -380,8 +390,8 @@ insertData().then(function () {
     <pre class="idl">
       interface ITableBuilder : IExecutionContext {
         ITableBuilder column(DOMString name, ColumnType type, optional boolean notNull = false);
-        ITableBuilder primaryKey((DOMString or DOMString[]) columns, optional boolean autoIncrement = false);
-        ITableBuilder foreignKey(DOMString name, (DOMString or DOMString[]) column, (DOMString or DOMString[]) foreign, optional ForeignKeyAction action = "restrict", optional ForeignKeyTiming timing = "immediate");
+        ITableBuilder primaryKey((DOMString or sequence< DOMString >) columns, optional boolean autoIncrement = false);
+        ITableBuilder foreignKey(DOMString name, (DOMString or sequence< DOMString >) column, (DOMString or sequence< DOMString >) foreign, optional ForeignKeyAction action = "restrict", optional ForeignKeyTiming timing = "immediate");
         ITableBuilder index(DOMString name, IndexedColumnDefinition columns, optional boolean unique = false);
       };
     </pre>
@@ -401,19 +411,25 @@ insertData().then(function () {
       <a>NOT NULL</a>.</dd>
       <dt><code>ITableBuilder
       <dfn data-dfn-for="ITableBuilder">primaryKey</dfn>((DOMString
-      or DOMString[]) columns, optional boolean autoIncrement = false);</code></dt>
+      or sequence< DOMString >) columns, optional boolean autoIncrement = false);</code></dt>
       <dd>Adds a primary key to table. This method MUST NOT be called multiple
       times. Primary key is a specialized unique index. Each table can have only
       one primary key. Column(s) that consists primary key, MUST <a>refer</a> to
       <a>indexable</a> column(s) of the containing table. When
       <code>autoIncrement</code> is set to <code>true</code>, there MUST be only
-      one column in the <code>column</code> field with <code>numeric</code>
+      one column in the <code>column</code> field with <code>integer</code>
       column type. An auto-increment key will start from zero. When a new row is
       inserted into the table, the key will increase by one and assigned to that
-      row regardless the original key value given to the row.</dd>
+      row regardless the original key value given to the row. If the key grows
+      beyond the integer range <code>Number#MAX_SAFE_INTEGER</code>, it will be
+      reset to <code>0</code> and start over. If a column is designated as
+      auto-increment primary key, its values become read-only and MUST NOT be
+      updatable by the user (i.e. users cannot call <code>update()</code> on
+      that column). The next auto-increment value cannot be reset even when all
+      rows are deleted from that table.</dd>
       <dt><code>ITableBuilder
       <dfn data-dfn-for="ITableBuilder">foreignKey</dfn>(DOMString name,
-      (DOMString or DOMString[]) column, (DOMString or DOMString[]) foreign,
+      (DOMString or sequence< DOMString >) column, (DOMString or sequence< DOMString >) foreign,
       optional ForeignKeyAction action = 'restrict',
       optional ForeignKeyTiming timing = 'immediate');</code></dt>
       <dd>Adds a foreign key to table. See
@@ -423,14 +439,14 @@ insertData().then(function () {
       <dfn data-dfn-for="ITableBuilder">index</dfn>(DOMString name,
       IndexedColumnDefinition columns, optional boolean unique = false);</code></dt>
       <dd>Adds an index to table. The <code>name</code> is the name of the
-      index, and it MUST be unique within the containing table. The 
+      index, and it MUST be unique within the containing table. The
       <code>columns</code> allows multiple type of definitions. If provided as
       <code>DOMString</code>, the string MUST <a>refer</a> to an
       <a>indexable</a> column of the containing table; if provided as
-      <code>DOMString[]</code>, it MUST NOT be empty, and the strings MUST
+      <code>sequence< DOMString ></code>, it MUST NOT be empty, and the strings MUST
       <a>refer</a> to different <a>indexable</a> columns of the containing
       table. In these two cases, default sort order of <code>asc</code> is
-      used. If provided as <code>IndexedColumnSpec[]</code>, it MUST NOT
+      used. If provided as <code>sequence< IndexedColumnSpec ></code>, it MUST NOT
       be empty, and each <code>IndexedColumnSpec</code> MUST <a>refer</a>
       to different column. The optional <code>unique</code> parameter specifies
       whether keys in index are unique or not, default to <code>false</code>.</dd>
@@ -447,12 +463,12 @@ insertData().then(function () {
     index is specified.</p>
 
     <p>The WebIDL below defines indexed column specification.</p>
-    <pre class="idl">      
+    <pre class="idl">
       dictionary IndexedColumnSpec {
         DOMString name;
         Order order = "asc";
       };
-      typedef (DOMString or DOMString[] or IndexedColumnSpec or IndexedColumnSpec[]) IndexedColumnDefinition;
+      typedef (DOMString or sequence< DOMString > or IndexedColumnSpec or sequence< IndexedColumnSpec >) IndexedColumnDefinition;
     </pre>
     <dl class="dictionary-members">
       <dt><code>name</code></dt>
@@ -470,7 +486,7 @@ insertData().then(function () {
     <p class="note">Cross-table indices or views are not supported in this
     specification.</p>
   </section>
-  
+
   <section>
     <h2>Foreign Key Declaration</h2>
     <p>Foreign keys provides <dfn>referential integrity</dfn>, which means that
@@ -545,8 +561,8 @@ insertData().then(function () {
         ITableChanger rename(DOMString newTableName);
         ITableChanger addColumn(DOMString name, ColumnType type, optional boolean notNull = false, optional ValueType defaultValue = null);
         ITableChanger dropColumn(DOMString name);
-        ITableChanger addPrimaryKey((DOMString or DOMString[]) columns);
-        ITableChanger addForeignKey(DOMString name, (DOMString or DOMString[]) column, (DOMString or DOMString[]) foreign, optional ForeignKeyAction action = "restrict", optional ForeignKeyTiming timing = "immediate");
+        ITableChanger addPrimaryKey((DOMString or sequence< DOMString >) columns);
+        ITableChanger addForeignKey(DOMString name, (DOMString or sequence< DOMString >) column, (DOMString or sequence< DOMString >) foreign, optional ForeignKeyAction action = "restrict", optional ForeignKeyTiming timing = "immediate");
         ITableChanger addIndex(DOMString name, IndexedColumnDefinition columns, optional boolean unique = false);
         ITableChanger dropConstraintOrIndex(DOMString name);
         IColumnChanger setColumn(DOMString name);
@@ -574,14 +590,14 @@ insertData().then(function () {
       be the only column in the table schema, and MUST NOT be referred by any
       index nor constraints. Every existing row in the table will be modified
       to remove the field represented by that column.</dd>
-      <dt><code>ITableChanger addPrimaryKey((DOMString or DOMString[]) columns);</code></dt>
+      <dt><code>ITableChanger addPrimaryKey((DOMString or sequence< DOMString >) columns);</code></dt>
       <dd>Adds a primary key to table, the table MUST not have existing primary
       key. The key MUST NOT auto increment.</dd>
       <dt><code>ITableChanger dropPrimaryKey();</code></dt>
       <dd>Removes primary key from table. If the table does not have primary
       key, this method will do nothing. If the primary key is auto-increment
       primary key, an <a>UnsupportedError</a> will be thrown.</dd>
-      <dt><code>ITableChanger addForeignKey(DOMString name, (DOMString or DOMString[]) column, (DOMString or DOMString[]) foreign, optional ForeignKeyAction action = 'restrict', optional ForeignKeyTiming timing = 'immediate')</code></dt>
+      <dt><code>ITableChanger addForeignKey(DOMString name, (DOMString or sequence< DOMString >) column, (DOMString or sequence< DOMString >) foreign, optional ForeignKeyAction action = 'restrict', optional ForeignKeyTiming timing = 'immediate')</code></dt>
       <dd>Adds a foreign key to the table.</dd>
       <dt><code>ITableChanger addIndex(DOMString name, IndexedColumnDefinition columns, optional boolean unique = false);</code></dt>
       <dd>Adds an index to the table. The <code>name</code> is the name
@@ -868,7 +884,7 @@ if (version < 2) {
   <p>Transaction execution behavior is modeled as the following:</p>
 
   <pre class="idl">
-    typedef (void or object[]) TransactionResults;
+    typedef (void or sequence< object >) TransactionResults;
 
     interface IExecutionContext {
       Promise< TransactionResults > commit();
@@ -912,7 +928,7 @@ if (version < 2) {
   <pre class="idl">
     interface ITransaction : IExecutionContext {
       Promise< void > begin();
-      Promise< TransactionResults > exec(IExecutionContext[] queries);
+      Promise< TransactionResults > exec(sequence< IExecutionContext > queries);
       Promise< TransactionResults > attach(IExecutionContext query);
     };
   </pre>
@@ -923,7 +939,7 @@ if (version < 2) {
     transaction is triggered, or the transaction is timed out by implementation
     (which the implementation MUST throw <a>TimoutError</a> and reject any
     further calls on this transaction object).</dd>
-    <dt><code>Promise< TransactionResults > exec(IExecutionContext[] queries);</code></dt>
+    <dt><code>Promise< TransactionResults > exec(sequence< IExecutionContext > queries);</code></dt>
     <dd>Starts <em>batch mode</em> execution and auto-commit.</dd>
     <dt><code>Promise< TransactionResults > attach(IExecutionContext query);</code></dt>
     <dd>Schedules a query to existing <em>sequence mode</em> execution. The
@@ -1179,7 +1195,7 @@ if (version < 2) {
   Bindable values are typed as following:</p>
   <pre class="idl">
     interface IBindableValue {
-      readonly attribute any value;
+      readonly attribute octet index;
     };
   </pre>
   <p>Type check of bound value is performed by query engine before executing
@@ -1187,6 +1203,9 @@ if (version < 2) {
   <a>IQuery.bind</a> prior to query execution. A query with any unassigned
   <a>IBindableValue</a>, or any assigned <a>IBindableValue</a> with mismatched
   type, MUST be rejected with <a>BindingError</a> during its execution.</p>
+
+  <p>One can bind at most 255 bindable values for any given statement. This
+  limitation is created for simpler implementation.</p>
 
   <p>The following example demonstrate how to perform parameterized query using
   data binding:</p>
@@ -1293,7 +1312,7 @@ function updateModel(employeeId) {
   <pre class="idl">
     interface IInsertQuery : IQuery {
       IInsertQuery into(ITable table);
-      IInsertQuery values((object or object[] or IBindableValue) rows);
+      IInsertQuery values((object or sequence< object > or IBindableValue) rows);
     };
   </pre>
   <dl class="methods">
@@ -1301,7 +1320,7 @@ function updateModel(employeeId) {
     <dd>Specifies the target table to insert rows into. For
     <code>insertOrReplace</code>, the <code>table</code> MUST have a primary
     key, otherwise <a>IntegrityError</a> will be thrown.</dd>
-    <dt><code>IInsertQuery values((object or object[] or IBindableValue) rows);</code></dt>
+    <dt><code>IInsertQuery values((object or sequence< object > or IBindableValue) rows);</code></dt>
     <dd>Supplies the row(s) to be inserted. When given an <code>object</code>
     as parameter, or the bindable value resolved as an object, the object will
     act as a single row; otherwise, each element in the given array is treated
@@ -1440,7 +1459,7 @@ function updateModel(employeeId) {
         ILogicalPredicate between(ComparableValueType lhs, ComparableValueType rhs);
         ILogicalPredicate startsWith((IBindableValue or DOMString) value);
         ILogicalPredicate endsWith((IBindableValue or DOMString) value);
-        ILogicalPredicate in((ComparableValueType[] or IBindableValue or ISelectQuery) values);
+        ILogicalPredicate in((sequence< ComparableValueType > or IBindableValue or ISelectQuery) values);
         ILogicalPredicate isNull();
         ILogicalPredicate isNotNull();
       };
@@ -1456,7 +1475,7 @@ function updateModel(employeeId) {
       <dt><code>ILogicalPredicate endsWith((IBindableValue or DOMString) value);</code></dt>
       <dd>The associated column starts with the string provided. If the column
       is not of string type, <a>TypeError</a> will be thrown.</dd>
-      <dt><code>ILogicalPredicate in((ComparableValueType[] or IBindableValue or ISelectQuery) values);</code></dt>
+      <dt><code>ILogicalPredicate in((sequence< ComparableValueType > or IBindableValue or ISelectQuery) values);</code></dt>
       <dd>The associated column equals to one of the value inside
       <code>values</code>. Equality is evaluated using the rule of JavaScript
       <code>===</code> operator. If the <code>values</code> are specified as an
@@ -1530,7 +1549,7 @@ function updateModel(employeeId) {
   <section>
     <h2>Subqueries</h2>
     <p><a href="#data-selection">Select queries</a> that can be evaluated into
-    <a>IndexableValueType</a> or <a>IndexableValueType</a><code>[]</code> can
+    <a>IndexableValueType</a> or <code>sequence< IndexableValueType ></code>can
     be used in predicates as <a>ComparableValueType</a> values. The evaluated
     type MUST be identical as the type requested by predicate. The query
     engine MUST evaluate these subqueries first and automatic bind the values
