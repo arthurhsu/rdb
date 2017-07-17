@@ -19,9 +19,11 @@
     };
   </pre>
   <dl class="methods">
-    <dt><code>Promise< TransactionResults > commit();</code></dt>
+    <dt><code>Promise< TransactionResults >
+    <dfn data-dfn-for="IExecutionContext">commit</dfn>();</code></dt>
     <dd>Runs <a href="#commit-algorithm">commit algorithm</a>.</dd>
-    <dt><code>Promise< void > rollback();</code></dt>
+    <dt><code>Promise< void >
+    <dfn data-dfn-for="IExecutionContext">rollback</dfn>();</code></dt>
     <dd>Runs <a href="#rollback-algorithm">rollback algorithm</a>.</dd>
   </dl>
 
@@ -46,9 +48,9 @@
   transaction MAY dynamically change during the lifetime of the transaction.
   </p>
 
-  <p>A transaction can be created explicitly or implicitly. An explicit
-  transaction is created directly from
-  <code>IDatabaseConnection.createTransaction()</code>. An implicit transaction
+  <p>A transaction can be created explicitly or implicitly. An <dfn>explicit
+  transaction</dfn> is created directly from
+  <code>IDatabaseConnection.createTransaction()</code>. An <dfn>implicit transaction</dfn>
   is created when the <a href="#commit-algorithm">commit algorithm</a> needs
   one. The explicit transaction is modeled as following:</p>
 
@@ -60,15 +62,18 @@
     };
   </pre>
   <dl class="methods">
-    <dt><code>Promise< void > begin();</code></dt>
+    <dt><code>Promise< void >
+    <dfn data-dfn-for="ITransaction">begin</dfn>();</code></dt>
     <dd>Starts <em>sequence mode</em> execution. The transaction will be kept
     alive until <code>commit()</code> or <code>rollback()</code> of this
     transaction is triggered, or the transaction is timed out by implementation
     (which the implementation MUST throw <a>TimoutError</a> and reject any
     further calls on this transaction object).</dd>
-    <dt><code>Promise< TransactionResults > exec(sequence< IExecutionContext > queries);</code></dt>
+    <dt><code>Promise< TransactionResults >
+    <dfn data-dfn-for="ITransaction">exec</dfn>(sequence< IExecutionContext > queries);</code></dt>
     <dd>Starts <em>batch mode</em> execution and auto-commit.</dd>
-    <dt><code>Promise< TransactionResults > attach(IExecutionContext query);</code></dt>
+    <dt><code>Promise< TransactionResults >
+    <dfn data-dfn-for="ITransaction">attach</dfn>(IExecutionContext query);</code></dt>
     <dd>Schedules a query to existing <em>sequence mode</em> execution. The
     promise will be resolved with the results when the query is executed.
     The query MUST NOT be an explicit transaction, i.e. <a>ITransaction</a>
