@@ -170,7 +170,8 @@
     if user tried to insert/update a row with duplicated key when a unique
     index is specified.</p>
 
-    <p>The WebIDL below defines indexed column specification.</p>
+    <p>The WebIDL below defines indexed column specification, <dfn>IndexedColumnSpec</dfn>
+    and <dfn>IndexedColumnDefinition</dfn>:</p>
     <pre class="idl">
       dictionary IndexedColumnSpec {
         DOMString name;
@@ -179,10 +180,10 @@
       typedef (DOMString or sequence< DOMString > or IndexedColumnSpec or sequence< IndexedColumnSpec >) IndexedColumnDefinition;
     </pre>
     <dl class="dictionary-members">
-      <dt><code>name</code></dt>
+      <dt><dfn data-dfn-for="IndexedColumnSpec"><code>name</code></dfn></dt>
       <dd>Name of the indexed column, MUST <a>refer</a> to an <a>indexable</a>
       column of the containing table.</dd>
-      <dt><code>order</code></dt>
+      <dt><dfn data-dfn-for="IndexedColumnSpec"><code>order</code></dfn></dt>
       <dd>(Optional) Sorting order of the column, default to
           <code>asc</code>.</dd>
     </dl>
@@ -220,7 +221,7 @@
     dependency. The query engine MAY support chainned foreign key. The query
     engine MAY support referred column to be within the containing table.</p>
 
-    <p>Foreign key actions are enum values as defined in the following:</p>
+    <p><dfn>ForeignKeyAction</dfn> enum is defined as following:</p>
     <pre class="idl">
       enum ForeignKeyAction {
         "restrict",
@@ -228,14 +229,14 @@
       };
     </pre>
     <dl class="dictionary-members">
-      <dt><code>restrict</code></dt>
+      <dt><dfn data-dfn-for="ForeignKeyAction"><code>restrict</code></dfn></dt>
       <dd>Any constraint violation results in cancelling the operation that
       violated the constraint. This is the default value.</dd>
-      <dt><code>cascade</code></dt>
+      <dt><dfn data-dfn-for="ForeignKeyAction"><code>cascade</code></dfn></dt>
       <dd>Constraint violation results in modifying related tables as necessary
       to maintain data integrity.</dd>
     </dl>
-    <p>Foreign key timings are enum values as defined below:</p>
+    <p><dfn>ForeignKeyTiming</dfn> enum is defined below:</p>
     <pre class="idl">
       enum ForeignKeyTiming {
         "immediate",
@@ -243,10 +244,10 @@
       };
     </pre>
     <dl class="dictionary-members">
-      <dt><code>immediate</code></dt>
+      <dt><dfn data-dfn-for="ForeignKeyTiming"><code>immediate</code></dfn></dt>
       <dd>The constraint is enforced during execution of each individual query.
       This is the default value.</dd>
-      <dt><code>deferrable</code></dt>
+      <dt><dfn data-dfn-for="ForeignKeyTiming"><code>deferrable</code></dfn></dt>
       <dd>The constraint is enforced right before a transaction is committed.
       The constraint can be violated by individual queries during the lifetime
       of the enclosing transaction, without any error being thrown.</dd>
@@ -260,7 +261,7 @@
 
   <section>
     <h2>Table Changer</h2>
-    <p>Table changer is used to change the schema of an existing table, and
+    <p><dfn>ITableChanger</dfn> is used to change the schema of an existing table, and
     MUST be used within the context of a <a>transaction</a>. If the table
     already contains data, altering table schema can cause constraint
     violations and fail the transaction.</p>
@@ -276,45 +277,54 @@
         IColumnChanger setColumn(DOMString name);
       };
     </pre>
-    <p>All methods returns the same <code>ITableChanger</code> object that
+    <p>All methods returns the same <a>ITableChanger</a> object that
     they were called from to make cascade builder pattern possible, except that
     <code>setColumn</code> will return a <a>IColumnChanger</a> instead. If any
     of the rule described in the following table were violated, an
     <a>InvalidSchemaError</a> will be thrown. All methods can be called
     multiple times.</p>
     <dl class="methods">
-      <dt><code>ITableChanger rename(DOMString newTableName);</code></dt>
+      <dt><code>ITableChanger
+      <dfn data-dfn-for="ITableChanger">rename</dfn>(DOMString newTableName);</code></dt>
       <dd>Renames the table, <code>newTableName</code> MUST be unique within the
       database, and MUST NOT be the same as existing table name.</dd>
-      <dt><code>ITableChanger addColumn(DOMString name, ColumnType type, optional boolean notNull = false, optional ValueType defaultValue = null);</code></dt>
+      <dt><code>ITableChanger
+      <dfn data-dfn-for="ITableChanger">addColumn</dfn>(DOMString name, ColumnType type, optional boolean notNull = false, optional ValueType defaultValue = null);</code></dt>
       <dd>Adds a new column to table, <code>name</code> MUST be unique within
       the containing table. If <code>defaultValue</code> is given, it MUST
       be of the same type as specified in <code>type</code>. Every existing row
       in the table will be added a new column with </code>defaultValue</code>.
       </dd>
-      <dt><code>ITableChanger dropColumn(DOMString name);</code></dt>
+      <dt><code>ITableChanger
+      <dfn data-dfn-for="ITableChanger">dropColumn</dfn>(DOMString name);</code></dt>
       <dd>Removes a column from table. The <code>name</code> MUST <a>refer</a>
       to an existing column in the table schema. The referred column MUST NOT
       be the only column in the table schema, and MUST NOT be referred by any
       index nor constraints. Every existing row in the table will be modified
       to remove the field represented by that column.</dd>
-      <dt><code>ITableChanger addPrimaryKey((DOMString or sequence< DOMString >) columns);</code></dt>
+      <dt><code>ITableChanger
+      <dfn data-dfn-for="ITableChanger">addPrimaryKey</dfn>((DOMString or sequence< DOMString >) columns);</code></dt>
       <dd>Adds a primary key to table, the table MUST not have existing primary
       key. The key MUST NOT auto increment.</dd>
-      <dt><code>ITableChanger dropPrimaryKey();</code></dt>
+      <dt><code>ITableChanger
+      <dfn data-dfn-for="ITableChanger">dropPrimaryKey</dfn>();</code></dt>
       <dd>Removes primary key from table. If the table does not have primary
       key, this method will do nothing. If the primary key is auto-increment
       primary key, an <a>UnsupportedError</a> will be thrown.</dd>
-      <dt><code>ITableChanger addForeignKey(DOMString name, (DOMString or sequence< DOMString >) column, (DOMString or sequence< DOMString >) foreign, optional ForeignKeyAction action = 'restrict', optional ForeignKeyTiming timing = 'immediate')</code></dt>
+      <dt><code>ITableChanger
+      <dfn data-dfn-for="ITableChanger">addForeignKey</dfn>(DOMString name, (DOMString or sequence< DOMString >) column, (DOMString or sequence< DOMString >) foreign, optional ForeignKeyAction action = 'restrict', optional ForeignKeyTiming timing = 'immediate')</code></dt>
       <dd>Adds a foreign key to the table.</dd>
-      <dt><code>ITableChanger addIndex(DOMString name, IndexedColumnDefinition columns, optional boolean unique = false);</code></dt>
+      <dt><code>ITableChanger
+      <dfn data-dfn-for="ITableChanger">addIndex</dfn>(DOMString name, IndexedColumnDefinition columns, optional boolean unique = false);</code></dt>
       <dd>Adds an index to the table. The <code>name</code> is the name
       of the index and MUST be unique within the containing table. If
       <code>unique</code> is set to true, add a unique index.</dd>
-      <dt><code>ITableChanger dropConstraintOrIndex(DOMString name);</code></dt>
+      <dt><code>ITableChanger
+      <dfn data-dfn-for="ITableChanger">dropConstraintOrIndex</dfn>(DOMString name);</code></dt>
       <dd>Removes a constraint or index in table by name. The <code>name</code>
       MUST refer to an existing constraint or index.</dd>
-      <dt><code>IColumnChanger setColumn(DOMString name);</code></dt>
+      <dt><code>IColumnChanger
+      <dfn data-dfn-for="ITableChanger">setColumn</dfn>(DOMString name);</code></dt>
       <dd>Changes a column in the table, and the <code>name</code> MUST
       <a>refer</a> to an existing column in the table schema.</dd>
     </dl>
@@ -324,13 +334,15 @@
 
   <section>
     <h2>Column Changer</h2>
+    <p>Column changer, modeled as <dfn>IColumnChanger</dfn>, is defined as following:</p>
     <pre class="idl">
       interface IColumnChanger {
         ITableChanger set(DOMString newColumnName, optional boolean notNull = true);
       };
     </pre>
     <dl class="methods">
-      <dt><code>ITableChanger set(DOMString newColumnName, optional boolean notNull = true);</code></dt>
+      <dt><code>ITableChanger
+      <dfn data-dfn-for="IColumnChanger">set</dfn>(DOMString newColumnName, optional boolean notNull = true);</code></dt>
       <dd>Changes the column's name or <a>NOT NULL</a> property. The returned
       <code>ITableChanger</code> is the parent object that creates this object.
       </dd>

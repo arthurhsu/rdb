@@ -2,7 +2,7 @@
   <h2>Aggregate Functions</h2>
   <p>Aggregate functions are used only in the projection list of a
   <code>select</code> query. The aggregation functions supported are defined in
-  the following:</p>
+  <dfn>IAggregateFunction</dfn>:</p>
   <pre class="idl">
     interface IAggregateFunction {
       IColumn avg(IColumn col);
@@ -14,20 +14,20 @@
     };
   </pre>
   <dl class="methods">
-    <dt><code>IColumn avg(IColumn col);</code></dt>
+    <dt><code>IColumn <dfn data-dfn-for="IAggregateFunction">avg</dfn>(IColumn col);</code></dt>
     <dd>Calculate the arithematic average of non-null values of column
     <code>col</code> for all rows grouped. If all rows are <code>null</code>,
     returns <code>null</code>. The returned column is always typed as
     <code>number</code>. If the <code>col</code> is not typed as
     <code>number</code>, <a>TypeError</a> will be thrown.</dd>
-    <dt><code>IColumn count(IColumn col);</code></dt>
+    <dt><code>IColumn <dfn data-dfn-for="IAggregateFunction">count</dfn>(IColumn col);</code></dt>
     <dd>Count the number of rows. If <code>col</code> is NOT <code>null</code>,
     returns number of rows in the group whose <code>col</code> is not null,
     otherwise returns the total number of rows in the group.</dd>
-    <dt><code>IColumn distinct(IColumn... col);</code></dt>
+    <dt><code>IColumn <dfn data-dfn-for="IAggregateFunction">distinct</dfn>(IColumn... col);</code></dt>
     <dd>Returns distinct value tuples of the specified columns in all grouped
     rows. <code>null</code> is considered as a unique value.</dd>
-    <dt><code>IColumn max(IColumn col);</code></dt>
+    <dt><code>IColumn <dfn data-dfn-for="IAggregateFunction">max</dfn>(IColumn col);</code></dt>
     <dd>Returns the maximum value of the column <code>col</code> for all rows
     grouped. The maximum value is determined by the last value of the
     <code>orderBy()</code> performed on that column. The <code>max()</code>
@@ -35,7 +35,7 @@
     <code>null</code>. The type of <code>col</code> MUST be either
     <code>number</code>, <code>string</code>, or <code>date</code>, otherwise
     <a>TypeError</a> will be thrown.</dd>
-    <dt><code>IColumn min(IColumn col);</code></dt>
+    <dt><code>IColumn <dfn data-dfn-for="IAggregateFunction">min</dfn>(IColumn col);</code></dt>
     <dd>Returns the minimum value of the column <code>col</code> for all rows
     grouped. The minimum value is determined by the first value of the
     <code>orderBy()</code> performed on that column. The <code>max()</code>
@@ -43,7 +43,7 @@
     <code>null</code>. The type of <code>col</code> MUST be either
     <code>number</code>, <code>string</code>, or <code>date</code>, otherwise
     <a>TypeError</a> will be thrown.</dd>
-    <dt><code>IColumn sum(IColumn col);</code></dt>
+    <dt><code>IColumn <dfn data-dfn-for="IAggregateFunction">sum</dfn>(IColumn col);</code></dt>
     <dd>Calculate the arithematic sum of non-null values of column
     <code>col</code> for all rows grouped. If all rows are <code>null</code>,
     returns <code>null</code>. The returned column is always typed as

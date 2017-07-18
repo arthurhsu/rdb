@@ -1,14 +1,18 @@
 <section>
   <h2>Relational Database</h2>
-  <p>The relational database is part of <code>Navigator</code> as defined in
+  <p>The relational database is part of <dfn><code>Navigator</code></dfn> as defined in
   following WebIDL.</p>
   <pre class="idl">
     partial interface Navigator {
       readonly attribute IRelationalDatabase db;
     };
   </pre>
+  <dl class="attributes">
+    <dt><code>IRelationalDatabase <dfn data-dfn-for="Navigator">db</dfn></code></dt>
+    <dd>Provides the entry point of accessing relational database functions.</dd>
+  </dl>
 
-  <p>The relational database is defined by the following WebIDL.</p>
+  <p>The relational database is defined as <dfn>IRelationalDatabase</dfn>:</p>
   <pre class="idl">
     interface IRelationalDatabase {
       readonly attribute IDatabaseFunctionProvider fn;
@@ -18,19 +22,22 @@
     };
   </pre>
   <dl class="attributes">
-    <dt><code>IDatabaseFunctionProvider fn</code></dt>
+    <dt><code>IDatabaseFunctionProvider
+    <dfn data-dfn-for="IRelationalDatabase">fn</dfn></code></dt>
     <dd>Provides a namespace for <a href="#aggregation-functions">aggregation
     functions</a> that can be used in queries.</dd>
   </dl>
   <dl class="methods">
-    <dt><code>Promise< DatabaseConnection > open(DOMString name, OpenDatabaseOptions? opt)</code></dt>
+    <dt><code>Promise< DatabaseConnection >
+    <dfn data-dfn-for="IRelationalDatabase">open</dfn>(DOMString name, OpenDatabaseOptions? opt)</code></dt>
     <dd>Opens a database connection using provided name. If the database does
     not exist, create a new database instance and returns connection to it.
     If the database is marked delete pending, the promise will be rejected with
     <a>BlockingError</a>. If the <code>OpenDatabaseOptions</code> is not
     specified, a <code>persistent</code> database with the given name will be
     opened/created.</dd>
-    <dt><code>Promise< void > drop()</code></dt>
+    <dt><code>Promise< void >
+    <dfn data-dfn-for="IRelationalDatabase">drop</dfn>()</code></dt>
     <dd>Deletes a database using provided <code>name</code>. This MUST follow
     the <a href="#delete-database-algorithm">delete database algorithm</a>. If
     the database does not exist, the returned promise will resolve immediately.
@@ -38,29 +45,35 @@
     immediately.</dd>
   </dl>
 
-  <p>Open database options are specified as a dictionary object.</p>
+  <p><dfn>OpenDatabaseOptions</dfn> is a dictionary object used to specify
+  options for opening a database:</p>
   <pre class="idl">
     dictionary OpenDatabaseOptions {
       RDBStorageType storageType;
     };
   </pre>
-
+  <dl class="attributes">
+    <dt><code>RDBStorageType
+    <dfn data-dfn-for="OpenDatabaseOptions">storageType</dfn></code></dt>
+    <dd>Specifies the type of storage used to back the database. The
+    <code>storageType</code> is fixed for the lifetime of returned database
+    connection.</dd>
+  </dl>
   
-  The <code>RDBStorageType</code> is an enum:
+  The <dfn>RDBStorageType</dfn> is an enum:
   <pre class="idl">
     enum RDBStorageType {
-      // Data will be persisted in permanent storage.
       "persistent",
-
-      // Data will be persisted in memory only.
       "temporary"
     };
   </pre>
-
-  <p>When <code>storageType</code> is set to <code>temporary</code>, the
-  relational database acts as in-memory cache of data and offers only the
-  relational query capability. The <code>storageType</code> is fixed for the
-  lifetime of returned database connection.</p>
+  <dl class="attributes">
+    <dt><code><dfn data-dfn-for="RDBStorageType">persistent</dfn></code></dt>
+    <dd>Data will be persisted in permanent storage.</dd>
+    <dt><code><dfn data-dfn-for="RDBStorageType">temporary</dfn></code></dt>
+    <dd>Data will be persisted in memory only: the relational database acts
+    as in-memory cache of data and offers only the relational query capability.</dd>
+  </dl>
 
   <section>
     <h2>Delete Database Algorithm</h2>

@@ -24,7 +24,10 @@
   <section>
     <h2>Comparison Predicate</h2>
     <p>The comparison predicates evaluates the relation between a column's value
-    and the given target. They are defined by the following interface:</p>
+    and the given target. Only indexable data types, denoted as
+    <a>IndexableValueType</a>, and their binding counterparts, can be
+    compared. These types are denoted as <dfn>ComparableValueType</dfn> and
+    constructs the fundamentals of <dfn>IComparisonPredicate</dfn>:</p>
     <pre class="idl">
       typedef (boolean or Date or number or DOMString) IndexableValueType;
       typedef (IndexableValueType or IBindableValue) ComparableValueType;
@@ -39,26 +42,32 @@
       };
     </pre>
     <dl class="methods">
-      <dt><code>ILogicalPredicate eq:((ComparableValueType or IColumn) value);</code></dt>
+      <dt><code>ILogicalPredicate
+      <dfn data-dfn-for="IComparisonPredicate">eq</dfn>((ComparableValueType or IColumn) value);</code></dt>
       <dd>The associated column equals to value. Equality is evaluated using
       the rule of JavaScript <code>==</code> operator.</dd>
-      <dt><code>ILogicalPredicate neq((ComparableValueType or IColumn) value);</code></dt>
+      <dt><code>ILogicalPredicate
+      <dfn data-dfn-for="IComparisonPredicate">neq</dfn>((ComparableValueType or IColumn) value);</code></dt>
       <dd>The associated column does not equal to value. Inequality is evaluated
       using the rule of JavaScript <code>!=</code> operator.</dd>
-      <dt><code>ILogicalPredicate lt((ComparableValueType or IColumn) value);</code></dt>
+      <dt><code>ILogicalPredicate
+      <dfn data-dfn-for="IComparisonPredicate">lt</dfn>((ComparableValueType or IColumn) value);</code></dt>
       <dd>The associated column is smaller than value. Relation is evaluated
       using the rule of JavaScript <code>&lt;</code> operator.</dd>
-      <dt><code>ILogicalPredicate lte((ComparableValueType or IColumn) value);</code></dt>
+      <dt><code>ILogicalPredicate
+      <dfn data-dfn-for="IComparisonPredicate">lte</dfn>((ComparableValueType or IColumn) value);</code></dt>
       <dd>The associated column is smaller than or equals to value. Relation is
       evaluated using the rule of JavaScript <code>&lt;=</code> operator.</dd>
-      <dt><code>ILogicalPredicate gt((ComparableValueType or IColumn) value);</code></dt>
+      <dt><code>ILogicalPredicate
+      <dfn data-dfn-for="IComparisonPredicate">gt</dfn>((ComparableValueType or IColumn) value);</code></dt>
       <dd>The associated column is greater than value. Relation is evaluated
       using the rule of JavaScript <code>&gt;</code> operator.</dd>
-      <dt><code>ILogicalPredicate lt((ComparableValueType or IColumn) value);</code></dt>
+      <dt><code>ILogicalPredicate
+      <dfn data-dfn-for="IComparisonPredicate">gte</dfn>((ComparableValueType or IColumn) value);</code></dt>
       <dd>The associated column is greater than or equals to value. Relation is
       evaluated using the rule of JavaScript <code>&gt;=</code> operator.</dd>
     </dl>
-    <p>Giving <code>IColumn</code> as the parameter of
+    <p>Giving <a>IColumn</a> as the parameter of
     <a>IComparisonPredicate</a> creates implicit <a href="#inner-join">inner
     join</a> syntax. The search condition given by this predicate MUST be
     evaluated as if given in the form of <code>innerJoin</code>. If the given
@@ -69,7 +78,7 @@
   <section>
     <h2>Truth Predicate</h2>
     <p>The truth predicates evaluate whether the given condition is true for the
-    associated column or not. They are defined by the following interface:</p>
+    associated column or not. They are defined by <dfn>ITruthPredicate</dfn>:</p>
     <pre class="idl">
       interface ITruthPredicate {
         ILogicalPredicate between(ComparableValueType lhs, ComparableValueType rhs);
@@ -81,26 +90,32 @@
       };
     </pre>
     <dl class="methods">
-      <dt><code>ILogicalPredicate between(ComparableValueType lhs, ComparableValueType rhs);</code></dt>
+      <dt><code>ILogicalPredicate
+      <dfn data-dfn-for="ITruthPredicate">between</dfn>(ComparableValueType lhs, ComparableValueType rhs);</code></dt>
       <dd>The associated column is within the range between lhs and rhs. The
       relation is evaluated using the rule of JavaScript <code>&lt;=</code> and
       <code>&gt;=</code>.</dd>
-      <dt><code>ILogicalPredicate startsWith((IBindableValue or DOMString) value);</code></dt>
+      <dt><code>ILogicalPredicate
+      <dfn data-dfn-for="ITruthPredicate">startsWith</dfn>((IBindableValue or DOMString) value);</code></dt>
       <dd>The associated column starts with the string provided. If the column
       is not of string type, <a>TypeError</a> will be thrown.</dd>
-      <dt><code>ILogicalPredicate endsWith((IBindableValue or DOMString) value);</code></dt>
+      <dt><code>ILogicalPredicate
+      <dfn data-dfn-for="ITruthPredicate">endsWith</dfn>((IBindableValue or DOMString) value);</code></dt>
       <dd>The associated column starts with the string provided. If the column
       is not of string type, <a>TypeError</a> will be thrown.</dd>
-      <dt><code>ILogicalPredicate in((sequence< ComparableValueType > or IBindableValue or ISelectQuery) values);</code></dt>
+      <dt><code>ILogicalPredicate
+      <dfn data-dfn-for="ITruthPredicate">in</dfn>((sequence< ComparableValueType > or IBindableValue or ISelectQuery) values);</code></dt>
       <dd>The associated column equals to one of the value inside
       <code>values</code>. Equality is evaluated using the rule of JavaScript
       <code>===</code> operator. If the <code>values</code> are specified as an
       <a>ISelectQuery</a>, the given query will be evaluated first and generate
       values from its projection list. If the projection list is of different
       data type, the implementation will throw <a>TypeError</a>.</dd>
-      <dt><code>ILogicalPredicate isNull();</code></dt>
+      <dt><code>ILogicalPredicate
+      <dfn data-dfn-for="ITruthPredicate">isNull</dfn>();</code></dt>
       <dd>The associated column is <code>null</code> or <code>undefined</code>.</dd>
-      <dt><code>ILogicalPredicate isNotNull();</code></dt>
+      <dt><code>ILogicalPredicate
+      <dfn data-dfn-for="ITruthPredicate">isNotNull</dfn>();</code></dt>
       <dd>The associated column is neither <code>null</code> nor
       <code>undefined</code>.</dd>
     </dl>
@@ -116,7 +131,7 @@
   <section>
     <h2>Logical Predicate</h2>
     <p>Logical predicate is the representation of search condition. Logical
-    predicates implement the following interface:</p>
+    predicates implement <dfn>ILogicalPredicate</dfn>:</p>
     <pre class="idl">
       interface ILogicalPredicate {
         ILogicalPredicate and(ILogicalPredicate... childPredicate);
@@ -125,15 +140,18 @@
       };
     </pre>
     <dl class="methods">
-      <dt><code>ILogicalPredicate and(ILogicalPredicate... childPredicate);</code></dt>
+      <dt><code>ILogicalPredicate
+      <dfn data-dfn-for="ILogicalPredicate">and</dfn>(ILogicalPredicate... childPredicate);</code></dt>
       <dd>Logical <code>AND</code> of logical predicates. The returning logical
       predicate will evaluate to true if and only if all predicates in its
       parameter are evaluated true.</dd>
-      <dt><code>ILogicalPredicate or(ILogicalPredicate... childPredicate);</code></dt>
+      <dt><code>ILogicalPredicate
+      <dfn data-dfn-for="ILogicalPredicate">or</dfn>(ILogicalPredicate... childPredicate);</code></dt>
       <dd>Logical <code>OR</code> of logical predicates. The returning logical
       predicate will evaluate to true if any of the predicates in its parameter
       is evaluated true.</dd>
-      <dt><code>ILogicalPredicate clone();</code></dt>
+      <dt><code>ILogicalPredicate
+      <dfn data-dfn-for="ILogicalPredicate">clone</dfn>();</code></dt>
       <dd>Clone the search condition, including the binding place holders.</dd>
     </dl>
 
@@ -149,14 +167,15 @@
   <section>
     <h2>Complementing Predicates</h2>
     <p>The predicates can be complemented using a global function
-    <code>not()</code>. The function is provided as following:</p>
+    <code>not()</code>. The function is provided in <dfn>IDatabaseFunctionProvider</dfn>:</p>
     <pre class="idl">
       interface IDatabaseFunctionProvider : IAggregateFunction {
         ILogicalPredicate not(ILogicalPredicate predicate);
       };
     </pre>
     <dl class="methods">
-      <dt><code>ILogicalPredicate not(ILogicalPredicate predicate);</code></dt>
+      <dt><code>ILogicalPredicate
+      <dfn data-dfn-for="IDatabaseFunctionProvider">not</dfn>(ILogicalPredicate predicate);</code></dt>
       <dd>Complement the evaluation result of passed in predicate, i.e. returns
       <code>false</code> if the predicate evaluated true, and vice versa.</dd>
     </dl>

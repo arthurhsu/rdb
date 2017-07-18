@@ -3,7 +3,7 @@
   <p>Observers monitor row changes inside a database. If the results from
   registered query change due to data changes in the database, the callback in
   corresponding observer will be invoked. Observer management are performed
-  via the following interface:</p>
+  through <dfn>IDatabaseObserver</dfn> interface:</p>
 
   <pre class="idl">
     callback observerCallback = void ();
@@ -14,10 +14,14 @@
     };
   </pre>
   <dl class="methods">
-    <dt><code>DOMString observe(ISelectQuery query, observerCallback callbackFn);</code></dt>
+    <dt><code>DOMString
+    <dfn data-dfn-for="IDatabaseObserver">observe</dfn>(ISelectQuery query, observerCallback callbackFn);</code></dt>
     <dd>Registers a select query for observation, returns a unique observer key
-    within the connection.</dd>
-    <dt><code>void unobserve(DOMString observerKey);</code></dt>
+    within the connection. When the results of the <code>query</code> changes
+    due to other data manipulations, <dfn>observerCallback</dfn> defined by the
+    user will be invoked.</dd>
+    <dt><code>void
+    <dfn data-dfn-for="IDatabaseObserver">unobserve</dfn>(DOMString observerKey);</code></dt>
     <dd>Removes a registered observer in the connection.</dd>
   </dl>
 

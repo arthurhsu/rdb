@@ -3,8 +3,8 @@
   <p>Delete queries are used to delete rows in a table. The rows to be deleted
   are specified via <a href="#search-condition">Search Condition</a>. If the
   search condition is not provided, all rows in the table specified by
-  <code>from()</code> will be deleted. The delete query implements the following
-  interface:</p>
+  <code>from()</code> will be deleted. The delete query implements the
+  <dfn>IDeleteQuery</dfn> interface:</p>
 
   <pre class="idl">
     interface IDeleteQuery : IQuery {
@@ -13,10 +13,12 @@
     };
   </pre>
   <dl class="methods">
-    <dt><code>IDeleteQuery from(ITable table);</code></dt>
+    <dt><code>IDeleteQuery
+    <dfn data-dfn-for="IDeleteQuery">from</dfn>(ITable table);</code></dt>
     <dd>Specifies the target table to delete rows from. This method MUST be
     called before execution, or <a>SyntaxError</a> will be thrown.</dd>
-    <dt><code>IDeleteQuery where(ILogicalPredicate searchCondition);</code></dt>
+    <dt><code>IDeleteQuery
+    <dfn data-dfn-for="IDeleteQuery">where</dfn>(ILogicalPredicate searchCondition);</code></dt>
     <dd>Specifies the search condition for filtering rows.</dd>
   </dl>
   <p>All methods of <a>IDeleteQuery</a> returns the calling

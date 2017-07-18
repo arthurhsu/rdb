@@ -6,7 +6,7 @@
   rows from the tables specified by <code>from()</code> will be returned.</p>
   <p>Scope of select queries MUST be evaluated using
   <a href="#select-scope-algorithm">select scope algorithm</a> before
-  execution. The select queries implement the following interface:</p>
+  execution. The select queries implement <dfn>ISelectQuery</dfn> interface:</p>
   <pre class="idl">
     interface ISelectQuery : IQuery {
       ISelectQuery from(ITable... tables);
@@ -23,46 +23,57 @@
     };
   </pre>
   <dl class="member">
-    <dt><code>ISelectQuery from(ITable... tables);</code></dt>
+    <dt><code>ISelectQuery
+    <dfn data-dfn-for="ISelectQuery">from</dfn>(ITable... tables);</code></dt>
     <dd>Specifies the scope of the select query. This function can only be
     called once per query, otherwise <a>SyntaxError</a> will be thrown.</dd>
-    <dt><code>ISelectQuery where(ILogicalPredicate searchCondition);</code></dt>
+    <dt><code>ISelectQuery
+    <dfn data-dfn-for="ISelectQuery">where</dfn>(ILogicalPredicate searchCondition);</code></dt>
     <dd>Specifies search condition. This function can only be
     called once per query, otherwise <a>SyntaxError</a> will be thrown.</dd>
-    <dt><code>ISelectQuery innerJoin(ITable table, ILogicalPredicate joinCondition);</code></dt>
+    <dt><code>ISelectQuery
+    <dfn data-dfn-for="ISelectQuery">innerJoin</dfn>(ITable table, ILogicalPredicate joinCondition);</code></dt>
     <dd>Specifies explicit <a href="#inner-join">inner join</a>. This function
     can be called multiple times per query.</dd>
-    <dt><code>ISelectQuery leftOuterJoin(ITable table, ILogicalPredicate joinCondition);</code></dt>
+    <dt><code>ISelectQuery
+    <dfn data-dfn-for="ISelectQuery">leftOuterJoin</dfn>(ITable table, ILogicalPredicate joinCondition);</code></dt>
     <dd>Specifies <a href="#left-outer-join">left outer join</a>. This function
     can be called multiple times per query.</dd>
-    <dt><code>ISelectQuery limit((unsigned long or IBindableValue) numberOfRows);</code></dt>
+    <dt><code>ISelectQuery
+    <dfn data-dfn-for="ISelectQuery">limit</dfn>((unsigned long or IBindableValue) numberOfRows);</code></dt>
     <dd>Specifies maximum number of rows to return. If the number is
     <code>0</code>, the query is effectively an no-op. This function can only
     be called once per query, otherwise <a>SyntaxError</a> will be thrown.</dd>
-    <dt><code>ISelectQuery skip((unsigned long or IBindableValue) numberOfRows);</code></dt>
+    <dt><code>ISelectQuery
+    <dfn data-dfn-for="ISelectQuery">skip</dfn>((unsigned long or IBindableValue) numberOfRows);</code></dt>
     <dd>Specifies maximum number of rows to skip from returning. If the
     number is greater than total number of rows filtered, an empty array will
     be returned. This function can only be called once per query, otherwise 
     <a>SyntaxError</a> will be thrown.</dd>
-    <dt><code>ISelectQuery orderBy(IColumn column, optional Order order);</code></dt>
+    <dt><code>ISelectQuery
+    <dfn data-dfn-for="ISelectQuery">orderBy</dfn>(IColumn column, optional Order order);</code></dt>
     <dd>Specify how to sort the returning row. This function can be called
     multiple times per query. The invocation order of this function will affect
     the results of sorting, , see
     <a href="#sorting-algorithm">sorting algorithm</a>.</dd>
-    <dt><code>ISelectQuery groupBy(IColumn... column);</code></dt>
+    <dt><code>ISelectQuery
+    <dfn data-dfn-for="ISelectQuery">groupBy</dfn>(IColumn... column);</code></dt>
     <dd>Specify how to group returning rows in aggregation, see
     <a href="#aggregation">aggregation</a> for more details. This function can
     only be called once per query, otherwise <a>SyntaxError</a> will be
     thrown. Caller MUST provide one or more columns in the parameter, otherwise
     <a>SyntaxError</a> will be thrown. If the same column is provided twice
     in the parameters, it will be treated as provided only once.</dd>
-    <dt><code>ISelectQuery union(ISelectQuery... query);</code></dt>
+    <dt><code>ISelectQuery
+    <dfn data-dfn-for="ISelectQuery">union</dfn>(ISelectQuery... query);</code></dt>
     <dd>Combine results of two or more select queries into a single result set
     that includes all the rows that belong to all queries in the union. See
     <a href="#union-projection">union projection</a> for details.</dd>
-    <dt><code>ISelectQuery intersect(ISelectQuery... query);</code></dt>
+    <dt><code>ISelectQuery
+    <dfn data-dfn-for="ISelectQuery">intersect</dfn>(ISelectQuery... query);</code></dt>
     <dd>See <a href="intersect-and-except">intersect and except</a>.</dd>
-    <dt><code>ISelectQuery except(ISelectQuery... query);</code></dt>
+    <dt><code>ISelectQuery
+    <dfn data-dfn-for="ISelectQuery">except</dfn>(ISelectQuery... query);</code></dt>
     <dd>See <a href="intersect-and-except">intersect and except</a>.</dd>
   </dl>
   <p class="note">

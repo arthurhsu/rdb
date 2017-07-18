@@ -2,20 +2,24 @@
   <h2>Bindable Values</h2>
   <p>Bindable values provides flexibilities for determining the actual values
   to be used in queries at run-time. They serve as placeholders of values.
-  Bindable values are typed as following:</p>
+  Bindable values are typed as <dfn>IBindableValue</dfn>:</p>
   <pre class="idl">
     interface IBindableValue {
-      readonly attribute octet index;
+      readonly attribute unsigned short index;
     };
   </pre>
+  <dl class="attributes">
+    <dt><dfn data-dfn-for="IBindableValue"><code>index</code></dfn></dt>
+    <dd>Index indicating which value to use in future <code>bind()</code> code.
+    One can bind at most 255 bindable values for any given statement. This
+    limitation is created for simpler implementation.</dd>
+  </dl>
+
   <p>Type check of bound value is performed by query engine before executing
   the query. To assign value to <a>IBindableValue</a>, caller MUST use
   <a>IQuery.bind</a> prior to query execution. A query with any unassigned
   <a>IBindableValue</a>, or any assigned <a>IBindableValue</a> with mismatched
   type, MUST be rejected with <a>BindingError</a> during its execution.</p>
-
-  <p>One can bind at most 255 bindable values for any given statement. This
-  limitation is created for simpler implementation.</p>
 
   <p>The following example demonstrate how to perform parameterized query using
   data binding:</p>

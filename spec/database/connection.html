@@ -1,8 +1,8 @@
 <section>
   <h2>Connection</h2>
   <p>The database <dfn>connection</dfn> is the means by which the browser
-  session and underlying database communicate with each other. The following
-  is the main interface of a database connection:</p>
+  session and underlying database communicate with each other.
+  <dfn>IDatabaseConnection</dfn> models a database connection:</p>
 
   <pre class="idl">
     interface IDatabaseConnection {
@@ -12,20 +12,24 @@
     };
   </pre>
   <dl class="methods">
-    <dt><code>ITransaction createTransaction(optional TransactionMode mode = "readonly");</code></dt>
+    <dt><code>ITransaction
+    <dfn data-dfn-for="IDatabaseConnection">createTransaction</dfn>(optional TransactionMode mode = "readonly");</code></dt>
     <dd>Creates an explicit transaction. If the connection is marked as close
     pending, throws <a>BlockingError</a>.</dd>
-    <dt><code>Promise< Error > close();</code></dt>
+    <dt><code>Promise< Error >
+    <dfn data-dfn-for="IDatabaseConnection">close</dfn>();</code></dt>
     <dd>Closes the connection. The connection will be marked as
     close pending immediately after this call, and no more new transaction
     can be created within this connection. It is a best efforts call and
     may resolve with error, or NULL if everything succeeded.</dd>
-    <dt><code>IBindableValue bind(unsigned short index);</code></dt>
+    <dt><code>IBindableValue
+    <dfn data-dfn-for="IDatabaseConnection">bind</dfn>(unsigned short index);</code></dt>
     <dd>Returns a bindable value that can be used in parameterized query.</dd>
   </dl>
 
-  <p>The actual database connection returned from <code>Navigator</code> is a
-  class object that implements four different interfaces.</p>
+  <p>The actual database connection returned from <a>Navigator</a> is a
+  class object, <dfn>DatabaseConnection</dfn>, that implements four different
+  interfaces:</p>
   <pre class="idl">
     interface DatabaseConnection : IDatabaseConnection {
       readonly attribute DOMString name;
@@ -35,7 +39,7 @@
     DatabaseConnection implements ISchemaQueryProvider;
   </pre>
   <dl class="attributes">
-    <dt><code>name</code></dt>
+    <dt><dfn data-dfn-for="DatabaseConnection"><code>name</code></dfn></dt>
     <dd>Name of the database. It MUST be the same as the <code>name</code>
     field specified in schema.</dd>
   </dl>

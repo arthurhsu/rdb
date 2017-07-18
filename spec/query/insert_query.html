@@ -2,8 +2,8 @@
   <h2>Insert Query</h2>
   <p>Insert queries are used to insert rows into tables. There are two
   variations of insert queries: <code>insert</code> and
-  <code>insertOrReplace</code>. Both variations support the following
-  interface:</p>
+  <code>insertOrReplace</code>. Both variations support the
+  <dfn>IInsertQuery</dfn> interface:</p>
 
   <pre class="idl">
     interface IInsertQuery : IQuery {
@@ -12,11 +12,13 @@
     };
   </pre>
   <dl class="methods">
-    <dt><code>IInsertQuery into(ITable table);</code></dt>
+    <dt><code>IInsertQuery
+    <dfn data-dfn-for="IInsertQuery">into</dfn>(ITable table);</code></dt>
     <dd>Specifies the target table to insert rows into. For
     <code>insertOrReplace</code>, the <code>table</code> MUST have a primary
     key, otherwise <a>IntegrityError</a> will be thrown.</dd>
-    <dt><code>IInsertQuery values((object or sequence< object > or IBindableValue) rows);</code></dt>
+    <dt><code>IInsertQuery
+    <dfn data-dfn-for="IInsertQuery">values</dfn>((object or sequence< object > or IBindableValue) rows);</code></dt>
     <dd>Supplies the row(s) to be inserted. When given an <code>object</code>
     as parameter, or the bindable value resolved as an object, the object will
     act as a single row; otherwise, each element in the given array is treated

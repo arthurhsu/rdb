@@ -10,7 +10,7 @@
   <section>
     <h2>Table Representation</h2>
     <p>The table objects returned by <a>IDatabaseSchema</a><code>.table()</code>
-    implements the <a>ITable</a> interface. These table objects MUST have
+    implements the <dfn>ITable</dfn> interface. These table objects MUST have
     properties with same names as columns of that table, and the properties are
     <a>Column</a> objects, see <a href="#column-representation">column
     representation</a> for more details.</p>
@@ -23,11 +23,14 @@
       };
     </pre>
     <dl class="methods">
-      <dt><code>ITable as(DOMString alias)</code></dt>
+      <dt><code>ITable
+      <dfn data-dfn-for="ITable">as</dfn>(DOMString alias)</code></dt>
       <dd>Creates an alias for the table, this is useful for self-join.</dd>
-      <dt><code>DOMString getName()</code></dt>
+      <dt><code>DOMString
+      <dfn data-dfn-for="ITable">getName</dfn>()</code></dt>
       <dd>Returns table name.</dd>
-      <dt><code>DOMString getAlias()</code></dt>
+      <dt><code>DOMString
+      <dfn data-dfn-for="ITable">getAlias</dfn>()</code></dt>
       <dd>Returns table alias. If no alias is defined for this table schema
       object, <code>null</code> is returned.</dd>
     </dl>
@@ -41,7 +44,8 @@
   <section>
     <h2>Column Representation</h2>
     <p>Column representation objects have a base interface as defined in the
-    following:</p>
+    <dfn>IColumn</dfn> interface:
+
     <pre class="idl">
       interface IColumn {
         readonly attribute DOMString name;
@@ -53,28 +57,28 @@
       };
     </pre>
     <dl class="attributes">
-      <dt><code>name</code></dt>
+      <dt><dfn data-dfn-for="IColumn"><code>name</code></dfn></dt>
       <dd>The name of the column.</dd>
-      <dt><code>table</code></dt>
+      <dt><dfn data-dfn-for="IColumn"><code>table</code></dfn></dt>
       <dd>The name of the table containing this column.</dd>
-      <dt><code>type</code></dt>
+      <dt><dfn data-dfn-for="IColumn"><code>type</code></dfn></dt>
       <dd>Data type of the column.</dd>
-      <dt><code>fullName</code></dt>
+      <dt><dfn data-dfn-for="IColumn"><code>fullName</code></dfn></dt>
       <dd>The <dfn>full name</dfn> of the column. When the containing table does
       not have alias, or used in foreign key definition, it will be
       <code>`${ITable#getName}.${IColumn.name}`</code>, otherwise
       <code>`${ITable#getAlias}.${IColumn.name}`</code>.</dd>
-      <dt><code>nullable</code></dt>
+      <dt><dfn data-dfn-for="IColumn"><code>nullable</code></dfn></dt>
       <dd>When <code>false</code>, the column is <a>NOT NULL</a></dd>
     </dl>
     <dl class="methods">
-      <dt><code>IColumn as(DOMString alias);</code></dt>
+      <dt><code>IColumn<dfn data-dfn-for="IColumn">as</dfn>(DOMString alias);</code></dt>
       <dd>Creates an alias for the column. The alias will be honored in select
       queries only.</dd>
     </dl>
 
     <p>The objects also provide interfaces for creating predicates, therefore
-    they are defined by the <a>Column</a> interface.</p>
+    they are defined by the <dfn>Column</dfn> interface.</p>
     <pre class="idl">
       interface Column : IColumn {
       };
