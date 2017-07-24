@@ -193,8 +193,8 @@ insertData().then(function () {
     and MUST be honored.</p>
 
     <p>The database schema is constructed via builder pattern APIs. Schema can
-    be changed through schema queries within any <code>readwrite</code>
-    transactions.</p>
+    be changed through schema queries within implicit transactions, or explicit
+    batched <code>readwrite</code> transactions.</p>
   </section>
 
 <section>
@@ -205,7 +205,7 @@ insertData().then(function () {
   <ul>
     <li>Names are case sensitive</li>
     <li>A name MUST pass the following check:
-        <code>/^[A-Za-z_][A-Za-z0-9_]*$/.test(name)</code>
+        <code>/^[A-Za-z][A-Za-z0-9_]*$/.test(name)</code>
     </li>
     <li>A name MUST NOT conflict with properties and methods defined in
         <code>Object.prototype</code> and <a>ITable</a>.
@@ -347,7 +347,7 @@ insertData().then(function () {
 
   <section>
     <h2>Database Schema</h2>
-    <p><dfn>IDatabaseSchema</dfn> presents a database.</p>
+    <p><dfn>IDatabaseSchema</dfn> represents a database.</p>
     <pre class="idl">
       interface IDatabaseSchema {
         readonly attribute DOMString name;
@@ -377,7 +377,7 @@ insertData().then(function () {
   <section>
     <h2>Table Builder</h2>
     <p><dfn>ITableBuilder</dfn> is used to describe the new table that will be
-    created, and MUST be used within the context of a <a>transaction</a>.</p>
+    created.</p>
     <pre class="idl">
       interface ITableBuilder : IExecutionContext {
         ITableBuilder column(DOMString name, ColumnType type, optional boolean notNull = false);
@@ -824,6 +824,7 @@ if (version < 2) {
       <li>Marks this database as delete pending.</li>
       <li>Marks each connection to this database as close pending, which will
       effectively prevent new transactions from creating.</li>
+      <li>Removes all observers.</li>
       <li>Waits for all pending transactions to be cancelled.</li>
       <li>Closes all connections.</li>
       <li>Deletes the database.</li>
@@ -962,11 +963,15 @@ if (version < 2) {
     <dd>Starts <em>sequence mode</em> execution. The transaction will be kept
     alive until <code>commit()</code> or <code>rollback()</code> of this
     transaction is triggered, or the transaction is timed out by implementation
-    (which the implementation MUST throw <a>TimoutError</a> and reject any
+    (which the implementation MUST throw <a>TimeoutError</a> and reject any
     further calls on this transaction object).</dd>
     <dt><code>Promise< TransactionResults >
     <dfn data-dfn-for="ITransaction">exec</dfn>(sequence< IExecutionContext > queries);</code></dt>
-    <dd>Starts <em>batch mode</em> execution and auto-commit.</dd>
+    <dd>Starts <em>batch mode</em> execution. The <code>queries</code> will be
+    executed in the order they appear in the sequence, and the transaction will
+    be auto-committed after all sequence has run. If any of the query failed,
+    or <a>TimeoutError</a> happens, the transaction will be automatically rolled
+    back.</dd>
     <dt><code>Promise< TransactionResults >
     <dfn data-dfn-for="ITransaction">attach</dfn>(IExecutionContext query);</code></dt>
     <dd>Schedules a query to existing <em>sequence mode</em> execution. The
@@ -996,6 +1001,9 @@ if (version < 2) {
   back. If a transaction's connection is lost before transaction being
   finished, the transaction is effectively rolled back and no change will be
   persisted.</p>
+
+  <p>Actual time out length for a given transaction is implementation dependent.
+  Implementation MAY choose an appropriate value, or just set it to indefinite.</p>
 
   <section>
     <h2>Commit Algorithm</h2>
@@ -2068,6 +2076,10 @@ function getOrderList() {
     <tr><td><dfn><code>BindingError</code></dfn></td>
       <td>The values given in <a>IQuery.bind</a> have type match, or the
         executing query has unprovided bindable values.</td></tr>
+    <tr><td><dfn><code>ConcurrencyError</code></dfn></td>
+      <td>In-flight transaction is automatically rolled back because the
+        <a>snapshot</a> it based on has been obsoleted by other committed
+        transactions.</td></tr>
     <tr><td><dfn><code>ConstraintError</code></dfn></td>
         <td>Constraints are violated.</td>
     </tr>
