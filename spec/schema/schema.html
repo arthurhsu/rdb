@@ -23,8 +23,8 @@
     and MUST be honored.</p>
 
     <p>The database schema is constructed via builder pattern APIs. Schema can
-    be changed through schema queries within any <code>readwrite</code>
-    transactions.</p>
+    be changed through schema queries within implicit transactions, or explicit
+    batched <code>readwrite</code> transactions.</p>
   </section>
 
   {{include: naming.html}}

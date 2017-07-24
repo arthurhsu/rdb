@@ -64,7 +64,7 @@
 
   <section>
     <h2>Database Schema</h2>
-    <p><dfn>IDatabaseSchema</dfn> presents a database.</p>
+    <p><dfn>IDatabaseSchema</dfn> represents a database.</p>
     <pre class="idl">
       interface IDatabaseSchema {
         readonly attribute DOMString name;
@@ -94,7 +94,7 @@
   <section>
     <h2>Table Builder</h2>
     <p><dfn>ITableBuilder</dfn> is used to describe the new table that will be
-    created, and MUST be used within the context of a <a>transaction</a>.</p>
+    created.</p>
     <pre class="idl">
       interface ITableBuilder : IExecutionContext {
         ITableBuilder column(DOMString name, ColumnType type, optional boolean notNull = false);

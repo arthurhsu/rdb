@@ -10,6 +10,10 @@
     <tr><td><dfn><code>BindingError</code></dfn></td>
       <td>The values given in <a>IQuery.bind</a> have type match, or the
         executing query has unprovided bindable values.</td></tr>
+    <tr><td><dfn><code>ConcurrencyError</code></dfn></td>
+      <td>In-flight transaction is automatically rolled back because the
+        <a>snapshot</a> it based on has been obsoleted by other committed
+        transactions.</td></tr>
     <tr><td><dfn><code>ConstraintError</code></dfn></td>
         <td>Constraints are violated.</td>
     </tr>
