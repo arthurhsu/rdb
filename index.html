@@ -2095,6 +2095,12 @@ function getOrderList() {
     <tr><td><dfn><code>InvalidSchemaError</code></dfn></td>
         <td>Provided schema is invalid.</td>
     </tr>
+    <tr><td><dfn><code>OutOfMemoryError</code></dfn></td>
+        <td>Executing the query demands too much memory than the implementation
+        could provide. Users are responsible for changing their queries to
+        consume less memory/resources. For example, inserting too many rows
+        into a temporary database, or selecting too many rows from a persistent
+        database.</td></tr>
     <tr><td><dfn><code>RuntimeError</code></dfn></td>
         <td>Invalid query has slipped through syntax checks but caught by
         the query execution engine.</td></tr>
