@@ -8,7 +8,7 @@ if (version < 2) {
       .createTable('NewTable')
       .column('id', 'string', true)
       .column('name', 'string', true);
-    
+
   let alterTable = dbConnection
       .alterTable('Emp')
       .addColumn('location', 'string', true, 'LAX')
