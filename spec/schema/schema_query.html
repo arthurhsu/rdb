@@ -2,14 +2,14 @@
   <h2>Schema Query</h2>
   <p>A database instance is created using schema queries. The schema of a
   database instance can also be altered via schema queries. Schema queries are
-  run in the context of <a>transaction</a> and can be executed any time during
-  the life time of the database.</p>
+  executed in the context of a <a>transaction</a> and can be executed any time
+  during the lifetime of the database.</p>
   <p><a>IExecutionContext</a> returned from <a>ISchemaQueryProvider</a> or
   its methods can only be used in <a>implicit transaction</a>s or
   batch-executed <a>explicit transaction</a>s, i.e. <a>ITransaction.exec()</a>.</p>
 
   <p>Any name used inside the schema not obeying
-  <a href="#naming-rules">Naming Rules</a> will result in raising
+  <a href="#naming-rules">Naming Rules</a> will result in raising an
   <a>InvalidSchemaError</a> during the execution of schema queries.</p>
 
   <section>
@@ -19,7 +19,7 @@
     <pre class="idl">
       interface ISchemaQueryProvider {
         IExecutionContext setVersion(unsigned short version);
-        IExecutionContext setForeignKeyCheck(boolean value);
+        IExecutionContext setForeignKeyCheck(boolean enabled);
         IDatabaseSchema schema();
         ITableBuilder createTable(DOMString tableName);
         ITableChanger alterTable(DOMString tableName);
@@ -33,7 +33,7 @@
       a <a>transaction</a>. The <code>version</code> MUST NOT be set to
       <code>0</code>, otherwise <a>InvalidSchemaError</a> will be raised.</dd>
       <dt><code>IExecutionContext
-      <dfn data-dfn-for="ISchemaQueryProvider">setForeignKeyCheck</dfn>(boolean value);</code></dt>
+      <dfn data-dfn-for="ISchemaQueryProvider">setForeignKeyCheck</dfn>(boolean enabled);</code></dt>
       <dd>Enables or disables foreign key constraint enforcement within the
       database that current connection is associated with. The change will be
       effective only after this function is called, and will not affect
@@ -43,7 +43,7 @@
       in broken data integrity.</dd>
       <dt><code>IDatabaseSchema
       <dfn data-dfn-for="ISchemaQueryProvider">schema</dfn>();</code></dt>
-      <dd>Returns an <a>IDatabaseSchema</a> object for crafting data
+      <dd>Returns an <a>IDatabaseSchema</a> object, useful for crafting data
       manipulation queries.</dd>
       <dt><code>ITableBuilder
       <dfn data-dfn-for="ISchemaQueryProvider">createTable</dfn>(DOMString tableName);</code></dt>

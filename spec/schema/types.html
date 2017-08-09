@@ -19,7 +19,7 @@
 
   <p><dfn data-dfn-for="ColumnType">blob</dfn> represents JavaScript
   <code>ArrayBuffer</code>, and <dfn data-dfn-for="ColumnType">date</dfn>
-  refers to <code>Date</code> object.
+  refers to the <code>Date</code> class.
   <dfn data-dfn-for="ColumnType">boolean</dfn>,
   <dfn data-dfn-for="ColumnType">number</dfn>,
   <dfn data-dfn-for="ColumnType">string</dfn> and
@@ -32,14 +32,14 @@
   but within the range of <code>[Number#MIN_SAFE_INTEGER,
   Number#MAX_SAFE_INTEGER]</code>. Integer columns will be converted to and from
   JavaScript <code>number</code> types using equivalent of
-  <code>Number#toPrecision(1)</code>. If the converted number failed test of
+  <code>Number#toPrecision(1)</code>. If the converted number fails
   <code>Number#isSafeInteger()</code>, a <a>DataError</a> will be thrown.</p>
-  <p>JavaScript types that can be used in a column is defined as
+  <p>A JavaScript type that can be used in a column is defined as
   <dfn>ValueType</dfn>. Only some value types are <dfn>indexable</dfn>,
   indicating that they can be compared, sorted, and used in indices and
   predicates. These types are defined as <dfn>IndexableValueType</dfn>.
   Non-indexable types, <a href="ColumnType#blob">blob</a> and
   <a href="ColumnType#object">object</a>, MUST NOT be used to
-  create indices and predicates, except the
+  create any indices or participate in any predicates, other than the
   <code>isNull()</code> and <code>isNotNull()</code> predicates.</p>
 </section>

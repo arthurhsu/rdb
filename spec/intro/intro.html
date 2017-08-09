@@ -1,27 +1,30 @@
 <section class="informative">
   <h2>Introduction</h2>
   <p>Relational data manipulation for web apps has been in a difficult
-  state for years. WebSQL has quite a few problems and is hence
-  deprecated. IndexedDB, on the other hand, is an object database. In this
-  document, we define a series of easy-to-use APIs that promote readable,
-  maintainable, and performant code for apps needing relational data.</p>
+  state for years. WebSQL has quite a few problems and is hence justifiably
+  deprecated. IndexedDB, on the other hand, is an object database, not a
+  relational database. In this document, we define a series of easy-to-use APIs
+  that promote readable, maintainable, and performant code for apps needing
+  relational data.</p>
 
   <p>The APIs proposed in this document are designed for small-scale relational
   data manipulation. The following example shows how to open a database.</p>
   <pre class="example highlight">
     {{include: ../example/open.js}}
   </pre>
-  <p>Once the database is opened, queries can be performed.</p>
+  <p>Once a connection to the database has been established, queries can be
+    performed.
+  </p>
   <pre class="example highlight">
     {{include: ../example/scud.js}}
   </pre>
 
   <p>The proposed spec defines the behaviors of a database. A database consists
-  of two parts: storage and query engine. Data is stored in the storage as
-  rows, each row is a tuple of values, and the types of values are defined as
-  columns. Same class of rows are grouped together as a table. The database
-  has a concept named schema to define columns inside tables, and the relations
-  among rows. Query engine is responsible for reading and writing rows from the
-  storage, enforcing relations defined in the schema, and providing various
-  functions to manipulate how the rows are read and written.</p>
+  of two parts: the storage and the query engine. Data is stored in the storage
+  as rows, each row is a tuple of values, and the types of values are defined as
+  columns. Same class of rows are grouped together as a table. A database schema
+  is used to define columns inside tables, and the relations among tables.
+  The query engine is responsible for reading and writing rows from the storage,
+  enforcing relations defined in the schema, and providing various functions to
+  manipulate data (adding, removing, updating rows or tables).</p>
 </section>

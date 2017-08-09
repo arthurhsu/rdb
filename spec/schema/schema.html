@@ -6,10 +6,11 @@
     A schema MUST have a name. The origin of the page and the schema name
     together uniquely identify a database instance during runtime.</p>
 
-    <p>A schema has a referential version number associated with it. Version
-    number is an integer greater than zero and can be freely assigned. It has
+    <p>A schema has a version number associated with it. The version number is
+    an integer greater than zero and can be freely assigned. It has
     no effect on identifying a database. It is provided for the convenience of
-    developers to version their schema without extra table.</p>
+    developers to version their schema without the use of an additional table.
+    </p>
 
     <p>A schema is structured in a hierachical way. A database schema contains
     one or more tables. A table contains one or more columns, zero or more
@@ -19,12 +20,12 @@
     associated data type. The indices hint the database engine to build index
     structures so that subsequent queries can be acclerated. Index definitions
     MAY be honored if the database engine determined that they are necessary.
-    The constraints define the relations of rows and ensures data integrity,
-    and MUST be honored.</p>
+    The constraints define additional characteristicts of a column or
+    relationships between tables and ensure data integrity, and MUST be honored.</p>
 
-    <p>The database schema is constructed via builder pattern APIs. Schema can
-    be changed through schema queries within implicit transactions, or explicit
-    batched <code>readwrite</code> transactions.</p>
+    <p>The database schema is constructed via builder pattern APIs. The schema
+    can be changed through schema querieswithin either implicit transactions,
+    or explicit batched <code>readwrite</code> transactions.</p>
   </section>
 
   {{include: naming.html}}
